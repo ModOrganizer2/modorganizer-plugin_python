@@ -15,15 +15,19 @@ PythonToolWrapper::PythonToolWrapper(const boost::python::object &initFunction,
                                      const boost::python::object &displayNameFunction,
                                      const boost::python::object &tooltipFunction,
                                      const boost::python::object &iconFunction,
-                                     const boost::python::object &displayFunction)
+                                     const boost::python::object &displayFunction,
+                                     const boost::python::object &setParentWidget)
   : PythonPluginWrapper(initFunction, nameFunction, authorFunction, descriptionFunction,
                         versionFunction, isActiveFunction, settingsFunction)
   , m_DisplayNameFunction(displayNameFunction)
   , m_ToolTipFunction(tooltipFunction)
   , m_IconFunction(iconFunction)
   , m_DisplayFunction(displayFunction)
+  , m_SetParentWidget(setParentWidget)
 {
 }
+
+
 
 QString PythonToolWrapper::displayName() const
 {
@@ -67,12 +71,9 @@ QIcon PythonToolWrapper::icon() const
 void PythonToolWrapper::display() const
 {
   try {
-    // can't make the dialog properly modal but we can disable input on the main window
-    // which has a similar effect
-    QWidget *mainWindow = QApplication::activeWindow();
-    if (mainWindow != NULL) mainWindow->setEnabled(false);
+    m_SetParentWidget(parentWidget());
+
     m_DisplayFunction();
-    if (mainWindow != NULL) mainWindow->setEnabled(true);
   } catch (const boost::python::error_already_set&) {
     reportPythonError();
   }

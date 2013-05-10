@@ -13,22 +13,34 @@ CONFIG += dll
 
 DEFINES += PROXYPYTHON_LIBRARY
 
-INCLUDEPATH += "$(BOOSTPATH)" "C:/Program Files (x86)/Python2.7/include"
+INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include"
+INCLUDEPATH += "$$(SIPPATH)/siplib"
 
 SOURCES += proxypython.cpp \
-    pythontoolwrapper.cpp \
-    pythonpluginwrapper.cpp
+    proxypluginwrappers.cpp
 
 HEADERS += proxypython.h \
-    pythontoolwrapper.h \
-    pythonpluginwrapper.h
+    proxypluginwrappers.h \
+    uibasewrappers.h
 
-LIBS += -L"C:/Program Files (x86)/Python2.7/libs" -L"$(BOOSTPATH)/stage/lib" -lpython27
+LIBS += -L"$$(PYTHONPATH)/libs" -L"$(BOOSTPATH)/stage/lib" -lpython27
 
 include(../plugin_template.pri)
 
 OTHER_FILES += \
-    iorganizer.sip \
-    configure.py
+    INexusBridge.sip \
+    interfaces.sip \
+    setup.py \
+    setup.cfg
 
-QMAKE_POST_LINK += xcopy /y /s /i *.py $$quote($$DSTDIR)\\plugins $$escape_expand(\\n)
+WINPWD = $$PWD
+WINPWD ~= s,/,$$QMAKE_DIR_SEP,g
+
+
+SIPPATH=""
+
+QMAKE_POST_LINK += SET VS90COMNTOOLS=%VS100COMNTOOLS% $$escape_expand(\\n)
+
+#QMAKE_POST_LINK += $$(PYTHONPATH)/Lib/site-packages/PyQt4/sip.exe -I "$$(PYTHONPATH)/Lib/site-packages/PyQt4/sip/PyQt4" -c . -t WS_WIN -t Qt_4_8_4 -x Py_v2 -b interfaces.sbf -g interfaces.sip $$escape_expand(\\n)
+QMAKE_POST_LINK += $$(PYTHONPATH)/python.exe $$WINPWD\\setup.py build_ext --sip-opts=\"-I C:\\Python27\\Lib\\site-packages\\PyQt4\\sip\\PyQt4 -e -g -t WS_WIN -t Qt_4_8_4\" build $$escape_expand(\\n)
+QMAKE_POST_LINK += copy $$WINPWD\\build\\lib.win32-2.7\\interfaces.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)

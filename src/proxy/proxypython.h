@@ -3,10 +3,14 @@
 
 
 #include <ipluginproxy.h>
-#include <imoinfo.h>
+#include <map>
+
+#ifndef Q_MOC_RUN
+#include <boost/python.hpp>
+#endif
 
 
-class ProxyPython : public MOBase::IPluginProxy
+class ProxyPython : public QObject, MOBase::IPluginProxy
 {
   Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy)
@@ -23,10 +27,20 @@ public:
   virtual QList<MOBase::PluginSetting> settings() const;
 
   QStringList pluginList(const QString &pluginPath) const;
-  QObject *instantiate(const QString &pluginName) const;
+  QObject *instantiate(const QString &pluginName);
+
+  /**
+   * @return the parent widget for newly created dialogs
+   * @note needs to be public so it can be exposed to plugins
+   */
+  virtual QWidget *getParentWidget() { return parentWidget(); }
 
 private:
+
   const MOBase::IOrganizer *m_MOInfo;
+
+  std::map<QString, boost::python::object> m_PythonObjects;
+
 };
 
 #endif // PROXYPYTHON_H

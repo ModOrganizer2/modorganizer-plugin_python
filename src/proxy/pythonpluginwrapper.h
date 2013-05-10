@@ -38,6 +38,7 @@ private:
   boost::python::object m_VersionFunction;
   boost::python::object m_IsActiveFunction;
   boost::python::object m_SettingsFunction;
+
 };
 
 #endif // PYTHONPLUGINWRAPPER_H

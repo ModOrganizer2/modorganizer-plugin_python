@@ -10,7 +10,7 @@
 #include "pythonpluginwrapper.h"
 
 
-class PythonToolWrapper : public QObject, public PythonPluginWrapper, public MOBase::IPluginTool
+class PythonToolWrapper : public QObject, public MOBase::IPluginTool, public PythonPluginWrapper
 {
 
   Q_OBJECT
@@ -27,7 +27,11 @@ public:
                     const boost::python::object &displayNameFunction,
                     const boost::python::object &tooltipFunction,
                     const boost::python::object &iconFunction,
-                    const boost::python::object &displayFunction);
+                    const boost::python::object &displayFunction,
+                    const boost::python::object &setParentWidget);
+
+  using PythonPluginWrapper::init;
+  using PythonPluginWrapper::name;
 
   virtual QString displayName() const;
   virtual QString tooltip() const;
@@ -44,6 +48,7 @@ private:
   boost::python::object m_IconFunction;
   boost::python::object m_DisplayFunction;
 
+  boost::python::object m_SetParentWidget;
 };
 
 
