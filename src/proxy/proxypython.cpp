@@ -14,6 +14,7 @@
 #include <QWidget>
 #include "proxypluginwrappers.h"
 #include "uibasewrappers.h"
+#include "error.h"
 
 // sip and qt slots seems to conflict
 #include <sip.h>
@@ -23,27 +24,28 @@ using namespace MOBase;
 namespace bpy = boost::python;
 
 
-static void reportPythonError()
+MOBase::IOrganizer *s_Organizer = NULL;
+
+
+struct ModRepositoryFileInfo_to_python_dict
 {
-  if (PyErr_Occurred()) {
-    // prints to s_ErrIO buffer
-    PyErr_Print();
-    // extract data from python buffer
-    bpy::object mainModule = bpy::import("__main__");
-    bpy::object mainNamespace = mainModule.attr("__dict__");
-    bpy::object errMsgObj = bpy::eval("s_ErrIO.getvalue()", mainNamespace);
-    QString errMsg = bpy::extract<QString>(errMsgObj.ptr());
-    bpy::eval("s_ErrIO.truncate(0)", mainNamespace);
-    throw MyException(errMsg);
-  } else {
-    throw MyException("An unexpected C++ exception was thrown in python code");
+  static PyObject *convert(const ModRepositoryFileInfo &info) {
+    PyObject *res = PyDict_New();
+    PyDict_SetItemString(res, "uri", bpy::incref(bpy::object(info.uri).ptr()));
+    PyDict_SetItemString(res, "name", bpy::incref(bpy::object(info.name).ptr()));
+    PyDict_SetItemString(res, "description", bpy::incref(bpy::object(info.description.toUtf8().constData()).ptr()));
+    PyDict_SetItemString(res, "categoryID", PyLong_FromLong(info.categoryID));
+    PyDict_SetItemString(res, "fileID", PyLong_FromLong(info.fileID));
+    PyDict_SetItemString(res, "fileSize", PyLong_FromLong(info.fileSize));
+    PyDict_SetItemString(res, "version", bpy::incref(bpy::object(info.version).ptr()));
+    return bpy::incref(res);
   }
-}
+};
 
 
 struct QString_to_python_str
 {
-  static PyObject *convert(QString const& str) {
+  static PyObject *convert(const QString &str) {
     return bpy::incref(bpy::object(str.toUtf8().constData()).ptr());
   }
 };
@@ -226,13 +228,17 @@ struct QList_to_python_list
 {
   static PyObject *convert(const QList<T> &list)
   {
-    qDebug("convert list");
+    bpy::list pyList;
 
-    boost::python::list pyList;
-    foreach (const T &item, list) {
-      pyList.append(item);
+    try {
+      foreach (const T &item, list) {
+        pyList.append(item);
+      }
+    } catch (const bpy::error_already_set&) {
+      reportPythonError();
     }
-    return bpy::incref(pyList.ptr());
+    PyObject *res = bpy::incref(pyList.ptr());
+    return res;
   }
 };
 
@@ -287,12 +293,8 @@ struct stdset_from_python_list
 
     bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
     int length = bpy::len(source);
-    try {
-      for (int i = 0; i < length; ++i) {
-        result->insert(bpy::extract<T>(source[i]));
-      }
-    } catch (const bpy::error_already_set&) {
-      qDebug("bla");
+    for (int i = 0; i < length; ++i) {
+      result->insert(bpy::extract<T>(source[i]));
     }
 
     data->convertible = storage;
@@ -314,6 +316,7 @@ static const sipAPIDef *sipAPI()
 template <typename T> struct MetaData;
 
 template <> struct MetaData<IModRepositoryBridge> { static const char *className() { return "MOBase::INexusBridge"; } };
+template <> struct MetaData<IDownloadManager> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
@@ -332,7 +335,7 @@ PyObject *toPyQt(T *objPtr)
   const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
 
   if (type == NULL) {
-    qDebug("failed to determine type");
+    qDebug("failed to determine type: %s", MetaData<T>::className());
     return bpy::incref(Py_None);
   }
 
@@ -478,6 +481,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<Q
 
 BOOST_PYTHON_MODULE(mobase)
 {
+  PyEval_InitThreads();
   bpy::to_python_converter<QVariant, QVariant_to_python_obj>();
   QVariant_from_python_obj();
 
@@ -489,8 +493,10 @@ BOOST_PYTHON_MODULE(mobase)
   //QClass_converters<QVariant>();
   QClass_converters<QIcon>();
   QInterface_converters<IModRepositoryBridge>();
+  QInterface_converters<IDownloadManager>();
 
   bpy::def("toPyQt", &toPyQt<IModRepositoryBridge>);
+  bpy::def("toPyQt", &toPyQt<IDownloadManager>);
 
   bpy::enum_<MOBase::VersionInfo::ReleaseType>("ReleaseType")
       .value("final", MOBase::VersionInfo::RELEASE_FINAL)
@@ -526,7 +532,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
       .def("gameInfo", bpy::pure_virtual(&MOBase::IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("createNexusBridge", bpy::pure_virtual(&MOBase::IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
+      //.def("createNexusBridge", bpy::pure_virtual(&MOBase::IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profileName", bpy::pure_virtual(&MOBase::IOrganizer::profileName))
       .def("profilePath", bpy::pure_virtual(&MOBase::IOrganizer::profilePath))
       .def("downloadsPath", bpy::pure_virtual(&MOBase::IOrganizer::downloadsPath))
@@ -536,15 +542,23 @@ BOOST_PYTHON_MODULE(mobase)
       .def("removeMod", bpy::pure_virtual(&MOBase::IOrganizer::removeMod))
       .def("modDataChanged", bpy::pure_virtual(&MOBase::IOrganizer::modDataChanged))
       .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
-      .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath));
+      .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
+      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod))
+      .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>());
 
-  bpy::class_<INexusBridgeWrapper, boost::noncopyable>("INexusBridge")
-      .def("requestDescription", bpy::pure_virtual(&MOBase::IModRepositoryBridge::requestDescription))
-      .def("requestFiles", bpy::pure_virtual(&MOBase::IModRepositoryBridge::requestFiles))
-      .def("requestFileInfo", bpy::pure_virtual(&MOBase::IModRepositoryBridge::requestFileInfo))
-      .def("requestDownloadURL", bpy::pure_virtual(&MOBase::IModRepositoryBridge::requestDownloadURL))
-      .def("requestToggleEndorsement", bpy::pure_virtual(&MOBase::IModRepositoryBridge::requestToggleEndorsement))
-      ;
+  bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
+      .def("requestDescription", &ModRepositoryBridgeWrapper::requestDescription)
+      .def("requestFiles", &ModRepositoryBridgeWrapper::requestFiles)
+      .def("requestFileInfo", &ModRepositoryBridgeWrapper::requestFileInfo)
+      .def("requestDownloadURL", &ModRepositoryBridgeWrapper::requestDownloadURL)
+      .def("requestToggleEndorsement", &ModRepositoryBridgeWrapper::requestToggleEndorsement)
+      .def("onFilesAvailable", &ModRepositoryBridgeWrapper::onFilesAvailable)
+      .def("onRequestFailed", &ModRepositoryBridgeWrapper::onRequestFailed);
+
+  bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
+      .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
+      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
+      .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath));
 
   bpy::enum_<MOBase::EGuessQuality>("GuessQuality")
       .value("invalid", MOBase::GUESS_INVALID)
@@ -565,20 +579,20 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget));
 
-  bpy::class_<ModRepositoryFileInfo, boost::noncopyable>("NexusFileInfo")
+/*  bpy::class_<MOBase::ModRepositoryFileInfo, boost::noncopyable>("ModRepositoryFileInfo")
       .def_readonly("name", &ModRepositoryFileInfo::name)
-      .def_readonly("uri", &ModRepositoryFileInfo::uri);
-/*      QString name;
-      QString uri;
-      VersionInfo version;
-      int categoryID;
+      .def_readonly("uri", &ModRepositoryFileInfo::uri)
+      .def_readonly("version", &ModRepositoryFileInfo::version)
+      .def_readonly("categoryID", &ModRepositoryFileInfo::categoryID);
       int fileID;*/
 
   GuessedValue_converters<QString>();
 
+  bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
+
   QList_from_python_obj<PluginSetting>();
-  bpy::to_python_converter<QList<ModRepositoryFileInfo*>,
-      QList_to_python_list<ModRepositoryFileInfo*> >();
+  bpy::to_python_converter<QList<ModRepositoryFileInfo>,
+      QList_to_python_list<ModRepositoryFileInfo> >();
 
   stdset_from_python_list<QString>();
 }
@@ -616,6 +630,7 @@ ProxyPython::ProxyPython()
 bool ProxyPython::init(IOrganizer *moInfo)
 {
   m_MOInfo = moInfo;
+  s_Organizer = moInfo;
   return true;
 }
 
@@ -680,6 +695,7 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
 QObject *ProxyPython::instantiate(const QString &pluginName)
 {
   try {
+    GILock lock;
     bpy::object main_module = bpy::import("__main__");
     bpy::object main_namespace = main_module.attr("__dict__");
 

@@ -17,11 +17,15 @@ INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include"
 INCLUDEPATH += "$$(SIPPATH)/siplib"
 
 SOURCES += proxypython.cpp \
-    proxypluginwrappers.cpp
+    proxypluginwrappers.cpp \
+    error.cpp \
+    gilock.cpp
 
 HEADERS += proxypython.h \
     proxypluginwrappers.h \
-    uibasewrappers.h
+    uibasewrappers.h \
+    error.h \
+    gilock.h
 
 LIBS += -L"$$(PYTHONPATH)/libs" -L"$(BOOSTPATH)/stage/lib" -lpython27
 
