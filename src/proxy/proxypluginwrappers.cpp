@@ -1,27 +1,13 @@
 #include "proxypluginwrappers.h"
 #include <boost/python.hpp>
 #include <utility.h>
+#include "error.h"
+#include "gilock.h"
 
 namespace bpy = boost::python;
 
 using namespace MOBase;
 
-static void reportPythonError()
-{
-  if (PyErr_Occurred()) {
-    // prints to s_ErrIO buffer
-    PyErr_Print();
-    // extract data from python buffer
-    bpy::object mainModule = bpy::import("__main__");
-    bpy::object mainNamespace = mainModule.attr("__dict__");
-    bpy::object errMsgObj = bpy::eval("s_ErrIO.getvalue()", mainNamespace);
-    QString errMsg = bpy::extract<QString>(errMsgObj.ptr());
-    bpy::eval("s_ErrIO.truncate(0)", mainNamespace);
-    throw MyException(errMsg);
-  } else {
-    throw MyException("An unexpected C++ exception was thrown in python code");
-  }
-}
 
 #define PYCATCH catch (const bpy::error_already_set &) { reportPythonError(); throw MyException("unhandled exception"); }\
                 catch (...) { throw MyException("An unknown exception was thrown in python code"); }
@@ -111,6 +97,8 @@ void IPluginToolWrapper::setParentWidget(QWidget *parent)
 void IPluginToolWrapper::display() const
 {
   try {
+    GILock lock;
+
     this->get_override("display")();
   } PYCATCH;
 }
@@ -205,10 +193,11 @@ std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
 }
 
 
-IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, const QString &archiveName)
+IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, const QString &archiveName,
+                                                                        const QString &version, int modID)
 {
   try {
-    return this->get_override("install")(modName, archiveName);
+    return this->get_override("install")(modName, archiveName, version, modID);
   } PYCATCH;
 }
 

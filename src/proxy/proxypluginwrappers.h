@@ -68,7 +68,8 @@ public:
   virtual bool isArchiveSupported(const MOBase::DirectoryTree &tree) const;
   virtual bool isArchiveSupported(const QString &archiveName) const;
   virtual std::set<QString> supportedExtensions() const;
-  virtual EInstallResult install(MOBase::GuessedValue<QString> &modName, const QString &archiveName);  
+  virtual EInstallResult install(MOBase::GuessedValue<QString> &modName, const QString &archiveName,
+                                 const QString &version, int modID);
   virtual void setParentWidget(QWidget *parent);
 
 };

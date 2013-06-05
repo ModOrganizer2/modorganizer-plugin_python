@@ -10,6 +10,7 @@ TEMPLATE = lib
 
 CONFIG += plugins
 CONFIG += dll
+CONFIG += warn_on
 
 DEFINES += PROXYPYTHON_LIBRARY
 

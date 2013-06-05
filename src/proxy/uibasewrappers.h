@@ -131,7 +131,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QString downloadsPath() const { return this->get_override("downloadsPath")(); }
   virtual MOBase::VersionInfo appVersion() const { return this->get_override("appVersion")(); }
   virtual MOBase::IModInterface *getMod(const QString &name) { return this->get_override("getMod")(name); }
-  virtual MOBase::IModInterface *createMod(const QString &name) { return this->get_override("createMod")(name); }
+  virtual MOBase::IModInterface *createMod(MOBase::GuessedValue<QString> &name) { return this->get_override("createMod")(name); }
   virtual bool removeMod(MOBase::IModInterface *mod) { return this->get_override("removeMod")(mod); }
   virtual void modDataChanged(MOBase::IModInterface *mod) { this->get_override("modDataChanged")(mod); }
   virtual QVariant pluginSetting(const QString &pluginName, const QString &key) const { return this->get_override("pluginSetting")(pluginName, key); }

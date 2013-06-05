@@ -19,7 +19,6 @@
 // sip and qt slots seems to conflict
 #include <sip.h>
 
-
 using namespace MOBase;
 namespace bpy = boost::python;
 
@@ -137,7 +136,6 @@ struct QVariant_to_python_obj
       case QVariant::Bool: return PyBool_FromLong(var.toBool());
       case QVariant::String: return bpy::incref(bpy::object(var.toString().toUtf8().constData()).ptr());
       case QVariant::List: {
-        qDebug("to list convert");
         QVariantList list = var.toList();
         PyObject *result = PyList_New(list.count());
         foreach (QVariant var, list) {
@@ -321,7 +319,6 @@ template <> struct MetaData<QObject> { static const char *className() { return "
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
 template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
-//template <> struct MetaData<QList<MOBase::NexusFileInfo> > { static const char *className() { return "QList<NexusFileInfo>"; } };
 
 
 template <typename T>
@@ -346,7 +343,6 @@ PyObject *toPyQt(T *objPtr)
   }
   return bpy::incref(sipObj);
 }
-
 
 template <typename T>
 struct QClass_converters
@@ -402,7 +398,6 @@ struct QClass_converters
     sipSimpleWrapper *wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
     return wrapper->data;
   }
-
   QClass_converters()
   {
     bpy::converter::registry::insert(&QClass_from_PyQt, bpy::type_id<T>());
@@ -579,13 +574,6 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget));
 
-/*  bpy::class_<MOBase::ModRepositoryFileInfo, boost::noncopyable>("ModRepositoryFileInfo")
-      .def_readonly("name", &ModRepositoryFileInfo::name)
-      .def_readonly("uri", &ModRepositoryFileInfo::uri)
-      .def_readonly("version", &ModRepositoryFileInfo::version)
-      .def_readonly("categoryID", &ModRepositoryFileInfo::categoryID);
-      int fileID;*/
-
   GuessedValue_converters<QString>();
 
   bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
@@ -598,6 +586,8 @@ BOOST_PYTHON_MODULE(mobase)
 }
 
 
+static char* argv0 = "ModOrganizer.exe";
+
 ProxyPython::ProxyPython()
   : m_MOInfo(NULL)
 {
@@ -606,7 +596,6 @@ ProxyPython::ProxyPython()
     Py_Initialize();
     qDebug("Python: %s", Py_GetVersion());
 
-    static char* argv0 = "Banana?";
     PySys_SetArgv(0, &argv0);
 
     bpy::object main_module = bpy::import("__main__");
@@ -700,12 +689,12 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
     bpy::object main_namespace = main_module.attr("__dict__");
 
     bpy::object mobase_module((bpy::handle<>(PyImport_ImportModule("mobase"))));
+    main_namespace["sys"] = bpy::import("sys");
     main_namespace["mobase"] = mobase_module;
 
     QString appendDataPath = QString("sys.path.append(\"%1\")").arg(m_MOInfo->pluginDataPath());
 
     bpy::eval(appendDataPath.toUtf8().constData(), main_namespace);
-
     main_namespace["interfaces"] = bpy::import("interfaces");
 
     std::string temp = ToString(pluginName);
@@ -718,8 +707,6 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
     bpy::object pluginObj = m_PythonObjects[pluginName];
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
-  } catch (const std::exception &e) {
-    qWarning("failed to run python script \"%s\": %s", qPrintable(pluginName), e.what());
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
     reportPythonError();
