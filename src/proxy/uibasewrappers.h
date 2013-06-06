@@ -117,8 +117,6 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
     return *result;
   }
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const {
-//    MOBase::IModRepositoryBridge *temp = this->get_override("createNexusBridge")();
-//    return new INexusBridgeWrapper(temp);
     return this->get_override("createNexusBridge")();
   }
 /*

@@ -695,7 +695,6 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
     QString appendDataPath = QString("sys.path.append(\"%1\")").arg(m_MOInfo->pluginDataPath());
 
     bpy::eval(appendDataPath.toUtf8().constData(), main_namespace);
-    main_namespace["interfaces"] = bpy::import("interfaces");
 
     std::string temp = ToString(pluginName);
     if (handled_exec_file(temp.c_str(), main_namespace)) {

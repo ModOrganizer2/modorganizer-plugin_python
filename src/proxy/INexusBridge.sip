@@ -5,11 +5,29 @@
 namespace MOBase
 {
 
-class INexusBridge : public QObject
+class ModRepositoryFileInfo
 {
 
 %TypeHeaderCode
-#include <inexusbridge.h>
+#include <imodrepositorybridge.h>
+%End
+
+public:
+
+  ModRepositoryFileInfo();
+  ModRepositoryFileInfo(const QString &data);
+  ~ModRepositoryFileInfo();
+
+  QString toString() const;
+
+};
+
+
+class IModRepositoryBridge : QObject
+{
+
+%TypeHeaderCode
+#include <imodrepositorybridge.h>
 %End
 
 public:
@@ -22,12 +40,12 @@ public:
 
 signals:
 
-	void nxmDescriptionAvailable(int modID, QVariant userData, QVariant resultData);
-	void nxmFilesAvailable(int modID, QVariant userData, QVariant resultData);
-	void nxmFileInfoAvailable(int modID, int fileID, QVariant userData, QVariant resultData);
-	void nxmDownloadURLsAvailable(int modID, int fileID, QVariant userData, QVariant resultData);
-	void nxmEndorsementToggled(int modID, QVariant userData, QVariant resultData);
-	void nxmRequestFailed(int modID, QVariant userData, const QString &errorMessage);
+  void descriptionAvailable(int modID, QVariant userData, QVariant resultData);
+  void filesAvailable(int modID, QVariant userData, const QList<MOBase::ModRepositoryFileInfo> &resultData);
+  void fileInfoAvailable(int modID, int fileID, QVariant userData, QVariant resultData);
+  void downloadURLsAvailable(int modID, int fileID, QVariant userData, QVariant resultData);
+  void endorsementToggled(int modID, QVariant userData, QVariant resultData);
+  void requestFailed(int modID, QVariant userData, const QString &errorMessage);
 
 };
 

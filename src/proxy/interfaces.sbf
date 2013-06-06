@@ -1,3 +1,0 @@
-target = interfaces
-sources = sipinterfacescmodule.cpp sipinterfacesINexusBridge.cpp
-headers = sipAPIinterfaces.h
