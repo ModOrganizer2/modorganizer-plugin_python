@@ -714,4 +714,6 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
 }
 
 
+#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
 Q_EXPORT_PLUGIN2(proxyPython, ProxyPython)
+#endif

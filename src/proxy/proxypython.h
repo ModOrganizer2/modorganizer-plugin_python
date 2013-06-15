@@ -14,6 +14,9 @@ class ProxyPython : public QObject, MOBase::IPluginProxy
 {
   Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy)
+#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+  Q_PLUGIN_METADATA(IID "org.tannin.ProxyPython" FILE "proxypython.json")
+#endif
 
 public:
   ProxyPython();
