@@ -16,6 +16,11 @@ CONFIG += plugins
 CONFIG += dll
 CONFIG += warn_on
 
+CONFIG(release, debug|release) {
+  QMAKE_CXXFLAGS += /Zi
+  QMAKE_LFLAGS += /DEBUG
+}
+
 DEFINES += PROXYPYTHON_LIBRARY
 
 INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include"
