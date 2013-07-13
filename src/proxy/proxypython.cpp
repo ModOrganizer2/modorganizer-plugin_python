@@ -23,6 +23,9 @@ using namespace MOBase;
 namespace bpy = boost::python;
 
 
+const char *ProxyPython::s_DownloadPythonURL = "http://www.python.org/download/releases/";
+
+
 MOBase::IOrganizer *s_Organizer = NULL;
 
 
@@ -591,11 +594,24 @@ static char* argv0 = "ModOrganizer.exe";
 ProxyPython::ProxyPython()
   : m_MOInfo(NULL)
 {
+  m_PythonHome = new char[MAX_PATH + 1];
+}
+
+bool ProxyPython::initPython()
+{
   try {
+    QString pythonPath = m_MOInfo->pluginSetting(name(), "python_dir").toString();
+    strncpy(m_PythonHome, pythonPath.toUtf8().constData(), MAX_PATH);
+    if (!pythonPath.isEmpty()) {
+      Py_SetPythonHome(m_PythonHome);
+    }
+
+    Py_SetProgramName(argv0);
     PyImport_AppendInittab("mobase", &initmobase);
     Py_Initialize();
-    qDebug("Python: %s", Py_GetVersion());
-
+    if (!Py_IsInitialized()) {
+      return false;
+    }
     PySys_SetArgv(0, &argv0);
 
     bpy::object main_module = bpy::import("__main__");
@@ -605,6 +621,7 @@ ProxyPython::ProxyPython()
     bpy::exec("s_ErrIO = cStringIO.StringIO()\n"
                         "sys.stderr = s_ErrIO",
                         main_namespace);
+    return true;
   } catch (const bpy::error_already_set&) {
     qDebug("failed to init python");
     PyErr_Print();
@@ -613,6 +630,7 @@ ProxyPython::ProxyPython()
     } else {
       qCritical("An unexpected C++ exception was thrown in python code");
     }
+    return false;
   }
 }
 
@@ -620,7 +638,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
 {
   m_MOInfo = moInfo;
   s_Organizer = moInfo;
-  return true;
+  return initPython();
 }
 
 QString ProxyPython::name() const
@@ -640,17 +658,19 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-  return VersionInfo(1, 0, 0, VersionInfo::RELEASE_FINAL);
+  return VersionInfo(1, 0, 1, VersionInfo::RELEASE_FINAL);
 }
 
 bool ProxyPython::isActive() const
 {
-  return true;
+  return isPythonInstalled();
 }
 
 QList<PluginSetting> ProxyPython::settings() const
 {
-  return QList<PluginSetting>();
+  QList<PluginSetting> result;
+  result.push_back(PluginSetting("python_dir", "Path to your python installation. Leave empty for auto-detection", Py_GetExecPrefix()));
+  return result;
 }
 
 QStringList ProxyPython::pluginList(const QString &pluginPath) const
@@ -711,6 +731,77 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
     reportPythonError();
   }
   return NULL;
+}
+
+
+bool ProxyPython::isPythonInstalled() const
+{
+  return Py_IsInitialized();
+}
+
+
+bool ProxyPython::isPythonVersionSupported() const
+{
+  const char *version = Py_GetVersion();
+  return strstr(version, "2.7") == version;
+}
+
+
+std::vector<unsigned int> ProxyPython::activeProblems() const
+{
+  std::vector<unsigned int> result;
+
+  if (!isPythonInstalled()) {
+    result.push_back(PROBLEM_PYTHONMISSING);
+  } else if (!isPythonVersionSupported()) {
+    result.push_back(PROBLEM_PYTHONWRONGVERSION);
+  }
+
+  return result;
+}
+
+QString ProxyPython::shortDescription(unsigned int key) const
+{
+  switch (key) {
+    case PROBLEM_PYTHONMISSING: {
+        return tr("Python not installed or not found");
+      } break;
+    case PROBLEM_PYTHONWRONGVERSION: {
+        return tr("Python version is incompatible");
+      } break;
+    default:
+      throw MyException(tr("invalid problem key %1").arg(key));
+  }
+}
+
+
+QString ProxyPython::fullDescription(unsigned int key) const
+{
+  switch (key) {
+    case PROBLEM_PYTHONMISSING: {
+        return tr("Some plugins require the python interpreter to be installed. "
+                  "These plugins will not even show up in settings->plugins.\n"
+                  "If you want to use those plugins, please install Python 2.7.x from <a href=\"%1\">%1</a>.").arg(s_DownloadPythonURL);
+      } break;
+    case PROBLEM_PYTHONWRONGVERSION: {
+        return tr("Your installed python version has a different version than 2.7. "
+                  "Some plugins may not work.<br>"
+                  "If you have multiple versions of python installed you may have to configure the path to 2.7 "
+                  "in the settings dialog.");
+      } break;
+    default:
+      throw MyException(tr("invalid problem key %1").arg(key));
+  }
+}
+
+bool ProxyPython::hasGuidedFix(unsigned int) const
+{
+  return true;
+}
+
+void ProxyPython::startGuidedFix(unsigned int) const
+{
+  ::ShellExecuteA(NULL, "open", s_DownloadPythonURL, NULL, NULL, SW_SHOWNORMAL);
 }
 
 

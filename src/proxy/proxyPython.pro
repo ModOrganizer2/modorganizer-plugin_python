@@ -23,7 +23,7 @@ CONFIG(release, debug|release) {
 
 DEFINES += PROXYPYTHON_LIBRARY
 
-INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include"
+INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include" "$$(PYTHONPATH)/Lib/site-packages/PyQt4/include"
 # INCLUDEPATH += "$$(SIPPATH)/siplib"
 
 SOURCES += proxypython.cpp \
