@@ -1,5 +1,6 @@
 #pragma warning( push )
 #pragma warning( disable : 4100 ) // a lot of unreferenced formal parameters from boost libraries
+#pragma warning( disable : 4996 ) // strncpy claimed to be unsafe
 
 #include "proxypython.h"
 
@@ -711,7 +712,6 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
     bpy::object mobase_module((bpy::handle<>(PyImport_ImportModule("mobase"))));
     main_namespace["sys"] = bpy::import("sys");
     main_namespace["mobase"] = mobase_module;
-
     QString appendDataPath = QString("sys.path.append(\"%1\")").arg(m_MOInfo->pluginDataPath());
 
     bpy::eval(appendDataPath.toUtf8().constData(), main_namespace);
@@ -736,7 +736,7 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
 
 bool ProxyPython::isPythonInstalled() const
 {
-  return Py_IsInitialized();
+  return Py_IsInitialized() != 0;
 }
 
 
