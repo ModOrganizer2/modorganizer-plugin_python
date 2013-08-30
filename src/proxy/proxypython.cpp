@@ -20,6 +20,7 @@
 // sip and qt slots seems to conflict
 #include <sip.h>
 
+
 using namespace MOBase;
 namespace bpy = boost::python;
 
@@ -659,7 +660,7 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-  return VersionInfo(1, 0, 1, VersionInfo::RELEASE_FINAL);
+  return VersionInfo(1, 0, 2, VersionInfo::RELEASE_FINAL);
 }
 
 bool ProxyPython::isActive() const
@@ -712,7 +713,7 @@ QObject *ProxyPython::instantiate(const QString &pluginName)
     bpy::object mobase_module((bpy::handle<>(PyImport_ImportModule("mobase"))));
     main_namespace["sys"] = bpy::import("sys");
     main_namespace["mobase"] = mobase_module;
-    QString appendDataPath = QString("sys.path.append(\"%1\")").arg(m_MOInfo->pluginDataPath());
+    QString appendDataPath = QString("sys.path.insert(0, \"%1\")").arg(m_MOInfo->pluginDataPath());
 
     bpy::eval(appendDataPath.toUtf8().constData(), main_namespace);
 
