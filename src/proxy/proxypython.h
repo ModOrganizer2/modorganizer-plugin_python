@@ -6,10 +6,7 @@
 #include <iplugindiagnose.h>
 #include <map>
 #include <Windows.h>
-
-#ifndef Q_MOC_RUN
-#include <boost/python.hpp>
-#endif
+#include <pythonrunner.h>
 
 
 class ProxyPython : public QObject, MOBase::IPluginProxy, MOBase::IPluginDiagnose
@@ -22,6 +19,7 @@ class ProxyPython : public QObject, MOBase::IPluginProxy, MOBase::IPluginDiagnos
 
 public:
   ProxyPython();
+  ~ProxyPython();
 
   virtual bool init(MOBase::IOrganizer *moInfo);
   virtual QString name() const;
@@ -50,20 +48,21 @@ public: // IPluginDiagnose
 
 private:
 
-  bool initPython();
-  bool isPythonInstalled() const;
-  bool isPythonVersionSupported() const;
-
-private:
-
-  const MOBase::IOrganizer *m_MOInfo;
-
-  std::map<QString, boost::python::object> m_PythonObjects;
-
   static const unsigned int PROBLEM_PYTHONMISSING = 1;
   static const unsigned int PROBLEM_PYTHONWRONGVERSION = 2;
   static const char *s_DownloadPythonURL;
-  char *m_PythonHome;
+
+  const MOBase::IOrganizer *m_MOInfo;
+  QString m_TempRunnerFile;
+  HMODULE m_RunnerLib;
+  IPythonRunner *m_Runner;
+
+  enum {
+    FAIL_NONE,
+    FAIL_NOTINIT,
+    FAIL_MISSINGDEPENDENCIES,
+    FAIL_OTHER
+  } m_LoadFailure;
 
 };
 

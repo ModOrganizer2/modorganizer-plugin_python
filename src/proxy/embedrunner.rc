@@ -1,0 +1,3 @@
+#include "resource.h"
+
+IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\release\\pythonRunner.dll"

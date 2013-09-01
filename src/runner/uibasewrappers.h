@@ -31,7 +31,7 @@ class ModRepositoryBridgeWrapper : public QObject
 public:
 
   ModRepositoryBridgeWrapper()
-    : m_Wrapped(s_Organizer->createNexusBridge())
+  : m_Wrapped(s_Organizer->createNexusBridge())
   {
   }
 

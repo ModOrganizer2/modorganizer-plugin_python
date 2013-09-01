@@ -23,38 +23,27 @@ CONFIG(release, debug|release) {
 
 DEFINES += PROXYPYTHON_LIBRARY
 
-INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include" "$$(PYTHONPATH)/Lib/site-packages/PyQt4/include"
-# INCLUDEPATH += "$$(SIPPATH)/siplib"
-
-SOURCES += proxypython.cpp \
-    proxypluginwrappers.cpp \
-    error.cpp \
-    gilock.cpp
-
+SOURCES += proxypython.cpp
 HEADERS += proxypython.h \
-    proxypluginwrappers.h \
-    uibasewrappers.h \
-    error.h \
-    gilock.h
+    resource.h
 
-LIBS += -L"$$(PYTHONPATH)/libs" -L"$(BOOSTPATH)/stage/lib" -lpython27
+OTHER_FILES += \
+    proxypython.json \
+    embedrunner.rc
+
+RC_FILE += \
+    embedrunner.rc
 
 include(../plugin_template.pri)
 
-OTHER_FILES += \
-		INexusBridge.sip \
-		interfaces.sip \
-    setup.py \
-    setup.cfg \
-    proxypython.json
+INCLUDEPATH += "../../pythonRunner"
 
 WINPWD = $$PWD
 WINPWD ~= s,/,$$QMAKE_DIR_SEP,g
 
 
-SIPPATH=""
+//QMAKE_POST_LINK += SET VS90COMNTOOLS=%VS100COMNTOOLS% $$escape_expand(\\n)
 
-QMAKE_POST_LINK += SET VS90COMNTOOLS=%VS100COMNTOOLS% $$escape_expand(\\n)
 
 QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\sip.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)
 QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtCore.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)

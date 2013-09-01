@@ -1,4 +1,3 @@
-#include "utility.h"
 #include <boost/python.hpp>
 #include <QString>
 #include <utility.h>
