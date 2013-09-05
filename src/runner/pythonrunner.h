@@ -15,7 +15,15 @@ public:
   virtual bool isPythonVersionSupported() const = 0;
 };
 
-extern "C" QDLLEXPORT IPythonRunner *CreatePythonRunner(const MOBase::IOrganizer *moInfo, const QString &pythonDir);
+
+#ifdef PYTHONRUNNER_LIBRARY
+#define PYDLLEXPORT Q_DECL_EXPORT
+#else // PYTHONRUNNER_LIBRARY
+#define PYDLLEXPORT Q_DECL_IMPORT
+#endif // PYTHONRUNNER_LIBRARY
+
+extern "C" PYDLLEXPORT IPythonRunner *CreatePythonRunner(const MOBase::IOrganizer *moInfo, const QString &pythonDir);
+
 
 
 #endif // PYTHONRUNNER_H

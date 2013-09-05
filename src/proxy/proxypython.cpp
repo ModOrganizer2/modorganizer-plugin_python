@@ -88,6 +88,14 @@ bool ProxyPython::init(IOrganizer *moInfo)
 
   m_LoadFailure = FAIL_OTHER;
 
+  QString pythonPath = m_MOInfo->pluginSetting(name(), "python_dir").toString();
+
+  if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
+    m_LoadFailure = FAIL_WRONGPYTHONPATH;
+    return true;
+  }
+
+
   m_TempRunnerFile = ExtractResource(IDR_LOADER_DLL, "__pythonRunner.dll");
   m_RunnerLib = ::LoadLibraryW(ToWString(m_TempRunnerFile).c_str());
   if (m_RunnerLib != NULL) {
@@ -95,8 +103,12 @@ bool ProxyPython::init(IOrganizer *moInfo)
     if (CreatePythonRunner == NULL) {
       throw MyException("embedded dll is invalid: " + windowsErrorString(::GetLastError()));
     }
-    m_Runner = CreatePythonRunner(moInfo, m_MOInfo->pluginSetting(name(), "python_dir").toString());
-    m_LoadFailure = FAIL_NONE;
+    m_Runner = CreatePythonRunner(moInfo, pythonPath);
+    if (m_Runner != NULL) {
+      m_LoadFailure = FAIL_NONE;
+    } else {
+      m_LoadFailure = FAIL_INITFAIL;
+    }
     return true;
   } else {
     DWORD error = ::GetLastError();
@@ -156,7 +168,8 @@ QStringList ProxyPython::pluginList(const QString &pluginPath) const
 QObject *ProxyPython::instantiate(const QString &pluginName)
 {
   if (m_Runner != NULL) {
-    return m_Runner->instantiate(pluginName);
+    QObject *result = m_Runner->instantiate(pluginName);
+    return result;
   } else {
     return NULL;
   }
@@ -168,6 +181,10 @@ std::vector<unsigned int> ProxyPython::activeProblems() const
   std::vector<unsigned int> result;
   if (m_LoadFailure == FAIL_MISSINGDEPENDENCIES) {
     result.push_back(PROBLEM_PYTHONMISSING);
+  } else if (m_LoadFailure == FAIL_WRONGPYTHONPATH) {
+    result.push_back(PROBLEM_WRONGPYTHONPATH);
+  } else if (m_LoadFailure == FAIL_INITFAIL) {
+    result.push_back(PROBLEM_INITFAIL);
   } else if (m_Runner != NULL) {
     if (!m_Runner->isPythonInstalled()) {
       // don't know how this could happen but wth
@@ -185,11 +202,17 @@ QString ProxyPython::shortDescription(unsigned int key) const
 {
   switch (key) {
     case PROBLEM_PYTHONMISSING: {
-        return tr("Python not installed or not found");
-      } break;
+      return tr("Python not installed or not found");
+    } break;
     case PROBLEM_PYTHONWRONGVERSION: {
-        return tr("Python version is incompatible");
-      } break;
+      return tr("Python version is incompatible");
+    } break;
+    case PROBLEM_WRONGPYTHONPATH: {
+      return tr("Invalid python path");
+    } break;
+    case PROBLEM_INITFAIL: {
+      return tr("Initializing Python failed");
+    } break;
     default:
       throw MyException(tr("invalid problem key %1").arg(key));
   }
@@ -200,24 +223,30 @@ QString ProxyPython::fullDescription(unsigned int key) const
 {
   switch (key) {
     case PROBLEM_PYTHONMISSING: {
-        return tr("Some plugins require the python interpreter to be installed. "
-                  "These plugins will not even show up in settings-&gt;plugins.<br>"
-                  "If you want to use those plugins, please install the 32-bit version of Python 2.7.x from <a href=\"%1\">%1</a>.").arg(s_DownloadPythonURL);
-      } break;
+      return tr("Some plugins require the python interpreter to be installed. "
+                "These plugins will not even show up in settings-&gt;plugins.<br>"
+                "If you want to use those plugins, please install the 32-bit version of Python 2.7.x from <a href=\"%1\">%1</a>.").arg(s_DownloadPythonURL);
+    } break;
     case PROBLEM_PYTHONWRONGVERSION: {
-        return tr("Your installed python version has a different version than 2.7. "
-                  "Some plugins may not work.<br>"
-                  "If you have multiple versions of python installed you may have to configure the path to 2.7 "
-                  "in the settings dialog.");
-      } break;
+      return tr("Your installed python version has a different version than 2.7. "
+                "Some plugins may not work.<br>"
+                "If you have multiple versions of python installed you may have to configure the path to 2.7 "
+                "in the settings dialog.");
+    } break;
+    case PROBLEM_WRONGPYTHONPATH: {
+      return tr("Please set python_dir in Settings->Plugins->ProxyPython to the path of your python 2.7 installation.");
+    } break;
+    case PROBLEM_INITFAIL: {
+      return tr("Sorry, I don't know any details. Most likely your python installation is not supported.");
+    } break;
     default:
       throw MyException(tr("invalid problem key %1").arg(key));
   }
 }
 
-bool ProxyPython::hasGuidedFix(unsigned int) const
+bool ProxyPython::hasGuidedFix(unsigned int key) const
 {
-  return true;
+  return (key == PROBLEM_PYTHONMISSING) || (key == PROBLEM_PYTHONWRONGVERSION);
 }
 
 void ProxyPython::startGuidedFix(unsigned int) const

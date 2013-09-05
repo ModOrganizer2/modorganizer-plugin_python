@@ -14,7 +14,6 @@ contains(QT_VERSION, "^5.*") {
 
 CONFIG += plugins
 CONFIG += dll
-CONFIG += warn_on
 
 CONFIG(release, debug|release) {
   QMAKE_CXXFLAGS += /Zi
@@ -46,5 +45,5 @@ WINPWD ~= s,/,$$QMAKE_DIR_SEP,g
 
 
 QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\sip.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)
-QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtCore.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)
-QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtGui.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)
+QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtCore.pyd $$quote($$DSTDIR)\\plugins\\data\\PyQt4\\ $$escape_expand(\\n)
+QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtGui.pyd $$quote($$DSTDIR)\\plugins\\data\\PyQt4\\ $$escape_expand(\\n)

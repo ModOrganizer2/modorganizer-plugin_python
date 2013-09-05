@@ -50,6 +50,8 @@ private:
 
   static const unsigned int PROBLEM_PYTHONMISSING = 1;
   static const unsigned int PROBLEM_PYTHONWRONGVERSION = 2;
+  static const unsigned int PROBLEM_WRONGPYTHONPATH = 3;
+  static const unsigned int PROBLEM_INITFAIL = 4;
   static const char *s_DownloadPythonURL;
 
   const MOBase::IOrganizer *m_MOInfo;
@@ -61,6 +63,8 @@ private:
     FAIL_NONE,
     FAIL_NOTINIT,
     FAIL_MISSINGDEPENDENCIES,
+    FAIL_INITFAIL,
+    FAIL_WRONGPYTHONPATH,
     FAIL_OTHER
   } m_LoadFailure;
 

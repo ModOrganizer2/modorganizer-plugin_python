@@ -1,5 +1,7 @@
 #include "pythonrunner.h"
 
+#pragma warning( disable : 4100 )
+#pragma warning( disable : 4996 )
 
 #include <boost/python.hpp>
 #include <iplugininstaller.h>
@@ -8,6 +10,7 @@
 #include "proxypluginwrappers.h"
 #include <Windows.h>
 #include <utility.h>
+#include <QFile>
 
 // sip and qt slots seems to conflict
 #include <sip.h>
@@ -15,6 +18,7 @@
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
 #endif
+
 
 MOBase::IOrganizer *s_Organizer = NULL;
 
@@ -44,8 +48,12 @@ private:
 IPythonRunner *CreatePythonRunner(const MOBase::IOrganizer *moInfo, const QString &pythonDir)
 {
   PythonRunner *result = new PythonRunner(moInfo);
-  result->initPython(pythonDir);
-  return result;
+  if (result->initPython(pythonDir)) {
+    return result;
+  } else {
+    delete result;
+    return NULL;
+  }
 }
 
 
@@ -624,7 +632,9 @@ static char* argv0 = "ModOrganizer.exe";
 bool PythonRunner::initPython(const QString &pythonPath)
 {
   try {
-    //QString pythonPath = m_MOInfo->pluginSetting(name(), "python_dir").toString();
+    if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
+      return false;
+    }
     strncpy(m_PythonHome, pythonPath.toUtf8().constData(), MAX_PATH);
     if (!pythonPath.isEmpty()) {
       Py_SetPythonHome(m_PythonHome);
