@@ -1,3 +1,7 @@
 #include "resource.h"
 
+#ifdef _DEBUG
+IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\debug\\pythonRunner.dll"
+#else
 IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\release\\pythonRunner.dll"
+#endif
