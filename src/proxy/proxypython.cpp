@@ -223,15 +223,17 @@ QString ProxyPython::fullDescription(unsigned int key) const
 {
   switch (key) {
     case PROBLEM_PYTHONMISSING: {
-      return tr("Some plugins require the python interpreter to be installed. "
+      return tr("Some MO plugins require the python interpreter to be installed. "
                 "These plugins will not even show up in settings-&gt;plugins.<br>"
-                "If you want to use those plugins, please install the 32-bit version of Python 2.7.x from <a href=\"%1\">%1</a>.").arg(s_DownloadPythonURL);
+                "If you want to use those plugins, please install the 32-bit version of Python 2.7.x from <a href=\"%1\">%1</a>.<br>"
+                "This is only required to use some extended functionality in MO, you do not need Python to play the game.").arg(s_DownloadPythonURL);
     } break;
     case PROBLEM_PYTHONWRONGVERSION: {
       return tr("Your installed python version has a different version than 2.7. "
-                "Some plugins may not work.<br>"
+                "Some MO plugins may not work.<br>"
                 "If you have multiple versions of python installed you may have to configure the path to 2.7 "
-                "in the settings dialog.");
+                "in the settings dialog.<br>"
+                "This is only required to use some extended functionality in MO, you do not need Python to play the game.");
     } break;
     case PROBLEM_WRONGPYTHONPATH: {
       return tr("Please set python_dir in Settings->Plugins->ProxyPython to the path of your python 2.7 installation.");
