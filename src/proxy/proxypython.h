@@ -52,9 +52,10 @@ private:
   static const unsigned int PROBLEM_PYTHONWRONGVERSION = 2;
   static const unsigned int PROBLEM_WRONGPYTHONPATH = 3;
   static const unsigned int PROBLEM_INITFAIL = 4;
+  static const unsigned int PROBLEM_PYTHONDETECTION = 5;
   static const char *s_DownloadPythonURL;
 
-  const MOBase::IOrganizer *m_MOInfo;
+  MOBase::IOrganizer *m_MOInfo;
   QString m_TempRunnerFile;
   HMODULE m_RunnerLib;
   IPythonRunner *m_Runner;
@@ -65,6 +66,7 @@ private:
     FAIL_MISSINGDEPENDENCIES,
     FAIL_INITFAIL,
     FAIL_WRONGPYTHONPATH,
+    FAIL_PYTHONDETECTION,
     FAIL_OTHER
   } m_LoadFailure;
 

@@ -572,6 +572,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("removeMod", bpy::pure_virtual(&MOBase::IOrganizer::removeMod))
       .def("modDataChanged", bpy::pure_virtual(&MOBase::IOrganizer::modDataChanged))
       .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
+      .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
+      .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
+      .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
       .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
       .def("installMod", bpy::pure_virtual(&IOrganizer::installMod))
       .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>());
@@ -642,10 +645,12 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
     Py_SetProgramName(argv0);
     PyImport_AppendInittab("mobase", &initmobase);
-    Py_Initialize();
+
+    Py_InitializeEx(0);
     if (!Py_IsInitialized()) {
       return false;
     }
+
     PySys_SetArgv(0, &argv0);
 
     bpy::object main_module = bpy::import("__main__");
