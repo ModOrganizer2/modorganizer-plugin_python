@@ -53,6 +53,7 @@ private:
   static const unsigned int PROBLEM_WRONGPYTHONPATH = 3;
   static const unsigned int PROBLEM_INITFAIL = 4;
   static const unsigned int PROBLEM_PYTHONDETECTION = 5;
+  static const unsigned int PROBLEM_SEMICOLON = 6;
   static const char *s_DownloadPythonURL;
 
   MOBase::IOrganizer *m_MOInfo;
@@ -62,6 +63,7 @@ private:
 
   enum {
     FAIL_NONE,
+    FAIL_SEMICOLON,
     FAIL_NOTINIT,
     FAIL_MISSINGDEPENDENCIES,
     FAIL_INITFAIL,

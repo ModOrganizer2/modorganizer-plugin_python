@@ -12,6 +12,7 @@
 #include <QDirIterator>
 #include <QWidget>
 #include <QMessageBox>
+#include <QCoreApplication>
 #include "resource.h"
 
 
@@ -92,6 +93,10 @@ bool ProxyPython::init(IOrganizer *moInfo)
   }
 
   m_LoadFailure = FAIL_OTHER;
+  if (QCoreApplication::applicationDirPath().contains(';')) {
+    m_LoadFailure = FAIL_SEMICOLON;
+    return true;
+  }
 
   QString pythonPath = m_MOInfo->pluginSetting(name(), "python_dir").toString();
 
@@ -213,6 +218,8 @@ std::vector<unsigned int> ProxyPython::activeProblems() const
     result.push_back(PROBLEM_PYTHONDETECTION);
   } else if (m_LoadFailure == FAIL_INITFAIL) {
     result.push_back(PROBLEM_INITFAIL);
+  } else if (m_LoadFailure == FAIL_SEMICOLON) {
+    result.push_back(PROBLEM_SEMICOLON);
   } else if (m_Runner != NULL) {
     if (!m_Runner->isPythonInstalled()) {
       // don't know how this could happen but wth
@@ -243,6 +250,9 @@ QString ProxyPython::shortDescription(unsigned int key) const
     } break;
     case PROBLEM_PYTHONDETECTION: {
       return tr("Python auto-detection failed");
+    } break;
+    case PROBLEM_SEMICOLON: {
+      return tr("ModOrganizer path contains a semicolon");
     } break;
     default:
       throw MyException(tr("invalid problem key %1").arg(key));
@@ -275,6 +285,13 @@ QString ProxyPython::fullDescription(unsigned int key) const
     } break;
     case PROBLEM_INITFAIL: {
       return tr("Sorry, I don't know any details. Most likely your python installation is not supported.");
+    } break;
+    case PROBLEM_SEMICOLON: {
+      return tr("The path to Mod Organizer (%1) contains a semicolon. <br>"
+                "While this is legal on NTFS drives there is a lot of software that doesn't handle it correctly.<br>"
+                "Unfortunately MO depends on libraries that seem to fall into that group.<br>"
+                "As a result the python plugin can't be loaded.<br>"
+                "The only solution I can offer is to remove the semicolon / move MO to a path without a semicolon.").arg(QCoreApplication::applicationDirPath());
     } break;
     default:
       throw MyException(tr("invalid problem key %1").arg(key));
