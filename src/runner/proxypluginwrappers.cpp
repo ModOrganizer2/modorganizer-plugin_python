@@ -171,7 +171,7 @@ bool IPluginInstallerCustomWrapper::isManualInstaller() const
   } PYCATCH;
 }
 
-bool IPluginInstallerCustomWrapper::isArchiveSupported(const DirectoryTree &tree) const
+bool IPluginInstallerCustomWrapper::isArchiveSupported(const DirectoryTree &) const
 {
   try {
     //return this->get_override("isArchiveSupported")(tree);

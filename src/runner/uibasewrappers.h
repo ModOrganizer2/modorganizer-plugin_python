@@ -119,10 +119,6 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const {
     return this->get_override("createNexusBridge")();
   }
-/*
-  static ModRepositoryBridgeWrapper newNexusBridge(IOrganizerWrapper *self) {
-    return ModRepositoryBridgeWrapper(self->createNexusBridge());
-  }*/
 
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
@@ -139,10 +135,13 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QString pluginDataPath() const { return this->get_override("pluginDataPath")(); }
   virtual void installMod(const QString &fileName) { this->get_override("installMod")(fileName); }
   virtual MOBase::IDownloadManager *downloadManager() { return this->get_override("downloadManager")(); }
+  virtual MOBase::IPluginList *pluginList() { return this->get_override("pluginList")(); }
   virtual QString resolvePath(const QString &fileName) const { return this->get_override("resolvePath")(fileName); }
   virtual QStringList listDirectories(const QString &directoryName) const { return this->get_override("listDirectories")(directoryName); }
   virtual QStringList findFiles(const QString &path, const std::function<bool(const QString&)> &filter) const { return this->get_override("findFiles")(path, filter); }
-  virtual void onAboutToRun(const boost::function<bool(const QString&)> &func) { this->get_override("onAboutToRun")(func); }
+  virtual HANDLE startApplication(const QString &executable, const QStringList &args = QStringList(), const QString &cwd = "", const QString &profile = "") { return this->get_override("startApplication")(executable, args, cwd, profile); }
+  virtual bool onAboutToRun(const std::function<bool(const QString&)> &func) { return this->get_override("onAboutToRun")(func); }
+
 };
 
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>
