@@ -136,6 +136,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual void installMod(const QString &fileName) { this->get_override("installMod")(fileName); }
   virtual MOBase::IDownloadManager *downloadManager() { return this->get_override("downloadManager")(); }
   virtual MOBase::IPluginList *pluginList() { return this->get_override("pluginList")(); }
+  virtual MOBase::IModList *modList() { return this->get_override("modList")(); }
   virtual QString resolvePath(const QString &fileName) const { return this->get_override("resolvePath")(fileName); }
   virtual QStringList listDirectories(const QString &directoryName) const { return this->get_override("listDirectories")(directoryName); }
   virtual QStringList findFiles(const QString &path, const std::function<bool(const QString&)> &filter) const { return this->get_override("findFiles")(path, filter); }
