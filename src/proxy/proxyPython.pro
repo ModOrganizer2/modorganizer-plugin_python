@@ -35,7 +35,7 @@ RC_FILE += \
 
 include(../plugin_template.pri)
 
-INCLUDEPATH += "../../pythonRunner"
+INCLUDEPATH += "../../pythonRunner" "$(BOOSTPATH)"
 
 WINPWD = $$PWD
 WINPWD ~= s,/,$$QMAKE_DIR_SEP,g

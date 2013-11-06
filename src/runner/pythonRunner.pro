@@ -31,6 +31,8 @@ CONFIG(debug, debug|release) {
   LIBS += -L$$OUT_PWD/../uibase/debug
 } else {
   LIBS += -L$$OUT_PWD/../uibase/release
+	QMAKE_CXXFLAGS += /Zi
+	QMAKE_LFLAGS += /DEBUG
 }
 
 
