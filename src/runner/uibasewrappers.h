@@ -140,6 +140,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QString resolvePath(const QString &fileName) const { return this->get_override("resolvePath")(fileName); }
   virtual QStringList listDirectories(const QString &directoryName) const { return this->get_override("listDirectories")(directoryName); }
   virtual QStringList findFiles(const QString &path, const std::function<bool(const QString&)> &filter) const { return this->get_override("findFiles")(path, filter); }
+  virtual QList<FileInfo> findFileInfos(const QString &path, const std::function<bool(const FileInfo&)> &filter) const { return this->get_override("findFileInfos")(path, filter); }
   virtual HANDLE startApplication(const QString &executable, const QStringList &args = QStringList(), const QString &cwd = "", const QString &profile = "") { return this->get_override("startApplication")(executable, args, cwd, profile); }
   virtual bool onAboutToRun(const std::function<bool(const QString&)> &func) { return this->get_override("onAboutToRun")(func); }
   virtual void refreshModList(bool saveChanges = true) { this->get_override("refreshModList")(saveChanges); }
