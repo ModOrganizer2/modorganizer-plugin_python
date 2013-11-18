@@ -22,6 +22,9 @@ CONFIG(release, debug|release) {
 
 DEFINES += PROXYPYTHON_LIBRARY
 
+# suppress a few warnings caused by boost vs vc++ paranoia
+DEFINES += _SCL_SECURE_NO_WARNINGS
+
 SOURCES += proxypython.cpp
 HEADERS += proxypython.h \
     resource.h
@@ -44,6 +47,6 @@ WINPWD ~= s,/,$$QMAKE_DIR_SEP,g
 //QMAKE_POST_LINK += SET VS90COMNTOOLS=%VS100COMNTOOLS% $$escape_expand(\\n)
 
 
-QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\sip.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)
-QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtCore.pyd $$quote($$DSTDIR)\\plugins\\data\\PyQt4\\ $$escape_expand(\\n)
-QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtGui.pyd $$quote($$DSTDIR)\\plugins\\data\\PyQt4\\ $$escape_expand(\\n)
+//QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\sip.pyd $$quote($$DSTDIR)\\plugins\\data\\ $$escape_expand(\\n)
+//QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtCore.pyd $$quote($$DSTDIR)\\plugins\\data\\PyQt4\\ $$escape_expand(\\n)
+//QMAKE_POST_LINK += copy $$(PYTHONPATH)\\lib\\site-packages\\PyQt4\\QtGui.pyd $$quote($$DSTDIR)\\plugins\\data\\PyQt4\\ $$escape_expand(\\n)

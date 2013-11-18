@@ -12,6 +12,9 @@ CONFIG += warn_on
 
 DEFINES += PYTHONRUNNER_LIBRARY
 
+# suppress a few warnings caused by boost vs vc++ paranoia
+DEFINES += _SCL_SECURE_NO_WARNINGS
+
 SOURCES += pythonrunner.cpp \
     gilock.cpp \
     error.cpp \

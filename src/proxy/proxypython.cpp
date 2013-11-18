@@ -1,11 +1,24 @@
-#pragma warning( push )
-#pragma warning( disable : 4100 ) // a lot of unreferenced formal parameters from boost libraries
-#pragma warning( disable : 4996 ) // strncpy claimed to be unsafe
+/*
+Copyright (C) 2013 Sebastian Herbord. All rights reserved.
+
+This file is part of python proxy plugin for MO
+
+python proxy plugin is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Python proxy plugin is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 
 #include "proxypython.h"
-
-#pragma warning( pop )
-
 #include <utility.h>
 #include <versioninfo.h>
 #include <QtPlugin>
@@ -34,8 +47,6 @@ HMODULE GetOwnModuleHandle()
 
 QString ExtractResource(WORD resourceID, const QString &szFilename)
 {
-  bool success = false;
-
   HMODULE mod = GetOwnModuleHandle();
 
   HRSRC hResource = FindResourceW(mod, MAKEINTRESOURCE(resourceID), L"BINARY");
