@@ -43,7 +43,6 @@ INCLUDEPATH += "../../pythonRunner" "$(BOOSTPATH)"
 WINPWD = $$PWD
 WINPWD ~= s,/,$$QMAKE_DIR_SEP,g
 
-
 //QMAKE_POST_LINK += SET VS90COMNTOOLS=%VS100COMNTOOLS% $$escape_expand(\\n)
 
 
