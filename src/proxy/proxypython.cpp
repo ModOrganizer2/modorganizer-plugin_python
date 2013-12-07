@@ -305,7 +305,7 @@ QString ProxyPython::fullDescription(unsigned int key) const
                 "The only solution I can offer is to remove the semicolon / move MO to a path without a semicolon.").arg(QCoreApplication::applicationDirPath());
     } break;
     default:
-      throw MyException(tr("invalid problem key %1").arg(key));
+      throw MyException(QString("invalid problem key %1").arg(key));
   }
 }
 
