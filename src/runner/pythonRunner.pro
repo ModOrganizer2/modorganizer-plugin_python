@@ -45,3 +45,5 @@ LIBS += -lpython27
 
 INCLUDEPATH += ../uibase
 LIBS += -luibase
+
+QMAKE_POST_LINK += xcopy /y /I $$quote($$SRCDIR\\$${TARGET}*.pdb) $$quote($$DSTDIR)\\plugins $$escape_expand(\\n)
