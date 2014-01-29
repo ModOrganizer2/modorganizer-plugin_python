@@ -46,8 +46,9 @@ private:
 };
 
 
-IPythonRunner *CreatePythonRunner(const MOBase::IOrganizer *moInfo, const QString &pythonDir)
+IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pythonDir)
 {
+  s_Organizer = moInfo;
   PythonRunner *result = new PythonRunner(moInfo);
   if (result->initPython(pythonDir)) {
     return result;

@@ -65,8 +65,8 @@ public:
 
   void onRequestFailed(boost::python::object callback) {
     m_FailedHandler = callback;
-    connect(m_Wrapped, SIGNAL(requestFailed(int,QVariant,QString)),
-            this, SLOT(requestFailed(int,QVariant,QString)),
+    connect(m_Wrapped, SIGNAL(requestFailed(int,int,QVariant,QString)),
+            this, SLOT(requestFailed(int,int,QVariant,QString)),
             Qt::UniqueConnection);
   }
 
@@ -91,11 +91,11 @@ private slots:
 //    }
   }
 
-  void requestFailed(int modID, QVariant userData, const QString &errorMessage)
+  void requestFailed(int modID, int fileID, QVariant userData, const QString &errorMessage)
   {
     try {
       GILock lock;
-      m_FailedHandler(modID, userData, errorMessage);
+      m_FailedHandler(modID, fileID, userData, errorMessage);
     } catch (const boost::python::error_already_set&) {
       reportPythonError();
     }
