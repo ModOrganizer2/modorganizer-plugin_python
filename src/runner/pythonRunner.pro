@@ -12,6 +12,9 @@ CONFIG += warn_on
 
 DEFINES += PYTHONRUNNER_LIBRARY
 
+# suppress a few warnings caused by boost vs vc++ paranoia
+DEFINES += _SCL_SECURE_NO_WARNINGS
+
 SOURCES += pythonrunner.cpp \
     gilock.cpp \
     error.cpp \
@@ -31,6 +34,8 @@ CONFIG(debug, debug|release) {
   LIBS += -L$$OUT_PWD/../uibase/debug
 } else {
   LIBS += -L$$OUT_PWD/../uibase/release
+	QMAKE_CXXFLAGS += /Zi
+	QMAKE_LFLAGS += /DEBUG
 }
 
 
@@ -40,3 +45,5 @@ LIBS += -lpython27
 
 INCLUDEPATH += ../uibase
 LIBS += -luibase
+
+QMAKE_POST_LINK += xcopy /y /I $$quote($$SRCDIR\\$${TARGET}*.pdb) $$quote($$DSTDIR)\\plugins $$escape_expand(\\n)

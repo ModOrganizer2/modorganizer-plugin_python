@@ -11,6 +11,7 @@
 #include <Windows.h>
 #include <utility.h>
 #include <QFile>
+#include <QCoreApplication>
 
 // sip and qt slots seems to conflict
 #include <sip.h>
@@ -36,17 +37,18 @@ public:
 
 private:
 
+  void initPath(boost::python::object &moduleNamespace);
+
+private:
   std::map<QString, boost::python::object> m_PythonObjects;
   const MOBase::IOrganizer *m_MOInfo;
   char *m_PythonHome;
 };
 
 
-
-
-
-IPythonRunner *CreatePythonRunner(const MOBase::IOrganizer *moInfo, const QString &pythonDir)
+IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pythonDir)
 {
+  s_Organizer = moInfo;
   PythonRunner *result = new PythonRunner(moInfo);
   if (result->initPython(pythonDir)) {
     return result;
@@ -572,9 +574,17 @@ BOOST_PYTHON_MODULE(mobase)
       .def("removeMod", bpy::pure_virtual(&MOBase::IOrganizer::removeMod))
       .def("modDataChanged", bpy::pure_virtual(&MOBase::IOrganizer::modDataChanged))
       .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
+      .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
+      .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
+      .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
       .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
       .def("installMod", bpy::pure_virtual(&IOrganizer::installMod))
-      .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>());
+      .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), bpy::return_value_policy<bpy::return_by_value>())
+      .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
+      .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
+      ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
       .def("requestDescription", &ModRepositoryBridgeWrapper::requestDescription)
@@ -629,6 +639,7 @@ PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
 
 static char* argv0 = "ModOrganizer.exe";
 
+
 bool PythonRunner::initPython(const QString &pythonPath)
 {
   try {
@@ -642,19 +653,25 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
     Py_SetProgramName(argv0);
     PyImport_AppendInittab("mobase", &initmobase);
-    Py_Initialize();
+    Py_OptimizeFlag = 2;
+    Py_NoSiteFlag = 1;
+    Py_InitializeEx(0);
+
     if (!Py_IsInitialized()) {
       return false;
     }
+
     PySys_SetArgv(0, &argv0);
 
-    bpy::object main_module = bpy::import("__main__");
-    bpy::object main_namespace = main_module.attr("__dict__");
-    main_namespace["cStringIO"] = bpy::import("cStringIO");
-    main_namespace["sys"] = bpy::import("sys");
+    bpy::object mainModule = bpy::import("__main__");
+    bpy::object mainNamespace = mainModule.attr("__dict__");
+    mainNamespace["sys"] = bpy::import("sys");
+    initPath(mainNamespace);
+    bpy::import("site");
+    mainNamespace["cStringIO"] = bpy::import("cStringIO");
     bpy::exec("s_ErrIO = cStringIO.StringIO()\n"
                         "sys.stderr = s_ErrIO",
-                        main_namespace);
+                        mainNamespace);
     return true;
   } catch (const bpy::error_already_set&) {
     qDebug("failed to init python");
@@ -684,26 +701,41 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
   } while (false)
 
 
+void PythonRunner::initPath(bpy::object &moduleNamespace)
+{
+  static QString paths[] = {
+      m_MOInfo->pluginDataPath(),
+      QCoreApplication::applicationDirPath(),
+      QCoreApplication::applicationDirPath() + "/python27.zip",
+      QCoreApplication::applicationDirPath() + "/python27.zip/Lib",
+      QCoreApplication::applicationDirPath() + "/python27.zip/DLLs",
+      QCoreApplication::applicationDirPath() + "/python27.zip/Lib/site-packages",
+    };
+
+  for (int i = 0; i < sizeof(paths) / sizeof(QString); ++i) {
+    QString expr = QString("sys.path.insert(%1, \"%2\")").arg(i).arg(paths[i]);
+    bpy::eval(expr.toUtf8().constData(), moduleNamespace);
+  }
+}
+
+
 QObject *PythonRunner::instantiate(const QString &pluginName)
 {
   try {
     GILock lock;
-    bpy::object main_module = bpy::import("__main__");
-    bpy::object main_namespace = main_module.attr("__dict__");
+    bpy::object mainModule = bpy::import("__main__");
+    bpy::object moduleNamespace = mainModule.attr("__dict__");
 
-    bpy::object mobase_module((bpy::handle<>(PyImport_ImportModule("mobase"))));
-    main_namespace["sys"] = bpy::import("sys");
-    main_namespace["mobase"] = mobase_module;
-    QString appendDataPath = QString("sys.path.insert(0, \"%1\")").arg(m_MOInfo->pluginDataPath());
-
-    bpy::eval(appendDataPath.toUtf8().constData(), main_namespace);
+    bpy::object sys = bpy::import("sys");
+    moduleNamespace["sys"] = sys;
+    moduleNamespace["mobase"] = bpy::import("mobase");
 
     std::string temp = ToString(pluginName);
-    if (handled_exec_file(temp.c_str(), main_namespace)) {
+    if (handled_exec_file(temp.c_str(), moduleNamespace)) {
       reportPythonError();
       return NULL;
     }
-    m_PythonObjects[pluginName] = main_namespace["createPlugin"]();
+    m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
 
     bpy::object pluginObj = m_PythonObjects[pluginName];
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);

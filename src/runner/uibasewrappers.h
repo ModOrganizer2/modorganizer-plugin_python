@@ -65,8 +65,8 @@ public:
 
   void onRequestFailed(boost::python::object callback) {
     m_FailedHandler = callback;
-    connect(m_Wrapped, SIGNAL(requestFailed(int,QVariant,QString)),
-            this, SLOT(requestFailed(int,QVariant,QString)),
+    connect(m_Wrapped, SIGNAL(requestFailed(int,int,QVariant,QString)),
+            this, SLOT(requestFailed(int,int,QVariant,QString)),
             Qt::UniqueConnection);
   }
 
@@ -91,11 +91,11 @@ private slots:
 //    }
   }
 
-  void requestFailed(int modID, QVariant userData, const QString &errorMessage)
+  void requestFailed(int modID, int fileID, QVariant userData, const QString &errorMessage)
   {
     try {
       GILock lock;
-      m_FailedHandler(modID, userData, errorMessage);
+      m_FailedHandler(modID, fileID, userData, errorMessage);
     } catch (const boost::python::error_already_set&) {
       reportPythonError();
     }
@@ -119,10 +119,6 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const {
     return this->get_override("createNexusBridge")();
   }
-/*
-  static ModRepositoryBridgeWrapper newNexusBridge(IOrganizerWrapper *self) {
-    return ModRepositoryBridgeWrapper(self->createNexusBridge());
-  }*/
 
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
@@ -133,10 +129,21 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual bool removeMod(MOBase::IModInterface *mod) { return this->get_override("removeMod")(mod); }
   virtual void modDataChanged(MOBase::IModInterface *mod) { this->get_override("modDataChanged")(mod); }
   virtual QVariant pluginSetting(const QString &pluginName, const QString &key) const { return this->get_override("pluginSetting")(pluginName, key); }
+  virtual void setPluginSetting(const QString &pluginName, const QString &key, const QVariant &value) { this->get_override("setPluginSetting")(pluginName, key, value); }
+  virtual QVariant persistent(const QString &pluginName, const QString &key, const QVariant &def = QVariant()) const { return this->get_override("persistent")(pluginName, key, def); }
+  virtual void setPersistent(const QString &pluginName, const QString &key, const QVariant &value, bool sync = true) { this->get_override("setPersistent")(pluginName, key, value, sync); }
   virtual QString pluginDataPath() const { return this->get_override("pluginDataPath")(); }
   virtual void installMod(const QString &fileName) { this->get_override("installMod")(fileName); }
   virtual MOBase::IDownloadManager *downloadManager() { return this->get_override("downloadManager")(); }
+  virtual MOBase::IPluginList *pluginList() { return this->get_override("pluginList")(); }
+  virtual MOBase::IModList *modList() { return this->get_override("modList")(); }
   virtual QString resolvePath(const QString &fileName) const { return this->get_override("resolvePath")(fileName); }
+  virtual QStringList listDirectories(const QString &directoryName) const { return this->get_override("listDirectories")(directoryName); }
+  virtual QStringList findFiles(const QString &path, const std::function<bool(const QString&)> &filter) const { return this->get_override("findFiles")(path, filter); }
+  virtual QList<FileInfo> findFileInfos(const QString &path, const std::function<bool(const FileInfo&)> &filter) const { return this->get_override("findFileInfos")(path, filter); }
+  virtual HANDLE startApplication(const QString &executable, const QStringList &args = QStringList(), const QString &cwd = "", const QString &profile = "") { return this->get_override("startApplication")(executable, args, cwd, profile); }
+  virtual bool onAboutToRun(const std::function<bool(const QString&)> &func) { return this->get_override("onAboutToRun")(func); }
+  virtual void refreshModList(bool saveChanges = true) { this->get_override("refreshModList")(saveChanges); }
 };
 
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>
