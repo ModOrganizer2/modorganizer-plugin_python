@@ -27,6 +27,7 @@ public:
   virtual QList<MOBase::PluginSetting> settings() const;
 
 protected:
+
   void reportPythonError() const;
 
 private:

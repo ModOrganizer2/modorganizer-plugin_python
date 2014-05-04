@@ -31,13 +31,20 @@ HEADERS += pythonrunner.h \
 
 
 CONFIG(debug, debug|release) {
+  SRCDIR = $$OUT_PWD/debug
+  DSTDIR = $$PWD/../../outputd
   LIBS += -L$$OUT_PWD/../uibase/debug
 } else {
+  SRCDIR = $$OUT_PWD/release
+  DSTDIR = $$PWD/../../output
   LIBS += -L$$OUT_PWD/../uibase/release
 	QMAKE_CXXFLAGS += /Zi
 	QMAKE_LFLAGS += /DEBUG
 }
 
+
+SRCDIR ~= s,/,$$QMAKE_DIR_SEP,g
+DSTDIR ~= s,/,$$QMAKE_DIR_SEP,g
 
 INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include" "$$(PYTHONPATH)/Lib/site-packages/PyQt4/include"
 LIBS += -L"$$(PYTHONPATH)/libs" -L"$(BOOSTPATH)/stage/lib"

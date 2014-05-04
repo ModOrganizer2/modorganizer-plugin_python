@@ -86,6 +86,15 @@ struct QString_to_python_str
   }
 };
 
+template <typename T>
+struct QFlags_to_int
+{
+  static PyObject *convert(const QFlags<T> &flags) {
+    return bpy::incref(bpy::object(static_cast<int>(flags)).ptr());
+  }
+};
+
+
 struct QString_from_python_str
 {
   QString_from_python_str() {
@@ -109,7 +118,6 @@ struct QString_from_python_str
     data->convertible = storage;
   }
 };
-
 
 
 template <typename T>
@@ -140,7 +148,6 @@ struct GuessedValue_converters
         return NULL;
       }
     }
-
 
     static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
       void *storage = ((bpy::converter::rvalue_from_python_storage<GuessedValue<T> >*)data)->storage.bytes;
@@ -257,6 +264,7 @@ struct QVariant_from_python_obj
     }
   }
 };
+
 
 template <typename T>
 struct QList_to_python_list
@@ -380,6 +388,7 @@ PyObject *toPyQt(T *objPtr)
   }
   return bpy::incref(sipObj);
 }
+
 
 template <typename T>
 struct QClass_converters
@@ -508,6 +517,105 @@ struct QInterface_converters
 };
 
 
+int getArgCount(PyObject *object) {
+  int result = 0;
+  PyObject *funcCode = PyObject_GetAttrString(object, "func_code");
+  if (funcCode) {
+    PyObject *argCount = PyObject_GetAttrString(funcCode, "co_argcount");
+    if(argCount) {
+      result = PyInt_AsLong(argCount);
+      Py_DECREF(argCount);
+    }
+    Py_DECREF(funcCode);
+  }
+  return result;
+}
+
+struct Functor0_converter
+{
+
+  struct FunctorWrapper
+  {
+    FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
+    }
+
+    void operator()() {
+      // These GIL calls make it thread safe, may or may not be needed depending on your use case
+      PyGILState_STATE gstate = PyGILState_Ensure();
+      m_Callable();
+      PyGILState_Release(gstate);
+    }
+
+    boost::python::object m_Callable;
+  };
+
+  Functor0_converter()
+  {
+    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<void()>>());
+  }
+
+  static void *convertible(PyObject *object)
+  {
+    if (!PyCallable_Check(object)
+        || (getArgCount(object) != 0)) {
+      return NULL;
+    }
+    return object;
+  }
+
+  static void construct(PyObject *object, bpy::converter::rvalue_from_python_stage1_data *data)
+  {
+    bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
+    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<void()>>*)data)->storage.bytes;
+    new (storage) std::function<void()>(FunctorWrapper(callable));
+    data->convertible = storage;
+  }
+};
+
+
+template <typename PAR1, typename PAR2>
+struct Functor2_converter
+{
+
+  struct FunctorWrapper
+  {
+    FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
+    }
+
+    void operator()(const PAR1 &param1, const PAR2 &param2) {
+      // These GIL calls make it thread safe, may or may not be needed depending on your use case
+      PyGILState_STATE gstate = PyGILState_Ensure();
+      m_Callable(param1, param2);
+      PyGILState_Release(gstate);
+    }
+
+    boost::python::object m_Callable;
+  };
+
+  Functor2_converter()
+  {
+    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<void(PAR1, PAR2)>>());
+  }
+
+  static void *convertible(PyObject *object)
+  {
+    if (!PyCallable_Check(object)
+        || (getArgCount(object) != 2)) {
+      return NULL;
+    }
+    return object;
+  }
+
+  static void construct(PyObject *object, bpy::converter::rvalue_from_python_stage1_data *data)
+  {
+    bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
+    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<void(PAR1, PAR2)>>*)data)->storage.bytes;
+    new (storage) std::function<void(PAR1, PAR2)>(FunctorWrapper(callable));
+    data->convertible = storage;
+  }
+};
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<QString>::update, 2, 2)
 
 
@@ -578,9 +686,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
       .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
       .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
-      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod))
+      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), bpy::return_value_policy<bpy::return_by_value>())
       .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
@@ -600,6 +709,24 @@ BOOST_PYTHON_MODULE(mobase)
       .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath));
 
+  bpy::class_<IInstallationManagerWrapper, boost::noncopyable>("IInstallationManager")
+      .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
+      .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
+      .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
+      ;
+
+  bpy::class_<IModInterfaceWrapper, boost::noncopyable>("IModInterface")
+      .def("name", bpy::pure_virtual(&IModInterface::name))
+      .def("absolutePath", bpy::pure_virtual(&IModInterface::absolutePath))
+      .def("setVersion", bpy::pure_virtual(&IModInterface::setVersion))
+      .def("setNewestVersion", bpy::pure_virtual(&IModInterface::setNewestVersion))
+      .def("setIsEndorsed", bpy::pure_virtual(&IModInterface::setIsEndorsed))
+      .def("setNexusID", bpy::pure_virtual(&IModInterface::setNexusID))
+      .def("addNexusCategory", bpy::pure_virtual(&IModInterface::addNexusCategory))
+      .def("setName", bpy::pure_virtual(&IModInterface::setName))
+      .def("remove", bpy::pure_virtual(&IModInterface::remove))
+      ;
+
   bpy::enum_<MOBase::EGuessQuality>("GuessQuality")
       .value("invalid", MOBase::GUESS_INVALID)
       .value("fallback", MOBase::GUESS_FALLBACK)
@@ -618,6 +745,25 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget));
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget));
+
+  Functor0_converter(); // converter for the onRefreshed-callback
+  bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
+      .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
+      .def("priority", bpy::pure_virtual(&MOBase::IPluginList::priority))
+      .def("loadOrder", bpy::pure_virtual(&MOBase::IPluginList::loadOrder))
+      .def("isMaster", bpy::pure_virtual(&MOBase::IPluginList::isMaster))
+      .def("origin", bpy::pure_virtual(&MOBase::IPluginList::origin))
+      .def("onRefreshed", bpy::pure_virtual(&MOBase::IPluginList::onRefreshed))
+      ;
+
+  bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
+  Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+  bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
+      .def("state", bpy::pure_virtual(&MOBase::IModList::state))
+      .def("priority", bpy::pure_virtual(&MOBase::IModList::priority))
+      .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
+      .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
+      ;
 
   GuessedValue_converters<QString>();
 
