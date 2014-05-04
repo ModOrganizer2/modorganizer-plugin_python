@@ -540,10 +540,8 @@ struct Functor0_converter
     }
 
     void operator()() {
-      // These GIL calls make it thread safe, may or may not be needed depending on your use case
-      PyGILState_STATE gstate = PyGILState_Ensure();
+      GILock lock;
       m_Callable();
-      PyGILState_Release(gstate);
     }
 
     boost::python::object m_Callable;
@@ -583,10 +581,8 @@ struct Functor2_converter
     }
 
     void operator()(const PAR1 &param1, const PAR2 &param2) {
-      // These GIL calls make it thread safe, may or may not be needed depending on your use case
-      PyGILState_STATE gstate = PyGILState_Ensure();
+      GILock lock;
       m_Callable(param1, param2);
-      PyGILState_Release(gstate);
     }
 
     boost::python::object m_Callable;
@@ -643,32 +639,37 @@ BOOST_PYTHON_MODULE(mobase)
       .value("candidate", MOBase::VersionInfo::RELEASE_CANDIDATE)
       .value("beta", MOBase::VersionInfo::RELEASE_BETA)
       .value("alpha", MOBase::VersionInfo::RELEASE_ALPHA)
-      .value("prealpha", MOBase::VersionInfo::RELEASE_PREALPHA);
+      .value("prealpha", MOBase::VersionInfo::RELEASE_PREALPHA)
+      ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
       .value("success", MOBase::IPluginInstaller::RESULT_SUCCESS)
       .value("failed", MOBase::IPluginInstaller::RESULT_FAILED)
       .value("canceled", MOBase::IPluginInstaller::RESULT_CANCELED)
       .value("manualRequested", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
-      .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED);
+      .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
+      ;
 
   bpy::enum_<MOBase::IGameInfo::Type>("GameType")
       .value("oblivion", MOBase::IGameInfo::TYPE_OBLIVION)
       .value("fallout3", MOBase::IGameInfo::TYPE_FALLOUT3)
       .value("falloutnv", MOBase::IGameInfo::TYPE_FALLOUTNV)
-      .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM);
+      .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM)
+      ;
 
   bpy::class_<MOBase::VersionInfo>("VersionInfo")
       .def(bpy::init<int, int, int, MOBase::VersionInfo::ReleaseType>())
       .def("parse", &MOBase::VersionInfo::parse)
-      .def("canonicalString", &MOBase::VersionInfo::canonicalString);
+      .def("canonicalString", &MOBase::VersionInfo::canonicalString)
+      ;
 
   bpy::class_<MOBase::PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
 
   bpy::class_<IGameInfoWrapper, boost::noncopyable>("GameInfo")
       .def("type", bpy::pure_virtual(&MOBase::IGameInfo::type))
       .def("path", bpy::pure_virtual(&MOBase::IGameInfo::path))
-      .def("binaryName", bpy::pure_virtual(&MOBase::IGameInfo::binaryName));
+      .def("binaryName", bpy::pure_virtual(&MOBase::IGameInfo::binaryName))
+      ;
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
       .def("gameInfo", bpy::pure_virtual(&MOBase::IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
@@ -702,12 +703,14 @@ BOOST_PYTHON_MODULE(mobase)
       .def("requestDownloadURL", &ModRepositoryBridgeWrapper::requestDownloadURL)
       .def("requestToggleEndorsement", &ModRepositoryBridgeWrapper::requestToggleEndorsement)
       .def("onFilesAvailable", &ModRepositoryBridgeWrapper::onFilesAvailable)
-      .def("onRequestFailed", &ModRepositoryBridgeWrapper::onRequestFailed);
+      .def("onRequestFailed", &ModRepositoryBridgeWrapper::onRequestFailed)
+      ;
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
       .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
-      .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath));
+      .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
+      ;
 
   bpy::class_<IInstallationManagerWrapper, boost::noncopyable>("IInstallationManager")
       .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
@@ -733,18 +736,22 @@ BOOST_PYTHON_MODULE(mobase)
       .value("good", MOBase::GUESS_GOOD)
       .value("meta", MOBase::GUESS_META)
       .value("preset", MOBase::GUESS_PRESET)
-      .value("user", MOBase::GUESS_USER);
+      .value("user", MOBase::GUESS_USER)
+      ;
 
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def("update",
            static_cast<GuessedValue<QString> &(GuessedValue<QString>::*)(const QString&, EGuessQuality)>(&GuessedValue<QString>::update),
            bpy::return_value_policy<bpy::reference_existing_object>(), updateWithQuality())
-      .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>());
+      .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
+      ;
 
   bpy::class_<IPluginToolWrapper, boost::noncopyable>("IPluginTool")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget));
+      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
+      ;
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget));
+      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
+      ;
 
   Functor0_converter(); // converter for the onRefreshed-callback
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")

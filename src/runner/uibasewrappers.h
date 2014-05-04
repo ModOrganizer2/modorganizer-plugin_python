@@ -86,13 +86,13 @@ private slots:
       qCritical("no handler connected");
       return;
     }
-//    try {
+    try {
       GILock lock;
       m_FilesAvailableHandler(modID, userData, resultData);
-//    } catch (const boost::python::error_already_set&) {
+    } catch (const boost::python::error_already_set&) {
 //      qDebug("error");
-      //reportPythonError();
-//    }
+      reportPythonError();
+    }
   }
 
   void requestFailed(int modID, int fileID, QVariant userData, const QString &errorMessage)

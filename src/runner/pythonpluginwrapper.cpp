@@ -99,7 +99,6 @@ QList<MOBase::PluginSetting> PythonPluginWrapper::settings() const
   try {
     boost::python::object l = m_SettingsFunction();
     if (!l.is_none()) {
-//    boost::python::list l = extract<boost::python::list>(temp);
       for (int i = 0; i < boost::python::len(l); ++i) {
         result.append(extract<MOBase::PluginSetting>(l[i]));
       }
