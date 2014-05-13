@@ -55,8 +55,6 @@ public:
     { m_Wrapped->requestFiles(modID, userData); }
   void requestFileInfo(int modID, int fileID, QVariant userData)
     { m_Wrapped->requestFileInfo(modID, fileID, userData); }
-  void requestDownloadURL(int modID, int fileID, QVariant userData)
-    { m_Wrapped->requestDownloadURL(modID, fileID, userData); }
   void requestToggleEndorsement(int modID, bool endorse, QVariant userData)
     { m_Wrapped->requestToggleEndorsement(modID, endorse, userData); }
 
@@ -64,6 +62,27 @@ public:
     m_FilesAvailableHandler = callback;
     connect(m_Wrapped, SIGNAL(filesAvailable(int,QVariant,const QList<ModRepositoryFileInfo>&)),
             this, SLOT(filesAvailable(int,QVariant,const QList<ModRepositoryFileInfo>&)),
+            Qt::UniqueConnection);
+  }
+
+  void onDescriptionAvailable(boost::python::object callback) {
+    m_DescriptionAvailableHandler = callback;
+    connect(m_Wrapped, SIGNAL(descriptionAvailable(int,QVariant,QVariant)),
+            this, SLOT(descriptionAvailable(int,QVariant,QVariant)),
+            Qt::UniqueConnection);
+  }
+
+  void onFileInfoAvailable(boost::python::object callback) {
+    m_FileInfoHandler = callback;
+    connect(m_Wrapped, SIGNAL(fileInfoAvailable(int,int,QVariant,QVariant)),
+            this, SLOT(fileInfoAvailable(int,int,QVariant,QVariant)),
+            Qt::UniqueConnection);
+  }
+
+  void onEndorsementToggled(boost::python::object callback) {
+    m_EndorsementToggledHandler = callback;
+    connect(m_Wrapped, SIGNAL(endorsementToggled(int,QVariant,QVariant)),
+            this, SLOT(endorsementToggled(int,QVariant,QVariant)),
             Qt::UniqueConnection);
   }
 
@@ -90,8 +109,66 @@ private slots:
       GILock lock;
       m_FilesAvailableHandler(modID, userData, resultData);
     } catch (const boost::python::error_already_set&) {
-//      qDebug("error");
       reportPythonError();
+    }
+  }
+
+  void descriptionAvailable(int modID, QVariant userData, const QVariant resultData)
+  {
+    try {
+      if (m_DescriptionAvailableHandler.is_none()) {
+        qCritical("no handler connected");
+        return;
+      }
+      try {
+        GILock lock;
+        m_DescriptionAvailableHandler(modID, userData, resultData);
+      } catch (const boost::python::error_already_set&) {
+        reportPythonError();
+      }
+    } catch (const std::exception &e) {
+      qCritical("failed to report event: %s", e.what());
+    } catch (...) {
+      qCritical("failed to report event");
+    }
+  }
+
+  void fileInfoAvailable(int modID, int fileID, QVariant userData, const QVariant resultData) {
+    try {
+      if (m_FileInfoHandler.is_none()) {
+        qCritical("no handler connected");
+        return;
+      }
+      try {
+        GILock lock;
+        m_FileInfoHandler(modID, fileID, userData, resultData);
+      } catch (const boost::python::error_already_set&) {
+        reportPythonError();
+      }
+    } catch (const std::exception &e) {
+      qCritical("failed to report event: %s", e.what());
+    } catch (...) {
+      qCritical("failed to report event");
+    }
+  }
+
+  void endorsementToggled(int modID, QVariant userData, const QVariant resultData)
+  {
+    try {
+      if (m_EndorsementToggledHandler.is_none()) {
+        qCritical("no handler connected");
+        return;
+      }
+      try {
+        GILock lock;
+        m_EndorsementToggledHandler(modID, userData, resultData);
+      } catch (const boost::python::error_already_set&) {
+        reportPythonError();
+      }
+    } catch (const std::exception &e) {
+      qCritical("failed to report event: %s", e.what());
+    } catch (...) {
+      qCritical("failed to report event");
     }
   }
 
@@ -109,10 +186,12 @@ private:
 
   MOBase::IModRepositoryBridge *m_Wrapped;
   boost::python::object m_FilesAvailableHandler;
+  boost::python::object m_DescriptionAvailableHandler;
+  boost::python::object m_FileInfoHandler;
+  boost::python::object m_EndorsementToggledHandler;
   boost::python::object m_FailedHandler;
 
 };
-
 
 struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOrganizer>
 {
@@ -120,10 +199,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
     MOBase::IGameInfo *result = this->get_override("gameInfo")();
     return *result;
   }
-  virtual MOBase::IModRepositoryBridge *createNexusBridge() const {
-    return this->get_override("createNexusBridge")();
-  }
-
+  virtual MOBase::IModRepositoryBridge *createNexusBridge() const { return this->get_override("createNexusBridge")(); }
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
   virtual QString downloadsPath() const { return this->get_override("downloadsPath")(); }
@@ -155,8 +231,15 @@ struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper
   virtual int startDownloadURLs(const QStringList &urls) { return this->get_override("downloadURLs")(urls); }
   virtual int startDownloadNexusFile(int modID, int fileID) { return this->get_override("downloadNexusFile")(modID, fileID); }
   virtual QString downloadPath(int id) { return this->get_override("downloadPath")(id); }
-private:
-  boost::python::object m_DownloadCompleteHandler;
+};
+
+struct IModRepositoryBridgeWrapper: MOBase::IModRepositoryBridge, boost::python::wrapper<MOBase::IModRepositoryBridge>
+{
+  virtual void requestDescription(int modID, QVariant userData) { this->get_override("requestDescription")(modID, userData); }
+  virtual void requestFiles(int modID, QVariant userData) { this->get_override("requestFiles")(modID, userData); }
+  virtual void requestFileInfo(int modID, int fileID, QVariant userData) { this->get_override("requestFileInfo")(modID, fileID, userData); }
+  virtual void requestDownloadURL(int modID, int fileID, QVariant userData) { this->get_override("requestDownloadURL")(modID, fileID, userData); }
+  virtual void requestToggleEndorsement(int modID, bool endorse, QVariant userData) { this->get_override("requestToggleEndorsement")(modID, endorse, userData); }
 };
 
 struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python::wrapper<MOBase::IInstallationManager>

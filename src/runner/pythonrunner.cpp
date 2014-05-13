@@ -177,6 +177,7 @@ struct QVariant_to_python_obj
   static PyObject *convert(const QVariant &var) {
     switch (var.type()) {
       case QVariant::Int: return PyLong_FromLong(var.toInt());
+      case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
       case QVariant::Bool: return PyBool_FromLong(var.toBool());
       case QVariant::String: return bpy::incref(bpy::object(var.toString().toUtf8().constData()).ptr());
       case QVariant::List: {
@@ -187,8 +188,18 @@ struct QVariant_to_python_obj
         }
         return result;
       } break;
+      case QVariant::Map: {
+        QVariantMap map = var.toMap();
+        PyObject *result = PyDict_New();
+        QMapIterator<QString, QVariant> iter(map);
+        while (iter.hasNext()) {
+          iter.next();
+          PyDict_SetItem(result, convert(iter.key()), convert(iter.value()));
+        }
+        return result;
+      } break;
       default: {
-        PyErr_SetString(PyExc_TypeError, "type unsupported");
+        PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.type());
         throw bpy::error_already_set();
       } break;
     }
@@ -356,9 +367,21 @@ static const sipAPIDef *sipAPI()
 }
 
 
+struct IModRepositoryBridge_to_python
+{
+  static PyObject *convert(IModRepositoryBridge *bridge)
+  {
+    ModRepositoryBridgeWrapper wrapper(bridge);
+
+    return bpy::incref(bpy::object(wrapper).ptr());
+  }
+};
+
+
+
 template <typename T> struct MetaData;
 
-template <> struct MetaData<IModRepositoryBridge> { static const char *className() { return "MOBase::INexusBridge"; } };
+template <> struct MetaData<IModRepositoryBridge> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<IDownloadManager> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
@@ -373,7 +396,6 @@ PyObject *toPyQt(T *objPtr)
     qDebug("no input object");
     return bpy::incref(Py_None);
   }
-
   const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
 
   if (type == NULL) {
@@ -624,12 +646,11 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<QString, QString_to_python_str>();
   QString_from_python_str();
 
-  QClass_converters<QObject>();
+  //QClass_converters<QObject>();
   QClass_converters<QWidget>();
-  //QClass_converters<QVariant>();
   QClass_converters<QIcon>();
-  QInterface_converters<IModRepositoryBridge>();
   QInterface_converters<IDownloadManager>();
+
 
   bpy::def("toPyQt", &toPyQt<IModRepositoryBridge>);
   bpy::def("toPyQt", &toPyQt<IDownloadManager>);
@@ -640,6 +661,14 @@ BOOST_PYTHON_MODULE(mobase)
       .value("beta", MOBase::VersionInfo::RELEASE_BETA)
       .value("alpha", MOBase::VersionInfo::RELEASE_ALPHA)
       .value("prealpha", MOBase::VersionInfo::RELEASE_PREALPHA)
+      ;
+
+  bpy::enum_<MOBase::VersionInfo::VersionScheme>("VersionScheme")
+      .value("discover", MOBase::VersionInfo::SCHEME_DISCOVER)
+      .value("regular", MOBase::VersionInfo::SCHEME_REGULAR)
+      .value("decimalmark", MOBase::VersionInfo::SCHEME_DECIMALMARK)
+      .value("numbersandletters", MOBase::VersionInfo::SCHEME_NUMBERSANDLETTERS)
+      .value("date", MOBase::VersionInfo::SCHEME_DATE)
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
@@ -657,31 +686,34 @@ BOOST_PYTHON_MODULE(mobase)
       .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM)
       ;
 
-  bpy::class_<MOBase::VersionInfo>("VersionInfo")
-      .def(bpy::init<int, int, int, MOBase::VersionInfo::ReleaseType>())
-      .def("parse", &MOBase::VersionInfo::parse)
-      .def("canonicalString", &MOBase::VersionInfo::canonicalString)
+  bpy::class_<VersionInfo>("VersionInfo")
+      .def(bpy::init<QString>())
+      .def(bpy::init<QString, VersionInfo::VersionScheme>())
+      .def(bpy::init<int, int, int>())
+      .def(bpy::init<int, int, int, VersionInfo::ReleaseType>())
+      .def("parse", &VersionInfo::parse)
+      .def("canonicalString", &VersionInfo::canonicalString)
       ;
 
-  bpy::class_<MOBase::PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
+  bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
 
   bpy::class_<IGameInfoWrapper, boost::noncopyable>("GameInfo")
-      .def("type", bpy::pure_virtual(&MOBase::IGameInfo::type))
-      .def("path", bpy::pure_virtual(&MOBase::IGameInfo::path))
-      .def("binaryName", bpy::pure_virtual(&MOBase::IGameInfo::binaryName))
+      .def("type", bpy::pure_virtual(&IGameInfo::type))
+      .def("path", bpy::pure_virtual(&IGameInfo::path))
+      .def("binaryName", bpy::pure_virtual(&IGameInfo::binaryName))
       ;
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
-      .def("gameInfo", bpy::pure_virtual(&MOBase::IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
-      //.def("createNexusBridge", bpy::pure_virtual(&MOBase::IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("profileName", bpy::pure_virtual(&MOBase::IOrganizer::profileName))
-      .def("profilePath", bpy::pure_virtual(&MOBase::IOrganizer::profilePath))
-      .def("downloadsPath", bpy::pure_virtual(&MOBase::IOrganizer::downloadsPath))
-      .def("appVersion", bpy::pure_virtual(&MOBase::IOrganizer::appVersion))
-      .def("getMod", bpy::pure_virtual(&MOBase::IOrganizer::getMod), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("createMod", bpy::pure_virtual(&MOBase::IOrganizer::createMod), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("removeMod", bpy::pure_virtual(&MOBase::IOrganizer::removeMod))
-      .def("modDataChanged", bpy::pure_virtual(&MOBase::IOrganizer::modDataChanged))
+      .def("gameInfo", bpy::pure_virtual(&IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
+      .def("profilePath", bpy::pure_virtual(&IOrganizer::profilePath))
+      .def("downloadsPath", bpy::pure_virtual(&IOrganizer::downloadsPath))
+      .def("appVersion", bpy::pure_virtual(&IOrganizer::appVersion))
+      .def("getMod", bpy::pure_virtual(&IOrganizer::getMod), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("createMod", bpy::pure_virtual(&IOrganizer::createMod), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("removeMod", bpy::pure_virtual(&IOrganizer::removeMod))
+      .def("modDataChanged", bpy::pure_virtual(&IOrganizer::modDataChanged))
       .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
       .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
       .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
@@ -697,13 +729,24 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
+      .def(bpy::init<IModRepositoryBridge*>())
       .def("requestDescription", &ModRepositoryBridgeWrapper::requestDescription)
       .def("requestFiles", &ModRepositoryBridgeWrapper::requestFiles)
       .def("requestFileInfo", &ModRepositoryBridgeWrapper::requestFileInfo)
-      .def("requestDownloadURL", &ModRepositoryBridgeWrapper::requestDownloadURL)
       .def("requestToggleEndorsement", &ModRepositoryBridgeWrapper::requestToggleEndorsement)
       .def("onFilesAvailable", &ModRepositoryBridgeWrapper::onFilesAvailable)
+      .def("onFileInfoAvailable", &ModRepositoryBridgeWrapper::onFileInfoAvailable)
+      .def("onDescriptionAvailable", &ModRepositoryBridgeWrapper::onDescriptionAvailable)
+      .def("onEndorsementToggled", &ModRepositoryBridgeWrapper::onEndorsementToggled)
       .def("onRequestFailed", &ModRepositoryBridgeWrapper::onRequestFailed)
+      ;
+
+  bpy::class_<IModRepositoryBridgeWrapper, boost::noncopyable>("IModRepositoryBridge")
+      .def("requestDescription", bpy::pure_virtual(&IModRepositoryBridge::requestDescription))
+      .def("requestFiles", bpy::pure_virtual(&IModRepositoryBridge::requestFiles))
+      .def("requestFileInfo", bpy::pure_virtual(&IModRepositoryBridge::requestFileInfo))
+      .def("requestDownloadURL", bpy::pure_virtual(&IModRepositoryBridge::requestDownloadURL))
+      .def("requestToggleEndorsement", bpy::pure_virtual(&IModRepositoryBridge::requestToggleEndorsement))
       ;
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
