@@ -39,6 +39,11 @@ CONFIG(debug, debug|release) {
 }
 
 
+load(moc)
+include(../common.pri)
+QMAKE_MOC += $$MOCDEFINES
+
+
 INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include" "$$(PYTHONPATH)/Lib/site-packages/PyQt4/include"
 LIBS += -L"$$(PYTHONPATH)/libs" -L"$(BOOSTPATH)/stage/lib"
 LIBS += -lpython27
