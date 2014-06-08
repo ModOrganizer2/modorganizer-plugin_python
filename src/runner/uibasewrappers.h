@@ -286,6 +286,7 @@ struct IModListWrapper: MOBase::IModList, boost::python::wrapper<MOBase::IModLis
   virtual int priority(const QString &name) const{ return this->get_override("priority")(name); }
   virtual bool setPriority(const QString &name, int newPriority){ return this->get_override("setPriority")(name, newPriority); }
   virtual bool onModStateChanged(const std::function<void (const QString &, ModStates)> &func) { return this->get_override("onModStateChanged")(func); }
+  virtual bool onModMoved(const std::function<void (const QString &, int, int)> &func) { return this->get_override("onModMoved")(func); }
 };
 
 #endif // UIBASEWRAPPERS_H

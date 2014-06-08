@@ -816,6 +816,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("priority", bpy::pure_virtual(&MOBase::IModList::priority))
       .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
       .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
+      .def("onModMoved", bpy::pure_virtual(&MOBase::IModList::onModMoved))
       ;
 
   GuessedValue_converters<QString>();
