@@ -278,6 +278,7 @@ struct IPluginListWrapper: MOBase::IPluginList, boost::python::wrapper<MOBase::I
   virtual bool isMaster(const QString &name) const { return this->get_override("isMaster")(name); }
   virtual QString origin(const QString &name) const { return this->get_override("origin")(name); }
   virtual bool onRefreshed(const std::function<void ()> &callback) { return this->get_override("onRefreshed")(callback); }
+  virtual bool onPluginMoved(const std::function<void (const QString &, int, int)> &callback) { return this->get_override("onPluginMoved")(callback); }
 };
 
 

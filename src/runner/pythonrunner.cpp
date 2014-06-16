@@ -807,6 +807,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isMaster", bpy::pure_virtual(&MOBase::IPluginList::isMaster))
       .def("origin", bpy::pure_virtual(&MOBase::IPluginList::origin))
       .def("onRefreshed", bpy::pure_virtual(&MOBase::IPluginList::onRefreshed))
+      .def("onPluginMoved", bpy::pure_virtual(&MOBase::IPluginList::onPluginMoved))
       ;
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
