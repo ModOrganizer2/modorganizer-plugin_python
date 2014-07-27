@@ -813,6 +813,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
+      .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
       .def("state", bpy::pure_virtual(&MOBase::IModList::state))
       .def("priority", bpy::pure_virtual(&MOBase::IModList::priority))
       .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
