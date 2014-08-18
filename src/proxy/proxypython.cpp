@@ -73,6 +73,7 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
   UnmapViewOfFile(lpAddress);
 
   CloseHandle(hFileMap);
+  ::FlushFileBuffers(hFile);
   CloseHandle(hFile);
 
   return outFile;
