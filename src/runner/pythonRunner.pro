@@ -13,7 +13,13 @@ CONFIG += warn_on
 DEFINES += PYTHONRUNNER_LIBRARY
 
 # suppress a few warnings caused by boost vs vc++ paranoia
-DEFINES += _SCL_SECURE_NO_WARNINGS
+DEFINES += _SCL_SECURE_NO_WARNINGS -DHAVE_ROUND
+
+
+!include(../LocalPaths.pri) {
+  message("paths to required libraries need to be set up in LocalPaths.pri")
+}
+
 
 SOURCES += pythonrunner.cpp \
     gilock.cpp \
@@ -36,8 +42,8 @@ CONFIG(debug, debug|release) {
   QMAKE_LFLAGS += /DEBUG
 }
 
-INCLUDEPATH += "$(BOOSTPATH)" "$$(PYTHONPATH)/include" "$$(PYTHONPATH)/Lib/site-packages/PyQt4/include"
-LIBS += -L"$$(PYTHONPATH)/libs" -L"$(BOOSTPATH)/stage/lib"
+INCLUDEPATH += "$${BOOSTPATH}" "$${PYTHONPATH}/include" "$${PYTHONPATH}/Lib/site-packages/PyQt4/include"
+LIBS += -L"$${PYTHONPATH}/libs" -L"$${BOOSTPATH}/stage/lib"
 LIBS += -lpython27
 
 INCLUDEPATH += ../uibase

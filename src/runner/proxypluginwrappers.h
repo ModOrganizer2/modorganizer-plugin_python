@@ -5,7 +5,6 @@
 #include <iplugintool.h>
 #include <iplugininstallersimple.h>
 #include <iplugininstallercustom.h>
-#include <iplugindiagnose.h>
 
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
