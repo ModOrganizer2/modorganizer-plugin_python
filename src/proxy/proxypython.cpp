@@ -164,7 +164,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
 
 QString ProxyPython::name() const
 {
-  return tr("Python Proxy");
+  return "Python Proxy";
 }
 
 QString ProxyPython::author() const

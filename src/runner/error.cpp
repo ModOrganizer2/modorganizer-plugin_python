@@ -1,4 +1,6 @@
+#ifndef Q_MOC_RUN
 #include <boost/python.hpp>
+#endif
 #include <QString>
 #include <utility.h>
 
