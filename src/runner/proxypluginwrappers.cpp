@@ -1,4 +1,4 @@
-#define HAVE_ROUND
+//#define HAVE_ROUND
 #include "proxypluginwrappers.h"
 #include <utility.h>
 #include "error.h"
@@ -27,63 +27,64 @@ bool IPluginToolWrapper::init(MOBase::IOrganizer *moInfo)
 QString IPluginToolWrapper::name() const
 {
   try {
-    return this->get_override("name")();
+    return this->get_override("name")().as<QString>();
   } PYCATCH;
 }
 
 QString IPluginToolWrapper::author() const
 {
   try {
-    return this->get_override("author")();
+    return this->get_override("author")().as<QString>();
   } PYCATCH;
 }
 
 QString IPluginToolWrapper::description() const
 {
   try {
-    return this->get_override("description")();
+    return this->get_override("description")().as<QString>();
   } PYCATCH;
 }
 
 MOBase::VersionInfo IPluginToolWrapper::version() const
 {
   try {
-    return this->get_override("version")();
+    return this->get_override("version")().as<MOBase::VersionInfo>();
   } PYCATCH;
 }
 
 bool IPluginToolWrapper::isActive() const
 {
   try {
-    return this->get_override("isActive")();
+    return this->get_override("isActive")().as<bool>();
   } PYCATCH;
 }
 
 QList<MOBase::PluginSetting> IPluginToolWrapper::settings() const
 {
   try {
-    return this->get_override("settings")();
+    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
   } PYCATCH;
 }
 
 QString IPluginToolWrapper::displayName() const
 {
   try {
-    return this->get_override("displayName")();
+    return this->get_override("displayName")().as<QString>();
   } PYCATCH;
 }
 
 QString IPluginToolWrapper::tooltip() const
 {
   try {
-    return this->get_override("tooltip")();
+    return this->get_override("tooltip")().as<QString>();
   } PYCATCH;
 }
 
 QIcon IPluginToolWrapper::icon() const
 {
   try {
-    return this->get_override("icon")();
+qDebug("%p", this->get_override("icon").ptr());
+    return this->get_override("icon")().as<QIcon>();
   } PYCATCH;
 }
 
@@ -118,21 +119,21 @@ bool IPluginInstallerCustomWrapper::init(MOBase::IOrganizer *moInfo)
 QString IPluginInstallerCustomWrapper::name() const
 {
   try {
-    return this->get_override("name")();
+    return this->get_override("name")().as<QString>();
   } PYCATCH;
 }
 
 QString IPluginInstallerCustomWrapper::author() const
 {
   try {
-    return this->get_override("author")();
+    return this->get_override("author")().as<QString>();
   } PYCATCH;
 }
 
 QString IPluginInstallerCustomWrapper::description() const
 {
   try {
-    return this->get_override("description")();
+    return this->get_override("description")().as<QString>();
   } PYCATCH;
 }
 
@@ -153,7 +154,7 @@ bool IPluginInstallerCustomWrapper::isActive() const
 QList<MOBase::PluginSetting> IPluginInstallerCustomWrapper::settings() const
 {
   try {
-    return this->get_override("settings")();
+    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
   } PYCATCH;
 }
 
@@ -189,7 +190,7 @@ bool IPluginInstallerCustomWrapper::isArchiveSupported(const QString &archiveNam
 std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
 {
   try {
-    return this->get_override("supportedExtensions")();
+    return this->get_override("supportedExtensions")().as<std::set<QString>>();
   } PYCATCH;
 }
 
