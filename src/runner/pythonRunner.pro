@@ -42,11 +42,9 @@ CONFIG(debug, debug|release) {
   QMAKE_LFLAGS += /DEBUG
 }
 
-INCLUDEPATH += "$${BOOSTPATH}" "$${PYTHONPATH}/include" "$${PYTHONPATH}/Lib/site-packages/PyQt4/include"
+INCLUDEPATH += "$${BOOSTPATH}" "$${PYTHONPATH}/include" "$${PYTHONPATH}/Lib/site-packages/PyQt5/include" ../uibase
 LIBS += -L"$${PYTHONPATH}/libs" -L"$${BOOSTPATH}/stage/lib"
 LIBS += -lpython27
-
-INCLUDEPATH += ../uibase
 LIBS += -luibase
 
 CONFIG(debug, debug|release) {
