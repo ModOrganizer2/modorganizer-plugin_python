@@ -727,6 +727,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), bpy::return_value_policy<bpy::return_by_value>())
       .def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), bpy::return_value_policy<bpy::return_by_value>())
       .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
+      .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
       ;
