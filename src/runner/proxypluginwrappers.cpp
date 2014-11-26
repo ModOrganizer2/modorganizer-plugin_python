@@ -83,7 +83,6 @@ QString IPluginToolWrapper::tooltip() const
 QIcon IPluginToolWrapper::icon() const
 {
   try {
-qDebug("%p", this->get_override("icon").ptr());
     return this->get_override("icon")().as<QIcon>();
   } PYCATCH;
 }
