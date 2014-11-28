@@ -223,7 +223,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QStringList getFileOrigins(const QString &fileName) const { return this->get_override("getFileOrigins")(fileName); }
   virtual QList<FileInfo> findFileInfos(const QString &path, const std::function<bool(const FileInfo&)> &filter) const { return this->get_override("findFileInfos")(path, filter); }
   virtual HANDLE startApplication(const QString &executable, const QStringList &args = QStringList(), const QString &cwd = "", const QString &profile = "") { return this->get_override("startApplication")(executable, args, cwd, profile); }
-  virtual bool waitForApplication(HANDLE handle, LPDWORD exitCode = NULL) const { return this->get_override("waitForApplication")(handle, exitCode); }
+  virtual bool waitForApplication(HANDLE handle, LPDWORD exitCode = nullptr) const { return this->get_override("waitForApplication")(handle, exitCode); }
   virtual void refreshModList(bool saveChanges = true) { this->get_override("refreshModList")(saveChanges); }
   virtual bool onAboutToRun(const std::function<bool(const QString&)> &func) { return this->get_override("onAboutToRun")(func); }
   virtual bool onFinishedRun(const std::function<void(const QString&, unsigned int)> &func) { return this->get_override("onFinishedRun")(func); }

@@ -37,7 +37,7 @@ const char *ProxyPython::s_DownloadPythonURL = "http://www.python.org/download/r
 
 HMODULE GetOwnModuleHandle()
 {
-  HMODULE hMod = NULL;
+  HMODULE hMod = nullptr;
   GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
       reinterpret_cast<LPCWSTR>(&GetOwnModuleHandle), &hMod);
 
@@ -50,12 +50,12 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
   HMODULE mod = GetOwnModuleHandle();
 
   HRSRC hResource = FindResourceW(mod, MAKEINTRESOURCE(resourceID), L"BINARY");
-  if (hResource == NULL) {
+  if (hResource == nullptr) {
     throw MyException("embedded dll not available: " + windowsErrorString(::GetLastError()));
   }
 
   HGLOBAL hFileResource = LoadResource(mod, hResource);
-  if (hFileResource == NULL) {
+  if (hFileResource == nullptr) {
     throw MyException("failed to load embedded dll resource: " + windowsErrorString(::GetLastError()));
   }
 
@@ -64,8 +64,8 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
 
   QString outFile = QDir::tempPath() + "/" + szFilename;
 
-  HANDLE hFile = CreateFileW(ToWString(outFile).c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  HANDLE hFileMap = CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, dwSize, NULL);
+  HANDLE hFile = CreateFileW(ToWString(outFile).c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  HANDLE hFileMap = CreateFileMapping(hFile, nullptr, PAGE_READWRITE, 0, dwSize, nullptr);
   LPVOID lpAddress = MapViewOfFile(hFileMap, FILE_MAP_WRITE, 0, 0, 0);
 
   CopyMemory(lpAddress, lpFile, dwSize);
@@ -81,7 +81,7 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
 
 
 ProxyPython::ProxyPython()
-  : m_MOInfo(NULL), m_Runner(NULL), m_LoadFailure(FAIL_NOTINIT)
+  : m_MOInfo(nullptr), m_Runner(nullptr), m_LoadFailure(FAIL_NOTINIT)
 {
 }
 
@@ -119,9 +119,9 @@ bool ProxyPython::init(IOrganizer *moInfo)
 
   m_TempRunnerFile = ExtractResource(IDR_LOADER_DLL, "__pythonRunner.dll");
   m_RunnerLib = ::LoadLibraryW(ToWString(m_TempRunnerFile).c_str());
-  if (m_RunnerLib != NULL) {
+  if (m_RunnerLib != nullptr) {
     CreatePythonRunner_func CreatePythonRunner = (CreatePythonRunner_func)::GetProcAddress(m_RunnerLib, "CreatePythonRunner");
-    if (CreatePythonRunner == NULL) {
+    if (CreatePythonRunner == nullptr) {
       throw MyException("embedded dll is invalid: " + windowsErrorString(::GetLastError()));
     }
     if (m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
@@ -146,7 +146,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
     m_Runner = CreatePythonRunner(moInfo, pythonPath);
     m_MOInfo->setPersistent(name(), "tryInit", false);
 
-    if (m_Runner != NULL) {
+    if (m_Runner != nullptr) {
       m_LoadFailure = FAIL_NONE;
     } else {
       m_LoadFailure = FAIL_INITFAIL;
@@ -210,11 +210,11 @@ QStringList ProxyPython::pluginList(const QString &pluginPath) const
 
 QObject *ProxyPython::instantiate(const QString &pluginName)
 {
-  if (m_Runner != NULL) {
+  if (m_Runner != nullptr) {
     QObject *result = m_Runner->instantiate(pluginName);
     return result;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -232,7 +232,7 @@ std::vector<unsigned int> ProxyPython::activeProblems() const
     result.push_back(PROBLEM_INITFAIL);
   } else if (m_LoadFailure == FAIL_SEMICOLON) {
     result.push_back(PROBLEM_SEMICOLON);
-  } else if (m_Runner != NULL) {
+  } else if (m_Runner != nullptr) {
     if (!m_Runner->isPythonInstalled()) {
       // don't know how this could happen but wth
       result.push_back(PROBLEM_PYTHONMISSING);
@@ -318,7 +318,7 @@ bool ProxyPython::hasGuidedFix(unsigned int key) const
 void ProxyPython::startGuidedFix(unsigned int key) const
 {
   if ((key == PROBLEM_PYTHONMISSING) || (key == PROBLEM_PYTHONWRONGVERSION)) {
-    ::ShellExecuteA(NULL, "open", s_DownloadPythonURL, NULL, NULL, SW_SHOWNORMAL);
+    ::ShellExecuteA(nullptr, "open", s_DownloadPythonURL, nullptr, nullptr, SW_SHOWNORMAL);
   }
 }
 

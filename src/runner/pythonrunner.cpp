@@ -22,7 +22,7 @@
 #endif
 
 
-MOBase::IOrganizer *s_Organizer = NULL;
+MOBase::IOrganizer *s_Organizer = nullptr;
 
 
 
@@ -55,7 +55,7 @@ IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pyt
     return result;
   } else {
     delete result;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -103,13 +103,13 @@ struct QString_from_python_str
   }
 
   static void *convertible(PyObject *objPtr) {
-    return PyString_Check(objPtr) ? objPtr : NULL;
+    return PyString_Check(objPtr) ? objPtr : nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
     // Extract the character data from the python string
     const char* value = PyString_AsString(objPtr);
-    assert(value != NULL);
+    assert(value != nullptr);
 
     // allocate storage
     void *storage = ((bpy::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
@@ -146,7 +146,7 @@ struct GuessedValue_converters
       if PyList_Check(objPtr) {
         return objPtr;
       } else {
-        return NULL;
+        return nullptr;
       }
     }
 
@@ -217,7 +217,7 @@ struct QVariant_from_python_obj
   static void *convertible(PyObject *objPtr) {
     if (!PyString_Check(objPtr) && !PyInt_Check(objPtr) &&
         !PyBool_Check(objPtr) && !PyList_Check(objPtr)) {
-      return NULL;
+      return nullptr;
     }
     return objPtr;
   }
@@ -310,7 +310,7 @@ struct QList_from_python_obj
 
   static void* convertible(PyObject *objPtr) {
     if (PyList_Check(objPtr)) return objPtr;
-    return NULL;
+    return nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
@@ -339,7 +339,7 @@ struct stdset_from_python_list
 
   static void* convertible(PyObject *objPtr) {
     if (PyList_Check(objPtr)) return objPtr;
-    return NULL;
+    return nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
@@ -359,8 +359,8 @@ struct stdset_from_python_list
 
 static const sipAPIDef *sipAPI()
 {
-  static const sipAPIDef *sipApi = NULL;
-  if (sipApi == NULL) {
+  static const sipAPIDef *sipApi = nullptr;
+  if (sipApi == nullptr) {
     sipApi = (const sipAPIDef *)PyCapsule_Import("sip._C_API", 0);
   }
 
@@ -393,19 +393,19 @@ template <> struct MetaData<QVariant> { static const char *className() { return 
 template <typename T>
 PyObject *toPyQt(T *objPtr)
 {
-  if (objPtr == NULL) {
+  if (objPtr == nullptr) {
     qDebug("no input object");
     return bpy::incref(Py_None);
   }
   const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
 
-  if (type == NULL) {
+  if (type == nullptr) {
     qDebug("failed to determine type: %s", MetaData<T>::className());
     return bpy::incref(Py_None);
   }
 
   PyObject *sipObj = sipAPI()->api_convert_from_type(objPtr, type, 0);
-  if (sipObj == NULL) {
+  if (sipObj == nullptr) {
     qDebug("failed to convert");
     return bpy::incref(Py_None);
   }
@@ -420,12 +420,12 @@ struct QClass_converters
   {
     static PyObject *convert(const T &object) {
       const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == NULL) {
+      if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
       PyObject *sipObj = sipAPI()->api_convert_from_type((void*)(&object), type, 0);
-      if (sipObj == NULL) {
+      if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
 
@@ -433,17 +433,17 @@ struct QClass_converters
     }
 
     static PyObject *convert(T *object) {
-      if (object == NULL) {
+      if (object == nullptr) {
         return bpy::incref(Py_None);
       }
 
       const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == NULL) {
+      if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
       PyObject *sipObj = sipAPI()->api_convert_from_type(object, type, 0);
-      if (sipObj == NULL) {
+      if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
 
@@ -484,12 +484,12 @@ struct QInterface_converters
   {
     static PyObject *convert(const T &object) {
       const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == NULL) {
+      if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
       PyObject *sipObj = sipAPI()->api_convert_from_type((void*)(&object), type, 0);
-      if (sipObj == NULL) {
+      if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
 
@@ -497,17 +497,17 @@ struct QInterface_converters
     }
 
     static PyObject *convert(T *object) {
-      if (object == NULL) {
+      if (object == nullptr) {
         return bpy::incref(Py_None);
       }
 
       const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == NULL) {
+      if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
       PyObject *sipObj = sipAPI()->api_convert_from_type(object, type, 0);
-      if (sipObj == NULL) {
+      if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
 
@@ -579,7 +579,7 @@ struct Functor0_converter
   {
     if (!PyCallable_Check(object)
         || (getArgCount(object) != 0)) {
-      return NULL;
+      return nullptr;
     }
     return object;
   }
@@ -620,7 +620,7 @@ struct Functor2_converter
   {
     if (!PyCallable_Check(object)
         || (getArgCount(object) != 2)) {
-      return NULL;
+      return nullptr;
     }
     return object;
   }
@@ -937,7 +937,7 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     std::string temp = ToString(pluginName);
     if (handled_exec_file(temp.c_str(), moduleNamespace)) {
       reportPythonError();
-      return NULL;
+      return nullptr;
     }
     m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
 
@@ -948,7 +948,7 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
     reportPythonError();
   }
-  return NULL;
+  return nullptr;
 }
 
 bool PythonRunner::isPythonInstalled() const
