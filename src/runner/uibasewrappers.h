@@ -203,6 +203,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
   virtual QString downloadsPath() const { return this->get_override("downloadsPath")(); }
+  virtual QString overwritePath() const { return this->get_override("overwritePath")(); }
   virtual MOBase::VersionInfo appVersion() const { return this->get_override("appVersion")(); }
   virtual MOBase::IModInterface *getMod(const QString &name) { return this->get_override("getMod")(name); }
   virtual MOBase::IModInterface *createMod(MOBase::GuessedValue<QString> &name) { return this->get_override("createMod")(name); }
