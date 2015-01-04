@@ -841,7 +841,7 @@ PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
   m_PythonHome = new char[MAX_PATH + 1];
 }
 
-static char* argv0 = "ModOrganizer.exe";
+static const char *argv0 = "ModOrganizer.exe";
 
 
 bool PythonRunner::initPython(const QString &pythonPath)
@@ -855,7 +855,10 @@ bool PythonRunner::initPython(const QString &pythonPath)
       Py_SetPythonHome(m_PythonHome);
     }
 
-    Py_SetProgramName(argv0);
+    char argBuffer[MAX_PATH];
+    strcpy(argBuffer, argv0);
+
+    Py_SetProgramName(argBuffer);
     PyImport_AppendInittab("mobase", &initmobase);
     Py_OptimizeFlag = 2;
     Py_NoSiteFlag = 1;
@@ -865,7 +868,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
       return false;
     }
 
-    PySys_SetArgv(0, &argv0);
+    PySys_SetArgv(0, (char**)&argBuffer);
 
     bpy::object mainModule = bpy::import("__main__");
     bpy::object mainNamespace = mainModule.attr("__dict__");

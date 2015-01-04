@@ -203,6 +203,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
   virtual QString downloadsPath() const { return this->get_override("downloadsPath")(); }
+  virtual QString overwritePath() const { return this->get_override("overwritePath")(); }
   virtual MOBase::VersionInfo appVersion() const { return this->get_override("appVersion")(); }
   virtual MOBase::IModInterface *getMod(const QString &name) { return this->get_override("getMod")(name); }
   virtual MOBase::IModInterface *createMod(MOBase::GuessedValue<QString> &name) { return this->get_override("createMod")(name); }
@@ -268,6 +269,7 @@ struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBas
   virtual void setNewestVersion(const MOBase::VersionInfo &version) { this->get_override("setNewestVersion")(version); }
   virtual void setIsEndorsed(bool endorsed) { this->get_override("setIsEndorsed")(endorsed); }
   virtual void setNexusID(int nexusID) { this->get_override("setNexusID")(nexusID); }
+  virtual void setInstallationFile(const QString &fileName) { this->get_override("setInstallationFile")(fileName); }
   virtual void addNexusCategory(int categoryID) { this->get_override("addNexusCategory")(categoryID); }
   virtual bool setName(const QString &name) { return this->get_override("setName")(name); }
   virtual bool remove() { return this->get_override("remove")(); }
