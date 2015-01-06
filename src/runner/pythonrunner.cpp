@@ -1,5 +1,3 @@
-#define HAVE_ROUND
-
 #include "pythonrunner.h"
 
 #pragma warning( disable : 4100 )

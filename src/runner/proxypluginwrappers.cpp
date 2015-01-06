@@ -1,4 +1,3 @@
-//#define HAVE_ROUND
 #include "proxypluginwrappers.h"
 #include <utility.h>
 #include "error.h"
@@ -83,7 +82,6 @@ QString IPluginToolWrapper::tooltip() const
 QIcon IPluginToolWrapper::icon() const
 {
   try {
-qDebug("%p", this->get_override("icon").ptr());
     return this->get_override("icon")().as<QIcon>();
   } PYCATCH;
 }

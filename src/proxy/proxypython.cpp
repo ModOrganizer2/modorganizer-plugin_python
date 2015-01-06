@@ -64,7 +64,7 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
 
   QString outFile = QDir::tempPath() + "/" + szFilename;
 
-  HANDLE hFile = CreateFileW(ToWString(outFile).c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  HANDLE hFile = CreateFileW(outFile.toStdWString().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   HANDLE hFileMap = CreateFileMapping(hFile, nullptr, PAGE_READWRITE, 0, dwSize, nullptr);
   LPVOID lpAddress = MapViewOfFile(hFileMap, FILE_MAP_WRITE, 0, 0, 0);
 
@@ -154,7 +154,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
     return true;
   } else {
     DWORD error = ::GetLastError();
-    qCritical("Failed to load python runner: %s", qPrintable(windowsErrorString(error)));
+    qCritical("Failed to load python runner (%s): %s", qPrintable(m_TempRunnerFile), qPrintable(windowsErrorString(error)));
     if (error == ERROR_MOD_NOT_FOUND) {
       m_LoadFailure = FAIL_MISSINGDEPENDENCIES;
     }
