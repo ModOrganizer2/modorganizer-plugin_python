@@ -28,7 +28,7 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <pythonrunner.h>
 
 
-class ProxyPython : public QObject, MOBase::IPluginProxy, MOBase::IPluginDiagnose
+class ProxyPython : public QObject, public MOBase::IPluginProxy, public MOBase::IPluginDiagnose
 {
   Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy MOBase::IPluginDiagnose)
