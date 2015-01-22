@@ -15,6 +15,9 @@
 #include <imodrepositorybridge.h>
 #include <imodinterface.h>
 #include <iinstallationmanager.h>
+#include <idownloadmanager.h>
+#include <ipluginlist.h>
+#include <imodlist.h>
 #include "error.h"
 #include "gilock.h"
 
