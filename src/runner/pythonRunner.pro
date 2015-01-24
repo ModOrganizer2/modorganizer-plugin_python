@@ -13,13 +13,12 @@ CONFIG += warn_on
 DEFINES += PYTHONRUNNER_LIBRARY
 
 # suppress a few warnings caused by boost vs vc++ paranoia
-DEFINES += _SCL_SECURE_NO_WARNINGS -DHAVE_ROUND
+DEFINES += _SCL_SECURE_NO_WARNINGS HAVE_ROUND
 
 
 !include(../LocalPaths.pri) {
   message("paths to required libraries need to be set up in LocalPaths.pri")
 }
-
 
 SOURCES += pythonrunner.cpp \
     gilock.cpp \

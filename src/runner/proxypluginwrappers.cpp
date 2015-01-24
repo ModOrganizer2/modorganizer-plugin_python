@@ -1,4 +1,3 @@
-//#define HAVE_ROUND
 #include "proxypluginwrappers.h"
 #include <utility.h>
 #include "error.h"
