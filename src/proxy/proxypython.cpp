@@ -60,13 +60,26 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
   }
 
   LPVOID lpFile = LockResource(hFileResource);
+  if (lpFile == nullptr) {
+    throw MyException(QString("failed to lock resource: %1").arg(windowsErrorString(::GetLastError())));
+  }
+
   DWORD dwSize = SizeofResource(mod, hResource);
 
   QString outFile = QDir::tempPath() + "/" + szFilename;
 
   HANDLE hFile = CreateFileW(outFile.toStdWString().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    throw MyException(QString("failed to open python runner: %1").arg(windowsErrorString(::GetLastError())));
+  }
   HANDLE hFileMap = CreateFileMapping(hFile, nullptr, PAGE_READWRITE, 0, dwSize, nullptr);
+  if (hFileMap == NULL) {
+    throw MyException(QString("failed to map python runner: %1").arg(windowsErrorString(::GetLastError())));
+  }
   LPVOID lpAddress = MapViewOfFile(hFileMap, FILE_MAP_WRITE, 0, 0, 0);
+  if (lpAddress == nullptr) {
+    throw MyException(QString("failed to map view of file: %1").arg(windowsErrorString(::GetLastError())));
+  }
 
   CopyMemory(lpAddress, lpFile, dwSize);
 
