@@ -70,7 +70,12 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
 
   HANDLE hFile = CreateFileW(outFile.toStdWString().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (hFile == INVALID_HANDLE_VALUE) {
-    throw MyException(QString("failed to open python runner: %1").arg(windowsErrorString(::GetLastError())));
+    if (::GetLastError() == ERROR_SHARING_VIOLATION) {
+      // dll exists and is opened by another instance of MO, shouldn't be outdated then...
+      return outFile;
+    } else {
+      throw MyException(QString("failed to open python runner: %1").arg(windowsErrorString(::GetLastError())));
+    }
   }
   HANDLE hFileMap = CreateFileMapping(hFile, nullptr, PAGE_READWRITE, 0, dwSize, nullptr);
   if (hFileMap == NULL) {
