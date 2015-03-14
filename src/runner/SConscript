@@ -1,0 +1,69 @@
+import os
+
+Import('qt_env')
+
+env = qt_env.Clone()
+
+modules = [
+    'Core',
+    'Gui',
+]
+
+env.EnableQt4Modules(['Qt' + n for n in modules],
+                     debug = env['CONFIG'] == 'debug')
+
+env.AppendUnique(CPPDEFINES = 'PYTHONRUNNER_LIBRARY')
+
+# suppress a few warnings caused by boost vs vc++ paranoia
+# NB HAVE_ROUND causes a warning because it's defined in pythonrunner.cpp
+env.AppendUnique(CPPDEFINES = [
+    '_SCL_SECURE_NO_WARNINGS',
+    'HAVE_ROUND'
+])
+
+#CONFIG(debug, debug|release) {
+#  LIBS += -L$$OUT_PWD/../uibase/debug
+#} else {
+#  LIBS += -L$$OUT_PWD/../uibase/release
+#  QMAKE_CXXFLAGS += /Zi
+#  QMAKE_LFLAGS += /DEBUG
+#}
+#
+
+# AppendUnique appears not to work with QT4
+env['CPPPATH'] += [
+    '${BOOST_PATH}',
+    '${PYTHONPATH}\\include',
+    '..\\uibase'
+]
+
+env.AppendUnique(LIBS = [
+    'python27',  # Could be done better
+    'uibase'
+])
+
+env.AppendUnique(LIBPATH = [
+    '${PYTHONPATH}/libs',  # Could be done better
+    '..\\uibase'
+])
+
+# We have to 'persuade' moc to generate certain other targets and inject them
+# into the list of cpps
+targets = env.AddExtraMoc(env.Glob('*.h'))
+
+# pythontoolwrapper doesnt compile and isn't in the project file
+cpp_files = [ x for x in Glob('*.cpp')
+                               if not str(x).endswith('pythontoolwrapper.cpp') ]
+
+lib = env.SharedLibrary('pythonrunner', cpp_files + targets)
+env.Depends(lib, env.Value(env['ENV']['DLLSPATH']))
+
+# FIXME scons bug doesn't provide pdb for executable.
+if env['CONFIG'] == 'debug':
+    x = env.File('pythonrunner.pdb')
+    env.Depends(x, lib)
+    lib.append(x)
+
+env.Install(env['INSTALL_PATH'], [
+    filter(lambda x: str(x).endswith('.dll') or str(x).endswith('.pdb'), lib),
+])
