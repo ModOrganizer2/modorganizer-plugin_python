@@ -52,18 +52,12 @@ env.AppendUnique(LIBPATH = [
 targets = env.AddExtraMoc(env.Glob('*.h'))
 
 # pythontoolwrapper doesnt compile and isn't in the project file
-cpp_files = [ x for x in Glob('*.cpp')
-                               if not str(x).endswith('pythontoolwrapper.cpp') ]
+cpp_files = [
+    x for x in Glob('*.cpp') if not str(x).endswith('pythontoolwrapper.cpp')
+]
 
 lib = env.SharedLibrary('pythonrunner', cpp_files + targets)
-env.Depends(lib, env.Value(env['ENV']['DLLSPATH']))
 
-# FIXME scons bug doesn't provide pdb for executable.
-if env['CONFIG'] == 'debug':
-    x = env.File('pythonrunner.pdb')
-    env.Depends(x, lib)
-    lib.append(x)
-
-env.Install(env['INSTALL_PATH'], [
-    filter(lambda x: str(x).endswith('.dll') or str(x).endswith('.pdb'), lib),
-])
+env.Install(env['INSTALL_PATH'],
+            filter(lambda x: str(x).endswith('.dll') or str(x).endswith('.pdb'),
+                   lib))
