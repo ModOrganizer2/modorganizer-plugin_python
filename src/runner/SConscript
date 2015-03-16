@@ -58,6 +58,4 @@ cpp_files = [
 
 lib = env.SharedLibrary('pythonrunner', cpp_files + targets)
 
-env.Install(env['INSTALL_PATH'],
-            filter(lambda x: str(x).endswith('.dll') or str(x).endswith('.pdb'),
-                   lib))
+env.InstallModule(lib)
