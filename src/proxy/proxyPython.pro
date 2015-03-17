@@ -29,7 +29,8 @@ HEADERS += proxypython.h \
 
 OTHER_FILES += \
     proxypython.json \
-    embedrunner.rc
+    embedrunner.rc\
+    SConscript
 
 RC_FILE += \
     embedrunner.rc

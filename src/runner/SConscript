@@ -1,5 +1,3 @@
-import os
-
 Import('qt_env')
 
 env = qt_env.Clone()
@@ -21,18 +19,12 @@ env.AppendUnique(CPPDEFINES = [
     'HAVE_ROUND'
 ])
 
-#CONFIG(debug, debug|release) {
-#  LIBS += -L$$OUT_PWD/../uibase/debug
-#} else {
-#  LIBS += -L$$OUT_PWD/../uibase/release
 #  QMAKE_CXXFLAGS += /Zi
 #  QMAKE_LFLAGS += /DEBUG
-#}
-#
 
 # AppendUnique appears not to work with QT4
 env['CPPPATH'] += [
-    '${BOOST_PATH}',
+    '${BOOSTPATH}',
     '${PYTHONPATH}\\include',
     '..\\uibase'
 ]
@@ -56,6 +48,6 @@ cpp_files = [
     x for x in Glob('*.cpp') if not str(x).endswith('pythontoolwrapper.cpp')
 ]
 
-lib = env.SharedLibrary('pythonrunner', cpp_files + targets)
+lib = env.SharedLibrary('pythonRunner', cpp_files + targets)
 
 env.InstallModule(lib)

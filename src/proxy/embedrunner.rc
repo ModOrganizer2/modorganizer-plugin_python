@@ -1,7 +1,11 @@
 #include "resource.h"
 
+#ifdef SCONS_VARIANT
+IDR_LOADER_DLL        BINARY  MOVEABLE PURE   SCONS_VARIANT
+#else
 #ifdef _DEBUG
 IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\debug\\pythonRunner.dll"
 #else // _DEBUG
 IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\release\\pythonRunner.dll"
 #endif // _DEBUG
+#endif

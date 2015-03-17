@@ -1,0 +1,48 @@
+import os
+
+Import('qt_env')
+
+env = qt_env.Clone()
+
+modules = [
+    'Core',
+    'Gui',
+]
+
+if env['QT_MAJOR_VERSION'] > 4:
+    modules += [ 'Widgets' ]
+
+env.EnableQt4Modules(['Qt' + n for n in modules],
+                     debug = env['CONFIG'] == 'debug')
+
+env.AppendUnique(CPPDEFINES = [
+    'PROXYPYTHON_LIBRARY',
+    # suppress a few warnings caused by boost vs vc++ paranoia
+    '_SCL_SECURE_NO_WARNINGS'
+])
+
+env.RequireLibraries('uibase')
+
+env.AppendUnique(CPPPATH = [
+    '${BOOSTPATH}',
+    '..\\..\\pythonRunner'
+])
+
+env.AppendUnique(LIBS = 'shell32')
+print env['RCFLAGS']
+
+runner = env.File(os.path.join('..', '..', 'pythonRunner', 'pythonRunner.dll'))
+
+# Seriously, this is horrible
+env.AppendUnique(RCFLAGS = [
+    '-DSCONS_VARIANT="\\"%s\\""' % runner.abspath
+])
+
+# Make sure we have the proper dependencies so it gets built
+env.Depends('embedrunner.res', runner)
+
+# There's a whole load of unused C++ files in here.
+lib = env.SharedLibrary('proxyPython',
+                        [ 'proxypython.cpp' ] + env.RES(env.Glob('*.rc')))
+
+env.InstallPlugin(lib)
