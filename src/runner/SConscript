@@ -2,13 +2,7 @@ Import('qt_env')
 
 env = qt_env.Clone()
 
-modules = [
-    'Core',
-    'Gui',
-]
-
-env.EnableQt4Modules(['Qt' + n for n in modules],
-                     debug = env['CONFIG'] == 'debug')
+env.EnableQtModules('Core', 'Gui')
 
 env.AppendUnique(CPPDEFINES = 'PYTHONRUNNER_LIBRARY')
 
@@ -22,21 +16,20 @@ env.AppendUnique(CPPDEFINES = [
 #  QMAKE_CXXFLAGS += /Zi
 #  QMAKE_LFLAGS += /DEBUG
 
+env.RequireLibraries('uibase')
+
 # AppendUnique appears not to work with QT4
 env['CPPPATH'] += [
     '${BOOSTPATH}',
     '${PYTHONPATH}\\include',
-    '..\\uibase'
 ]
 
 env.AppendUnique(LIBS = [
     'python27',  # Could be done better
-    'uibase'
 ])
 
 env.AppendUnique(LIBPATH = [
     '${PYTHONPATH}/libs',  # Could be done better
-    '..\\uibase'
 ])
 
 # We have to 'persuade' moc to generate certain other targets and inject them
@@ -45,7 +38,7 @@ targets = env.AddExtraMoc(env.Glob('*.h'))
 
 # pythontoolwrapper doesnt compile and isn't in the project file
 cpp_files = [
-    x for x in Glob('*.cpp') if not str(x).endswith('pythontoolwrapper.cpp')
+    x for x in Glob('*.cpp') if x.name != 'pythontoolwrapper.cpp'
 ]
 
 lib = env.SharedLibrary('pythonRunner', cpp_files + targets)
