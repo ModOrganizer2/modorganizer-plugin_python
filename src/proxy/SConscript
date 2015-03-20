@@ -32,3 +32,6 @@ lib = env.SharedLibrary('proxyPython',
                         [ 'proxypython.cpp' ] + env.RES(env.Glob('*.rc')))
 
 env.InstallModule(lib)
+
+res = env['QT_USED_MODULES']
+Return('res')

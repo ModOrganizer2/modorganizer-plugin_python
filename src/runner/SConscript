@@ -44,3 +44,6 @@ cpp_files = [
 lib = env.SharedLibrary('pythonRunner', cpp_files + targets)
 
 env.InstallModule(lib)
+
+res = env['QT_USED_MODULES']
+Return('res')
