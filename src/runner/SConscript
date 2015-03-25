@@ -46,5 +46,15 @@ lib = env.SharedLibrary('pythonRunner', cpp_files + targets)
 #This is referred to from inside a resource file. We don't install it.
 #env.InstallModule(lib)
 
+# However...
+# we do need boost-python and pythonvv.dll and pythonvv.zip (though the last
+# isn't needed to just bring up the module)
+#env.Pseudo('install')
+#env.Depends('install',
+#            (env.Install('${INSTALL_PATH}', 'pyCfg.py'),
+#             env.Install(os.path.join('${INSTALL_PATH}', 'data'),
+#                         ( ui, rc, 'settings.json' )),
+#             ))
+
 res = env['QT_USED_MODULES']
 Return('res')
