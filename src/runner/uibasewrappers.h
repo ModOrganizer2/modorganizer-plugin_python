@@ -280,7 +280,7 @@ struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBas
 
 
 struct IPluginListWrapper: MOBase::IPluginList, boost::python::wrapper<MOBase::IPluginList> {
-  virtual PluginState state(const QString &name) const { return this->get_override("state")(name); }
+  virtual PluginStates state(const QString &name) const { return this->get_override("state")(name); }
   virtual int priority(const QString &name) const { return this->get_override("priority")(name); }
   virtual int loadOrder(const QString &name) const { return this->get_override("loadOrder")(name); }
   virtual bool isMaster(const QString &name) const { return this->get_override("isMaster")(name); }
@@ -288,6 +288,7 @@ struct IPluginListWrapper: MOBase::IPluginList, boost::python::wrapper<MOBase::I
   virtual QString origin(const QString &name) const { return this->get_override("origin")(name); }
   virtual bool onRefreshed(const std::function<void ()> &callback) { return this->get_override("onRefreshed")(callback); }
   virtual bool onPluginMoved(const std::function<void (const QString &, int, int)> &callback) { return this->get_override("onPluginMoved")(callback); }
+  virtual bool onPluginStateChanged(const std::function<void (const QString &, PluginStates)> &callback) override { return this->get_override("onPluginStateChanged")(callback); }
 };
 
 
