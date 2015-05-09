@@ -19,16 +19,17 @@ env.AppendUnique(LIBS = 'shell32')
 
 runner = env.File(os.path.join('..', '..', 'pythonRunner', 'pythonRunner.dll'))
 
-env.AppendUnique(RCFLAGS = [
-    '/dSCONS_VARIANT',
-    '/i"%s"' % runner.dir
-])
-
+runner_env = env.Clone()
+runner_env.AppendUnique(CPPDEFINES = 'SCONS_BUILD')
+runner_env.AppendUnique(CPPPATH = runner.dir)
+rc = runner_env.RES('embedrunner.rc')
 # Make sure we have the proper dependencies so it gets built
-env.Depends('embedrunner.res', runner)
+runner_env.Depends(rc, runner)
 
 # There's a whole load of unused C++ files in here.
-lib = env.SharedLibrary('proxyPython',
-                        [ 'proxypython.cpp' ] + env.RES(env.Glob('*.rc')))
+lib = env.SharedLibrary('proxyPython', [ 'proxypython.cpp' ] + rc)
 
 env.InstallModule(lib)
+
+res = env['QT_USED_MODULES']
+Return('res')
