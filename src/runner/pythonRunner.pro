@@ -37,8 +37,8 @@ CONFIG(debug, debug|release) {
   LIBS += -L$$OUT_PWD/../uibase/debug
 } else {
   LIBS += -L$$OUT_PWD/../uibase/release
-  QMAKE_CXXFLAGS += /Zi
-  QMAKE_LFLAGS += /DEBUG
+  msvc:QMAKE_CXXFLAGS += /Zi
+  msvc:QMAKE_LFLAGS += /DEBUG
 }
 
 INCLUDEPATH += "$${BOOSTPATH}" "$${PYTHONPATH}/include" "$${PYTHONPATH}/Lib/site-packages/PyQt5/include" ../uibase
