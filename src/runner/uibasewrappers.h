@@ -217,7 +217,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual QVariant persistent(const QString &pluginName, const QString &key, const QVariant &def = QVariant()) const { return this->get_override("persistent")(pluginName, key, def); }
   virtual void setPersistent(const QString &pluginName, const QString &key, const QVariant &value, bool sync = true) { this->get_override("setPersistent")(pluginName, key, value, sync); }
   virtual QString pluginDataPath() const { return this->get_override("pluginDataPath")(); }
-  virtual MOBase::IModInterface *installMod(const QString &fileName) { return this->get_override("installMod")(fileName); }
+  virtual MOBase::IModInterface *installMod(const QString &fileName, const QString &nameSuggestion = QString()) { return this->get_override("installMod")(fileName, nameSuggestion); }
   virtual MOBase::IDownloadManager *downloadManager() { return this->get_override("downloadManager")(); }
   virtual MOBase::IPluginList *pluginList() { return this->get_override("pluginList")(); }
   virtual MOBase::IModList *modList() { return this->get_override("modList")(); }
@@ -293,12 +293,14 @@ struct IPluginListWrapper: MOBase::IPluginList, boost::python::wrapper<MOBase::I
 
 
 struct IModListWrapper: MOBase::IModList, boost::python::wrapper<MOBase::IModList> {
-  virtual QString displayName(const QString &internalName) const { return this->get_override("displayName")(internalName); }
-  virtual ModStates state(const QString &name) const { return this->get_override("state")(name); }
-  virtual int priority(const QString &name) const { return this->get_override("priority")(name); }
-  virtual bool setPriority(const QString &name, int newPriority) { return this->get_override("setPriority")(name, newPriority); }
-  virtual bool onModStateChanged(const std::function<void (const QString &, ModStates)> &func) { return this->get_override("onModStateChanged")(func); }
-  virtual bool onModMoved(const std::function<void (const QString &, int, int)> &func) { return this->get_override("onModMoved")(func); }
+  virtual QString displayName(const QString &internalName) const override { return this->get_override("displayName")(internalName); }
+  virtual QStringList allMods() const override { return this->get_override("allMods")(); }
+  virtual ModStates state(const QString &name) const override { return this->get_override("state")(name); }
+  virtual int priority(const QString &name) const override { return this->get_override("priority")(name); }
+  virtual bool setActive(const QString &name, bool active) override { return this->get_override("setActive")(name, active); }
+  virtual bool setPriority(const QString &name, int newPriority) override { return this->get_override("setPriority")(name, newPriority); }
+  virtual bool onModStateChanged(const std::function<void (const QString &, ModStates)> &func) override { return this->get_override("onModStateChanged")(func); }
+  virtual bool onModMoved(const std::function<void (const QString &, int, int)> &func) override { return this->get_override("onModMoved")(func); }
 };
 
 #endif // UIBASEWRAPPERS_H

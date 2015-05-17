@@ -385,6 +385,7 @@ template <> struct MetaData<IDownloadManager> { static const char *className() {
 template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
+template <> struct MetaData<QStringList> { static const char *className() { return "QStringList"; } };
 template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
 
 
@@ -648,6 +649,7 @@ BOOST_PYTHON_MODULE(mobase)
   //QClass_converters<QObject>();
   QClass_converters<QWidget>();
   QClass_converters<QIcon>();
+  QClass_converters<QStringList>();
   QInterface_converters<IDownloadManager>();
 
 
@@ -718,7 +720,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
       .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
       .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
-      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod),(bpy::arg("nameSuggestion")=""), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
@@ -814,7 +816,9 @@ BOOST_PYTHON_MODULE(mobase)
   Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
       .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
+      .def("allMods", bpy::pure_virtual(&MOBase::IModList::allMods))
       .def("state", bpy::pure_virtual(&MOBase::IModList::state))
+      .def("setActive", bpy::pure_virtual(&MOBase::IModList::setActive))
       .def("priority", bpy::pure_virtual(&MOBase::IModList::priority))
       .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
       .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
