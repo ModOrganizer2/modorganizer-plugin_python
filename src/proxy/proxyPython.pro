@@ -29,11 +29,9 @@ HEADERS += proxypython.h \
 
 OTHER_FILES += \
     proxypython.json \
-    embedrunner.rc\
     SConscript
 
-RC_FILE += \
-    embedrunner.rc
+RC_FILE +=
 
 include(../plugin_template.pri)
 

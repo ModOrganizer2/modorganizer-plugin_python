@@ -135,8 +135,9 @@ bool ProxyPython::init(IOrganizer *moInfo)
     return true;
   }
 
-  m_TempRunnerFile = ExtractResource(IDR_LOADER_DLL, "__pythonRunner.dll");
-  m_RunnerLib = ::LoadLibraryW(ToWString(m_TempRunnerFile).c_str());
+  //m_TempRunnerFile = ExtractResource(IDR_LOADER_DLL, "__pythonRunner.dll");
+  //m_RunnerLib = ::LoadLibraryW(ToWString(m_TempRunnerFile).c_str());
+  m_RunnerLib = ::LoadLibraryW(QDir::toNativeSeparators(m_MOInfo->pluginDataPath() + "/pythonRunner.dll").toStdWString().c_str());
   if (m_RunnerLib != nullptr) {
     CreatePythonRunner_func CreatePythonRunner = (CreatePythonRunner_func)::GetProcAddress(m_RunnerLib, "CreatePythonRunner");
     if (CreatePythonRunner == nullptr) {
