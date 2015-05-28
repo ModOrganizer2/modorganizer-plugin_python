@@ -43,8 +43,7 @@ cpp_files = [
 
 lib = env.SharedLibrary('pythonRunner', cpp_files + targets)
 
-#This is referred to from inside a resource file. We don't install it.
-#env.InstallModule(lib)
+env.InstallModule(lib, 'plugins/data')
 
 # However...
 # we do need boost-python and pythonvv.dll and pythonvv.zip (though the last
