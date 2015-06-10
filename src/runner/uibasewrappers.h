@@ -266,16 +266,19 @@ struct IGameInfoWrapper: MOBase::IGameInfo, boost::python::wrapper<MOBase::IGame
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>
 {
-  virtual QString name() const { return this->get_override("name")();  }
-  virtual QString absolutePath() const { return this->get_override("absolutePath")(); }
-  virtual void setVersion(const MOBase::VersionInfo &version) { this->get_override("setVersion")(version); }
-  virtual void setNewestVersion(const MOBase::VersionInfo &version) { this->get_override("setNewestVersion")(version); }
-  virtual void setIsEndorsed(bool endorsed) { this->get_override("setIsEndorsed")(endorsed); }
-  virtual void setNexusID(int nexusID) { this->get_override("setNexusID")(nexusID); }
-  virtual void setInstallationFile(const QString &fileName) { this->get_override("setInstallationFile")(fileName); }
-  virtual void addNexusCategory(int categoryID) { this->get_override("addNexusCategory")(categoryID); }
-  virtual bool setName(const QString &name) { return this->get_override("setName")(name); }
-  virtual bool remove() { return this->get_override("remove")(); }
+  virtual QString name() const override { return this->get_override("name")();  }
+  virtual QString absolutePath() const override { return this->get_override("absolutePath")(); }
+  virtual void setVersion(const MOBase::VersionInfo &version) override { this->get_override("setVersion")(version); }
+  virtual void setNewestVersion(const MOBase::VersionInfo &version) override { this->get_override("setNewestVersion")(version); }
+  virtual void setIsEndorsed(bool endorsed) override { this->get_override("setIsEndorsed")(endorsed); }
+  virtual void setNexusID(int nexusID) override { this->get_override("setNexusID")(nexusID); }
+  virtual void setInstallationFile(const QString &fileName) override { this->get_override("setInstallationFile")(fileName); }
+  virtual void addNexusCategory(int categoryID) override { this->get_override("addNexusCategory")(categoryID); }
+  virtual bool setName(const QString &name) override { return this->get_override("setName")(name); }
+  virtual bool remove() override { return this->get_override("remove")(); }
+  virtual void addCategory(const QString &categoryName) override { this->get_override("addCategory")(categoryName); }
+  virtual bool removeCategory(const QString &categoryName) override { return this->get_override("removeCategory")(categoryName); }
+  virtual QStringList categories() override { return this->get_override("categories")(); }
 };
 
 
