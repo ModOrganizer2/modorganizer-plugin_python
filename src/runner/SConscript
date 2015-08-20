@@ -13,6 +13,10 @@ env.AppendUnique(CPPDEFINES = [
     'HAVE_ROUND'
 ])
 
+# Boost produces very long names with msvc truncates. Doesn't seem to cause
+# problems.
+env.AppendUnique(CPPFLAGS = [ '-wd4503' ])
+
 #  QMAKE_CXXFLAGS += /Zi
 #  QMAKE_LFLAGS += /DEBUG
 
