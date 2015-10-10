@@ -1,7 +1,7 @@
 #include "proxypluginwrappers.h"
 #include <boost/python.hpp>
 #include <utility.h>
-#include "error.h"
+//#include "error.h"
 #include "gilock.h"
 
 namespace bpy = boost::python;
