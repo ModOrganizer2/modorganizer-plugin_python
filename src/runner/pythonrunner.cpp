@@ -763,6 +763,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
       .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
       .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
+      .def("setURL", bpy::pure_virtual(&IInstallationManager::setURL))
       ;
 
   bpy::class_<IModInterfaceWrapper, boost::noncopyable>("IModInterface")
