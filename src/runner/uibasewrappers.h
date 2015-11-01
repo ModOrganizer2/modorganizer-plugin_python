@@ -262,6 +262,8 @@ struct IGameInfoWrapper: MOBase::IGameInfo, boost::python::wrapper<MOBase::IGame
   virtual Type type() const { return this->get_override("type")(); }
   virtual QString path() const { return this->get_override("path")(); }
   virtual QString binaryName() const { return this->get_override("binaryName")(); }
+  virtual QString version() const { return this->get_override("version")(); }
+  virtual QString extenderVersion() const { return this->get_override("extenderVersion")(); }
 };
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>

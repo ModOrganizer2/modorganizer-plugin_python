@@ -702,6 +702,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("type", bpy::pure_virtual(&IGameInfo::type))
       .def("path", bpy::pure_virtual(&IGameInfo::path))
       .def("binaryName", bpy::pure_virtual(&IGameInfo::binaryName))
+      .def("version", bpy::pure_virtual(&IGameInfo::version))
+      .def("extenderVersion", bpy::pure_virtual(&IGameInfo::extenderVersion))
       ;
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
