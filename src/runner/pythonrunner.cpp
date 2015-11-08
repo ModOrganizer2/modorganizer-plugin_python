@@ -11,6 +11,7 @@
 #include <utility.h>
 #include <QFile>
 #include <QCoreApplication>
+#include <QWidget>
 
 // sip and qt slots seems to conflict
 #include <sip.h>
@@ -905,7 +906,7 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
 
 
 #define TRY_PLUGIN_TYPE(type, var) do { \
-    bpy::extract<type ## *> extr(var); \
+    bpy::extract<type *> extr(var); \
     if (extr.check()) { \
       QObject *res = extr; \
       return res; \

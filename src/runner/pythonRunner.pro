@@ -9,6 +9,7 @@ TEMPLATE = lib
 
 CONFIG += dll
 CONFIG += warn_on
+QT += widgets
 
 DEFINES += PYTHONRUNNER_LIBRARY
 
