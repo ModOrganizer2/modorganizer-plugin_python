@@ -243,7 +243,9 @@ struct QVariant_from_python_obj
     } else if (PyBool_Check(objPtr)) {
       result = (objPtr == Py_True);
     } else if (PyInt_Check(objPtr)) {
-      result = PyInt_AsLong(objPtr);
+      //QVariant doesn't have long. It has int or long long. Given that on m/s,
+      //long is 32 bits for 32- and 64- bit code...
+      result = static_cast<int>(PyInt_AsLong(objPtr));
     } else {
       PyErr_SetString(PyExc_TypeError, "type unsupported");
       throw bpy::error_already_set();
@@ -267,7 +269,9 @@ struct QVariant_from_python_obj
       bool value = (objPtr == Py_True);
       constructVariant(value, data);
     } else if (PyInt_Check(objPtr)) {
-      long value = PyInt_AsLong(objPtr);
+      //QVariant doesn't have long. It has int or long long. Given that on m/s,
+      //long is 32 bits for 32- and 64- bit code...
+      int value = static_cast<int>(PyInt_AsLong(objPtr));
       constructVariant(value, data);
     } else {
       PyErr_SetString(PyExc_TypeError, "type unsupported");
