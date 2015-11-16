@@ -25,11 +25,13 @@ IF (Boost_FOUND)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF (Boost_FOUND)
 
-SET(default_project_path "${CMAKE_SOURCE_DIR}/../..")
+SET(default_project_path "${CMAKE_SOURCE_DIR}/..")
 GET_FILENAME_COMPONENT(${default_project_path} ${default_project_path} REALPATH)
 
 SET(project_path "${default_project_path}" CACHE PATH "path to the other mo projects")
-SET(lib_path "${project_path}/../install/libs")
+SET(lib_path "${project_path}/../../install/libs")
+
+MESSAGE(STATUS "${Boost_LIBRARY_DIRS}")
 
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
 					${PYTHON_ROOT}/Include
