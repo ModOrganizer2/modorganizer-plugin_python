@@ -3,10 +3,12 @@
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4996 )
 
+#include "iplugingame.h"
 #include <iplugininstaller.h>
 #include "uibasewrappers.h"
 #include "pythonpluginwrapper.h"
 #include "proxypluginwrappers.h"
+
 #include <Windows.h>
 #include <utility.h>
 #include <QFile>
@@ -706,7 +708,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IGameInfoWrapper, boost::noncopyable>("GameInfo")
       .def("type", bpy::pure_virtual(&IGameInfo::type))
       .def("path", bpy::pure_virtual(&IGameInfo::path))
-      .def("binaryName", bpy::pure_virtual(&IGameInfo::binaryName))
+//      .def("binaryName", bpy::pure_virtual(&IGameInfo::binaryName))
       ;
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
@@ -735,6 +737,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
+      .def("managedGame", bpy::pure_virtual(&IOrganizer::managedGame), bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
