@@ -687,13 +687,6 @@ BOOST_PYTHON_MODULE(mobase)
       .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
 
-  bpy::enum_<MOBase::IGameInfo::Type>("GameType")
-      .value("oblivion", MOBase::IGameInfo::TYPE_OBLIVION)
-      .value("fallout3", MOBase::IGameInfo::TYPE_FALLOUT3)
-      .value("falloutnv", MOBase::IGameInfo::TYPE_FALLOUTNV)
-      .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM)
-      ;
-
   bpy::class_<VersionInfo>("VersionInfo")
       .def(bpy::init<QString>())
       .def(bpy::init<QString, VersionInfo::VersionScheme>())
@@ -705,14 +698,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
 
-  bpy::class_<IGameInfoWrapper, boost::noncopyable>("GameInfo")
-//      .def("type", bpy::pure_virtual(&IGameInfo::type))
-//      .def("path", bpy::pure_virtual(&IGameInfo::path))
-//      .def("binaryName", bpy::pure_virtual(&IGameInfo::binaryName))
-      ;
-
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
-      .def("gameInfo", bpy::pure_virtual(&IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
       .def("profilePath", bpy::pure_virtual(&IOrganizer::profilePath))
@@ -812,6 +798,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   Functor0_converter(); // converter for the onRefreshed-callback
+
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
       .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
       .def("priority", bpy::pure_virtual(&MOBase::IPluginList::priority))
@@ -825,6 +812,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
       .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
       .def("allMods", bpy::pure_virtual(&MOBase::IModList::allMods))
@@ -834,6 +822,50 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
       .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
       .def("onModMoved", bpy::pure_virtual(&MOBase::IModList::onModMoved))
+      ;
+
+  bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
+      .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
+      .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
+      ;
+
+  bpy::enum_<MOBase::IPluginGame::ProfileSetting>("ProfileSetting")
+      .value("mods", MOBase::IPluginGame::MODS)
+      .value("configuration", MOBase::IPluginGame::CONFIGURATION)
+      .value("savegames", MOBase::IPluginGame::SAVEGAMES)
+      .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
+      ;
+
+
+  bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
+      .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
+      .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
+      .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
+      .def("isInstalled", bpy::pure_virtual(&MOBase::IPluginGame::isInstalled))
+      .def("gameIcon", bpy::pure_virtual(&MOBase::IPluginGame::gameIcon))
+      .def("gameDirectory", bpy::pure_virtual(&MOBase::IPluginGame::gameDirectory))
+      .def("dataDirectory", bpy::pure_virtual(&MOBase::IPluginGame::dataDirectory))
+      .def("setGamePath", bpy::pure_virtual(&MOBase::IPluginGame::setGamePath))
+      .def("documentsDirectory", bpy::pure_virtual(&MOBase::IPluginGame::documentsDirectory))
+      .def("savesDirectory", bpy::pure_virtual(&MOBase::IPluginGame::savesDirectory))
+      .def("executables", bpy::pure_virtual(&MOBase::IPluginGame::executables))
+      .def("steamAPPId", bpy::pure_virtual(&MOBase::IPluginGame::steamAPPId))
+      .def("getPrimaryPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getPrimaryPlugins))
+      .def("gameVariants", bpy::pure_virtual(&MOBase::IPluginGame::gameVariants))
+      .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant))
+      .def("getBinaryName", bpy::pure_virtual(&MOBase::IPluginGame::getBinaryName))
+      .def("getNexusName", bpy::pure_virtual(&MOBase::IPluginGame::getNexusName))
+      .def("getIniFiles", bpy::pure_virtual(&MOBase::IPluginGame::getIniFiles))
+
+      //Plugin interface.
+      .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
+      .def("name", bpy::pure_virtual(&MOBase::IPluginGame::name))
+      .def("author", bpy::pure_virtual(&MOBase::IPluginGame::author))
+      .def("description", bpy::pure_virtual(&MOBase::IPluginGame::description))
+      .def("version", bpy::pure_virtual(&MOBase::IPluginGame::version))
+      .def("isActive", bpy::pure_virtual(&MOBase::IPluginGame::isActive))
+      .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
+
       ;
 
   GuessedValue_converters<QString>();
