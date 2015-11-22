@@ -260,7 +260,7 @@ struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python:
 
 struct IGameInfoWrapper: MOBase::IGameInfo, boost::python::wrapper<MOBase::IGameInfo>
 {
-  virtual Type type() const { return this->get_override("type")(); }
+//  virtual Type type() const { return this->get_override("type")(); }
 //  virtual QString path() const { return this->get_override("path")(); }
 //  virtual QString binaryName() const { return this->get_override("binaryName")(); }
 };
