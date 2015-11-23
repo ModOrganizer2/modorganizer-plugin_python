@@ -233,7 +233,8 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>
 {
   virtual int startDownloadURLs(const QStringList &urls) { return this->get_override("downloadURLs")(urls); }
-  virtual int startDownloadNexusFile(int modID, int fileID) { return this->get_override("downloadNexusFile")(modID, fileID); }
+  //not used
+  //virtual int startDownloadNexusFile(int modID, int fileID) { return this->get_override("downloadNexusFile")(modID, fileID); }
   virtual QString downloadPath(int id) { return this->get_override("downloadPath")(id); }
 };
 
@@ -317,6 +318,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual QString getBinaryName() const override { return this->get_override("getBinaryName")(); }
   virtual QString getNexusName() const override { return this->get_override("getNexusName")(); }
   virtual QStringList getIniFiles() const override { return this->get_override("getIniFiles")(); }
+  virtual QStringList getDLCPlugins() const override { return this->get_override("getDLCPlugins")(); }
 
   //Plugin interface. Could this bit be implemented just once?
   virtual bool init(MOBase::IOrganizer *moInfo) override { return this->get_override("init")(moInfo); }

@@ -749,7 +749,8 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
-      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
+      //not used?
+      //.def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
       ;
 
@@ -856,6 +857,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("getBinaryName", bpy::pure_virtual(&MOBase::IPluginGame::getBinaryName))
       .def("getNexusName", bpy::pure_virtual(&MOBase::IPluginGame::getNexusName))
       .def("getIniFiles", bpy::pure_virtual(&MOBase::IPluginGame::getIniFiles))
+      .def("getDLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getDLCPlugins))
 
       //Plugin interface.
       .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
