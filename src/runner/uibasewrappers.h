@@ -319,6 +319,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual QString getNexusName() const override { return this->get_override("getNexusName")(); }
   virtual QStringList getIniFiles() const override { return this->get_override("getIniFiles")(); }
   virtual QStringList getDLCPlugins() const override { return this->get_override("getDLCPlugins")(); }
+  virtual LoadOrderMechanism getLoadOrderMechanism() const override { return this->get_override("getLoadorderMechanism")(); }
 
   //Plugin interface. Could this bit be implemented just once?
   virtual bool init(MOBase::IOrganizer *moInfo) override { return this->get_override("init")(moInfo); }
