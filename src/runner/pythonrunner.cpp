@@ -859,6 +859,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("getIniFiles", bpy::pure_virtual(&MOBase::IPluginGame::getIniFiles))
       .def("getDLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getDLCPlugins))
       .def("getLoadOrderMechanism", bpy::pure_virtual(&MOBase::IPluginGame::getLoadOrderMechanism))
+      .def("getNexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusModOrganizerID))
+      .def("getNexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusGameID))
 
       //Plugin interface.
       .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
