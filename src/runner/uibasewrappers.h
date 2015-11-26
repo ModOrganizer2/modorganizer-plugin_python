@@ -323,7 +323,6 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual LoadOrderMechanism getLoadOrderMechanism() const override { return this->get_override("getLoadorderMechanism")(); }
   virtual int getNexusModOrganizerID() const override { return this->get_override("getNexusModOrganizerID")(); }
   virtual int getNexusGameID() const override { return this->get_override("getNexusGameID")(); }
-  virtual bool isRelatedURL(QUrl const &url) const override { return this->get_override("isRelatedURL")(url); }
 
   //Plugin interface. Could this bit be implemented just once?
   virtual bool init(MOBase::IOrganizer *moInfo) override { return this->get_override("init")(moInfo); }
@@ -333,7 +332,6 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual MOBase::VersionInfo version() const override { return this->get_override("version")(); }
   virtual bool isActive() const override { return this->get_override("isActive")(); }
   virtual QList<MOBase::PluginSetting> settings() const override { return this->get_override("settings")(); }
-  virtual QString getNexusDisplayURL() const override { return this->get_override("getNexusDisplayURL")(); }
 
 protected:
 
