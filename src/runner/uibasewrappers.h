@@ -317,7 +317,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual QStringList gameVariants() const override { return this->get_override("gameVariants")(); }
   virtual void setGameVariant(const QString &variant) override { this->get_override("setGameVariant")(variant); }
   virtual QString getBinaryName() const override { return this->get_override("getBinaryName")(); }
-  virtual QString getNexusName() const override { return this->get_override("getNexusName")(); }
+  virtual QString getGameShortName() const override { return this->get_override("getGameShortName")(); }
   virtual QStringList getIniFiles() const override { return this->get_override("getIniFiles")(); }
   virtual QStringList getDLCPlugins() const override { return this->get_override("getDLCPlugins")(); }
   virtual LoadOrderMechanism getLoadOrderMechanism() const override { return this->get_override("getLoadorderMechanism")(); }
