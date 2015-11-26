@@ -227,7 +227,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual bool onAboutToRun(const std::function<bool(const QString&)> &func) { return this->get_override("onAboutToRun")(func); }
   virtual bool onFinishedRun(const std::function<void(const QString&, unsigned int)> &func) { return this->get_override("onFinishedRun")(func); }
   virtual bool onModInstalled(const std::function<void(const QString&)> &func) { return this->get_override("onModInstalled")(func); }
-  virtual MOBase::IPluginGame *managedGame() const { return this->get_override("managedGame")(); }
+  virtual MOBase::IPluginGame const *managedGame() const { return this->get_override("managedGame")(); }
 };
 
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>
@@ -331,6 +331,8 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual MOBase::VersionInfo version() const override { return this->get_override("version")(); }
   virtual bool isActive() const override { return this->get_override("isActive")(); }
   virtual QList<MOBase::PluginSetting> settings() const override { return this->get_override("settings")(); }
+  virtual QString getNexusManagementURL() const override { return this->get_override("getNexusManagementURL")(); }
+  virtual QString getNexusDisplayURL() const override { return this->get_override("getNexusDisplayURL")(); }
 
 protected:
 
