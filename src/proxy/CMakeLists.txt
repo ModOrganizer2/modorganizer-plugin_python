@@ -3,9 +3,11 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 CMAKE_POLICY(SET CMP0020 NEW)
 CMAKE_POLICY(SET CMP0043 NEW)
 
-FILE(GLOB ${PROJ_NAME}_SRCS proxypython.cpp)
-FILE(GLOB ${PROJ_NAME}_HDRS proxypython.h)
+SET(${PROJ_NAME}_SRCS proxypython.cpp)
 
+SET(${PROJ_NAME}_HDRS
+    proxypython.h
+    resource.h)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 SET(CMAKE_AUTOMOC ON)
@@ -31,9 +33,9 @@ SET(lib_path "${project_path}/../../install/libs")
 ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
-					${project_path}/plugin_python/src/runner/
-					${PYTHON_ROOT}/Include
-					${PYTHON_ROOT}/PC)
+                    ${project_path}/plugin_python/src/runner/
+                    ${PYTHON_ROOT}/Include
+                    ${PYTHON_ROOT}/PC)
 LINK_DIRECTORIES(${lib_path})
 
 
