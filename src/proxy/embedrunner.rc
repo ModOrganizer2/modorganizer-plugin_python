@@ -3,9 +3,5 @@
 #ifdef SCONS_BUILD
 IDR_LOADER_DLL        BINARY  MOVEABLE PURE   pythonRunner.dll
 #else
-#ifdef _DEBUG
-IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\debug\\pythonRunner.dll"
-#else // _DEBUG
-IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\..\\pythonRunner\\release\\pythonRunner.dll"
-#endif // _DEBUG
+IDR_LOADER_DLL        BINARY  MOVEABLE PURE   "..\\runner\\pythonRunner.dll"
 #endif

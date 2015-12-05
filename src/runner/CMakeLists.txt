@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
-SET(PROJ_NAME python_runner)
+SET(PROJ_NAME pythonrunner)
 
 PROJECT(${PROJ_NAME})
 
@@ -25,11 +25,13 @@ IF (Boost_FOUND)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF (Boost_FOUND)
 
-SET(default_project_path "${CMAKE_SOURCE_DIR}/../..")
+SET(default_project_path "${CMAKE_SOURCE_DIR}/..")
 GET_FILENAME_COMPONENT(${default_project_path} ${default_project_path} REALPATH)
 
 SET(project_path "${default_project_path}" CACHE PATH "path to the other mo projects")
-SET(lib_path "${project_path}/../install/libs")
+SET(lib_path "${project_path}/../../install/libs")
+
+MESSAGE(STATUS "${Boost_LIBRARY_DIRS}")
 
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
 					${PYTHON_ROOT}/Include
@@ -55,6 +57,6 @@ QT5_USE_MODULES(${PROJ_NAME} Widgets)
 ## Installation
 
 INSTALL(TARGETS ${PROJ_NAME}
-        RUNTIME DESTINATION libs
+        RUNTIME DESTINATION bin/plugins/data
         ARCHIVE DESTINATION libs)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.pdb DESTINATION pdb)

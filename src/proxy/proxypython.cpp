@@ -135,8 +135,6 @@ bool ProxyPython::init(IOrganizer *moInfo)
     return true;
   }
 
-  //m_TempRunnerFile = ExtractResource(IDR_LOADER_DLL, "__pythonRunner.dll");
-  //m_RunnerLib = ::LoadLibraryW(ToWString(m_TempRunnerFile).c_str());
   m_RunnerLib = ::LoadLibraryW(QDir::toNativeSeparators(m_MOInfo->pluginDataPath() + "/pythonRunner.dll").toStdWString().c_str());
   if (m_RunnerLib != nullptr) {
     CreatePythonRunner_func CreatePythonRunner = (CreatePythonRunner_func)::GetProcAddress(m_RunnerLib, "CreatePythonRunner");
@@ -340,8 +338,3 @@ void ProxyPython::startGuidedFix(unsigned int key) const
     ::ShellExecuteA(nullptr, "open", s_DownloadPythonURL, nullptr, nullptr, SW_SHOWNORMAL);
   }
 }
-
-
-#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-Q_EXPORT_PLUGIN2(proxyPython, ProxyPython)
-#endif
