@@ -291,7 +291,7 @@ struct QList_to_python_list
     bpy::list pyList;
 
     try {
-      foreach (const T &item, list) {
+      for (const T &item : list) {
         pyList.append(item);
       }
     } catch (const bpy::error_already_set&) {
