@@ -289,7 +289,7 @@ struct QList_to_python_list
     bpy::list pyList;
 
     try {
-      foreach (const T &item, list) {
+      for (const T &item : list) {
         pyList.append(item);
       }
     } catch (const bpy::error_already_set&) {
@@ -688,6 +688,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::enum_<MOBase::IGameInfo::Type>("GameType")
       .value("oblivion", MOBase::IGameInfo::TYPE_OBLIVION)
       .value("fallout3", MOBase::IGameInfo::TYPE_FALLOUT3)
+      .value("fallout4", MOBase::IGameInfo::TYPE_FALLOUT4)
       .value("falloutnv", MOBase::IGameInfo::TYPE_FALLOUTNV)
       .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM)
       ;
