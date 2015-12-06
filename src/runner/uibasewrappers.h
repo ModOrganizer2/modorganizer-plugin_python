@@ -8,10 +8,12 @@
 #pragma warning (pop)
 #endif
 
+#include <QIcon>
 #include <QString>
+#include <QUrl>
 
+#include "iplugingame.h"
 #include <imoinfo.h>
-#include <igameinfo.h>
 #include <imodrepositorybridge.h>
 #include <imodinterface.h>
 #include <iinstallationmanager.h>
@@ -20,8 +22,6 @@
 #include <imodlist.h>
 #include "error.h"
 #include "gilock.h"
-
-
 
 extern MOBase::IOrganizer *s_Organizer;
 
@@ -198,17 +198,13 @@ private:
 
 struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOrganizer>
 {
-  virtual MOBase::IGameInfo &gameInfo() const {
-    MOBase::IGameInfo *result = this->get_override("gameInfo")();
-    return *result;
-  }
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const { return this->get_override("createNexusBridge")(); }
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
   virtual QString downloadsPath() const { return this->get_override("downloadsPath")(); }
   virtual QString overwritePath() const { return this->get_override("overwritePath")(); }
   virtual MOBase::VersionInfo appVersion() const { return this->get_override("appVersion")(); }
-  virtual MOBase::IModInterface *getMod(const QString &name) { return this->get_override("getMod")(name); }
+  virtual MOBase::IModInterface *getMod(const QString &name) const { return this->get_override("getMod")(name); }
   virtual MOBase::IModInterface *createMod(MOBase::GuessedValue<QString> &name) { return this->get_override("createMod")(name); }
   virtual bool removeMod(MOBase::IModInterface *mod) { return this->get_override("removeMod")(mod); }
   virtual void modDataChanged(MOBase::IModInterface *mod) { this->get_override("modDataChanged")(mod); }
@@ -218,9 +214,9 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual void setPersistent(const QString &pluginName, const QString &key, const QVariant &value, bool sync = true) { this->get_override("setPersistent")(pluginName, key, value, sync); }
   virtual QString pluginDataPath() const { return this->get_override("pluginDataPath")(); }
   virtual MOBase::IModInterface *installMod(const QString &fileName, const QString &nameSuggestion = QString()) { return this->get_override("installMod")(fileName, nameSuggestion); }
-  virtual MOBase::IDownloadManager *downloadManager() { return this->get_override("downloadManager")(); }
-  virtual MOBase::IPluginList *pluginList() { return this->get_override("pluginList")(); }
-  virtual MOBase::IModList *modList() { return this->get_override("modList")(); }
+  virtual MOBase::IDownloadManager *downloadManager() const { return this->get_override("downloadManager")(); }
+  virtual MOBase::IPluginList *pluginList() const { return this->get_override("pluginList")(); }
+  virtual MOBase::IModList *modList() const { return this->get_override("modList")(); }
   virtual QString resolvePath(const QString &fileName) const { return this->get_override("resolvePath")(fileName); }
   virtual QStringList listDirectories(const QString &directoryName) const { return this->get_override("listDirectories")(directoryName); }
   virtual QStringList findFiles(const QString &path, const std::function<bool(const QString&)> &filter) const { return this->get_override("findFiles")(path, filter); }
@@ -233,6 +229,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual bool onFinishedRun(const std::function<void(const QString&, unsigned int)> &func) { return this->get_override("onFinishedRun")(func); }
   virtual bool onModInstalled(const std::function<void(const QString&)> &func) { return this->get_override("onModInstalled")(func); }
   virtual MOBase::IProfile *profile() override { return this->get_override("profile")(); }
+  virtual MOBase::IPluginGame const *managedGame() const { return this->get_override("managedGame")(); }
 };
 
 struct IProfileWrapper: MOBase::IProfile, boost::python::wrapper<MOBase::IProfile>
@@ -245,7 +242,8 @@ struct IProfileWrapper: MOBase::IProfile, boost::python::wrapper<MOBase::IProfil
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>
 {
   virtual int startDownloadURLs(const QStringList &urls) { return this->get_override("downloadURLs")(urls); }
-  virtual int startDownloadNexusFile(int modID, int fileID) { return this->get_override("downloadNexusFile")(modID, fileID); }
+  //not used
+  //virtual int startDownloadNexusFile(int modID, int fileID) { return this->get_override("downloadNexusFile")(modID, fileID); }
   virtual QString downloadPath(int id) { return this->get_override("downloadPath")(id); }
 };
 
@@ -263,13 +261,7 @@ struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python:
   virtual QString extractFile(const QString &fileName) { return this->get_override("extractFile")(fileName); }
   virtual QStringList extractFiles(const QStringList &files, bool flatten) { return this->get_override("extractFiles")(files, flatten); }
   virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile) { return this->get_override("installArchive")(modName, archiveFile); }
-};
-
-struct IGameInfoWrapper: MOBase::IGameInfo, boost::python::wrapper<MOBase::IGameInfo>
-{
-  virtual Type type() const { return this->get_override("type")(); }
-  virtual QString path() const { return this->get_override("path")(); }
-  virtual QString binaryName() const { return this->get_override("binaryName")(); }
+  virtual void setURL(QString const &url) { this->get_override("setURL")(url); }
 };
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>
@@ -312,6 +304,50 @@ struct IModListWrapper: MOBase::IModList, boost::python::wrapper<MOBase::IModLis
   virtual bool setPriority(const QString &name, int newPriority) override { return this->get_override("setPriority")(name, newPriority); }
   virtual bool onModStateChanged(const std::function<void (const QString &, ModStates)> &func) override { return this->get_override("onModStateChanged")(func); }
   virtual bool onModMoved(const std::function<void (const QString &, int, int)> &func) override { return this->get_override("onModMoved")(func); }
+};
+
+
+struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::IPluginGame> {
+  virtual QString gameName() const override { return this->get_override("gameName")(); }
+  virtual void initializeProfile(const QDir &directory, ProfileSettings settings) const override {
+    this->get_override("initializeProfile")(directory, settings);
+  }
+  virtual QString savegameExtension() const override { return this->get_override("savegameExtension")(); }
+  virtual bool isInstalled() const override { return this->get_override("isInstalled")(); }
+  virtual QIcon gameIcon() const override { return this->get_override("gameIcon")(); }
+  virtual QDir gameDirectory() const override { return this->get_override("gameDirectory")(); }
+  virtual QDir dataDirectory() const override { return this->get_override("dataDirectory")(); }
+  virtual void setGamePath(const QString &path) override { this->get_override("setGamePath")(path); }
+  virtual QDir documentsDirectory() const override { return this->get_override("documentsDirectory")(); }
+  virtual QDir savesDirectory() const override { return this->get_override("savesDirectory")(); }
+  virtual QList<MOBase::ExecutableInfo> executables() const override { return this->get_override("executables")(); }
+  virtual QString steamAPPId() const override { return this->get_override("steamAPPId")(); }
+  virtual QStringList getPrimaryPlugins() const override { return this->get_override("getPrimaryPlugins")(); }
+  virtual QStringList gameVariants() const override { return this->get_override("gameVariants")(); }
+  virtual void setGameVariant(const QString &variant) override { this->get_override("setGameVariant")(variant); }
+  virtual QString getBinaryName() const override { return this->get_override("getBinaryName")(); }
+  virtual QString getGameShortName() const override { return this->get_override("getGameShortName")(); }
+  virtual QStringList getIniFiles() const override { return this->get_override("getIniFiles")(); }
+  virtual QStringList getDLCPlugins() const override { return this->get_override("getDLCPlugins")(); }
+  virtual LoadOrderMechanism getLoadOrderMechanism() const override { return this->get_override("getLoadorderMechanism")(); }
+  virtual int getNexusModOrganizerID() const override { return this->get_override("getNexusModOrganizerID")(); }
+  virtual int getNexusGameID() const override { return this->get_override("getNexusGameID")(); }
+  virtual bool looksValid(QDir const &dir) const override { return this->get_override("looksValid")(dir); }
+  virtual QString getGameVersion() const override { return this->get_override("getGameVersion")(); }
+
+  //Plugin interface. Could this bit be implemented just once?
+  virtual bool init(MOBase::IOrganizer *moInfo) override { return this->get_override("init")(moInfo); }
+  virtual QString name() const override { return this->get_override("name")(); }
+  virtual QString author() const override { return this->get_override("author")(); }
+  virtual QString description() const override { return this->get_override("description")(); }
+  virtual MOBase::VersionInfo version() const override { return this->get_override("version")(); }
+  virtual bool isActive() const override { return this->get_override("isActive")(); }
+  virtual QList<MOBase::PluginSetting> settings() const override { return this->get_override("settings")(); }
+
+protected:
+
+  virtual std::map<std::type_index, boost::any> featureList() const override { return this->get_override("featureList")(); }
+
 };
 
 #endif // UIBASEWRAPPERS_H

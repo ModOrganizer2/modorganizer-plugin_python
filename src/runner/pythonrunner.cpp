@@ -3,14 +3,17 @@
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4996 )
 
+#include "iplugingame.h"
 #include <iplugininstaller.h>
 #include "uibasewrappers.h"
 #include "pythonpluginwrapper.h"
 #include "proxypluginwrappers.h"
+
 #include <Windows.h>
 #include <utility.h>
 #include <QFile>
 #include <QCoreApplication>
+#include <QWidget>
 
 // sip and qt slots seems to conflict
 #include <sip.h>
@@ -242,7 +245,9 @@ struct QVariant_from_python_obj
     } else if (PyBool_Check(objPtr)) {
       result = (objPtr == Py_True);
     } else if (PyInt_Check(objPtr)) {
-      result = PyInt_AsLong(objPtr);
+      //QVariant doesn't have long. It has int or long long. Given that on m/s,
+      //long is 32 bits for 32- and 64- bit code...
+      result = static_cast<int>(PyInt_AsLong(objPtr));
     } else {
       PyErr_SetString(PyExc_TypeError, "type unsupported");
       throw bpy::error_already_set();
@@ -266,7 +271,9 @@ struct QVariant_from_python_obj
       bool value = (objPtr == Py_True);
       constructVariant(value, data);
     } else if (PyInt_Check(objPtr)) {
-      long value = PyInt_AsLong(objPtr);
+      //QVariant doesn't have long. It has int or long long. Given that on m/s,
+      //long is 32 bits for 32- and 64- bit code...
+      int value = static_cast<int>(PyInt_AsLong(objPtr));
       constructVariant(value, data);
     } else {
       PyErr_SetString(PyExc_TypeError, "type unsupported");
@@ -680,14 +687,6 @@ BOOST_PYTHON_MODULE(mobase)
       .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
 
-  bpy::enum_<MOBase::IGameInfo::Type>("GameType")
-      .value("oblivion", MOBase::IGameInfo::TYPE_OBLIVION)
-      .value("fallout3", MOBase::IGameInfo::TYPE_FALLOUT3)
-      .value("fallout4", MOBase::IGameInfo::TYPE_FALLOUT4)
-      .value("falloutnv", MOBase::IGameInfo::TYPE_FALLOUTNV)
-      .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM)
-      ;
-
   bpy::class_<VersionInfo>("VersionInfo")
       .def(bpy::init<QString>())
       .def(bpy::init<QString, VersionInfo::VersionScheme>())
@@ -699,14 +698,8 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
 
-  bpy::class_<IGameInfoWrapper, boost::noncopyable>("GameInfo")
-      .def("type", bpy::pure_virtual(&IGameInfo::type))
-      .def("path", bpy::pure_virtual(&IGameInfo::path))
-      .def("binaryName", bpy::pure_virtual(&IGameInfo::binaryName))
-      ;
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
-      .def("gameInfo", bpy::pure_virtual(&IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
       .def("profilePath", bpy::pure_virtual(&IOrganizer::profilePath))
@@ -732,6 +725,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
       .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::return_by_value>())
+      .def("managedGame", bpy::pure_virtual(&IOrganizer::managedGame), bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
   bpy::class_<IProfileWrapper, boost::noncopyable>("IProfile")
@@ -763,7 +757,8 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
-      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
+      //not used?
+      //.def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
       ;
 
@@ -771,6 +766,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
       .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
       .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
+      .def("setURL", bpy::pure_virtual(&IInstallationManager::setURL))
       ;
 
   bpy::class_<IModInterfaceWrapper, boost::noncopyable>("IModInterface")
@@ -812,6 +808,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   Functor0_converter(); // converter for the onRefreshed-callback
+
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
       .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
       .def("priority", bpy::pure_virtual(&MOBase::IPluginList::priority))
@@ -825,6 +822,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
       .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
       .def("allMods", bpy::pure_virtual(&MOBase::IModList::allMods))
@@ -834,6 +832,56 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
       .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
       .def("onModMoved", bpy::pure_virtual(&MOBase::IModList::onModMoved))
+      ;
+
+  bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
+      .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
+      .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
+      ;
+
+  bpy::enum_<MOBase::IPluginGame::ProfileSetting>("ProfileSetting")
+      .value("mods", MOBase::IPluginGame::MODS)
+      .value("configuration", MOBase::IPluginGame::CONFIGURATION)
+      .value("savegames", MOBase::IPluginGame::SAVEGAMES)
+      .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
+      ;
+
+
+  bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
+      .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
+      .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
+      .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
+      .def("isInstalled", bpy::pure_virtual(&MOBase::IPluginGame::isInstalled))
+      .def("gameIcon", bpy::pure_virtual(&MOBase::IPluginGame::gameIcon))
+      .def("gameDirectory", bpy::pure_virtual(&MOBase::IPluginGame::gameDirectory))
+      .def("dataDirectory", bpy::pure_virtual(&MOBase::IPluginGame::dataDirectory))
+      .def("setGamePath", bpy::pure_virtual(&MOBase::IPluginGame::setGamePath))
+      .def("documentsDirectory", bpy::pure_virtual(&MOBase::IPluginGame::documentsDirectory))
+      .def("savesDirectory", bpy::pure_virtual(&MOBase::IPluginGame::savesDirectory))
+      .def("executables", bpy::pure_virtual(&MOBase::IPluginGame::executables))
+      .def("steamAPPId", bpy::pure_virtual(&MOBase::IPluginGame::steamAPPId))
+      .def("getPrimaryPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getPrimaryPlugins))
+      .def("gameVariants", bpy::pure_virtual(&MOBase::IPluginGame::gameVariants))
+      .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant))
+      .def("getBinaryName", bpy::pure_virtual(&MOBase::IPluginGame::getBinaryName))
+      .def("getGameShortName", bpy::pure_virtual(&MOBase::IPluginGame::getGameShortName))
+      .def("getIniFiles", bpy::pure_virtual(&MOBase::IPluginGame::getIniFiles))
+      .def("getDLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getDLCPlugins))
+      .def("getLoadOrderMechanism", bpy::pure_virtual(&MOBase::IPluginGame::getLoadOrderMechanism))
+      .def("getNexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusModOrganizerID))
+      .def("getNexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusGameID))
+      .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid))
+      .def("getGameVersion", bpy::pure_virtual(&MOBase::IPluginGame::getGameVersion))
+
+      //Plugin interface.
+      .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
+      .def("name", bpy::pure_virtual(&MOBase::IPluginGame::name))
+      .def("author", bpy::pure_virtual(&MOBase::IPluginGame::author))
+      .def("description", bpy::pure_virtual(&MOBase::IPluginGame::description))
+      .def("version", bpy::pure_virtual(&MOBase::IPluginGame::version))
+      .def("isActive", bpy::pure_virtual(&MOBase::IPluginGame::isActive))
+      .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
+
       ;
 
   GuessedValue_converters<QString>();
@@ -913,7 +961,7 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
 
 
 #define TRY_PLUGIN_TYPE(type, var) do { \
-    bpy::extract<type ## *> extr(var); \
+    bpy::extract<type *> extr(var); \
     if (extr.check()) { \
       QObject *res = extr; \
       return res; \
