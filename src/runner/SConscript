@@ -2,7 +2,7 @@ Import('qt_env')
 
 env = qt_env.Clone()
 
-env.EnableQtModules('Core', 'Gui')
+env.EnableQtModules('Core', 'Gui', 'Widgets')
 
 env.AppendUnique(CPPDEFINES = 'PYTHONRUNNER_LIBRARY')
 

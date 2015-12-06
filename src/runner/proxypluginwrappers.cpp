@@ -2,6 +2,7 @@
 #include <utility.h>
 #include "error.h"
 #include "gilock.h"
+#include <QWidget>
 
 namespace bpy = boost::python;
 
