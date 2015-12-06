@@ -9,6 +9,7 @@ TEMPLATE = lib
 
 CONFIG += dll
 CONFIG += warn_on
+QT += widgets
 
 DEFINES += PYTHONRUNNER_LIBRARY
 
@@ -61,4 +62,5 @@ QMAKE_POST_LINK += xcopy /y /s /i $$quote($$SRCDIR\\$${TARGET}*.dll) $$quote($$D
 QMAKE_POST_LINK += xcopy /y /I $$quote($$SRCDIR\\$${TARGET}*.pdb) $$quote($$DSTDIR)\\plugins $$escape_expand(\\n)
 
 OTHER_FILES += \
-    SConscript
+    SConscript\
+    CMakeLists.txt
