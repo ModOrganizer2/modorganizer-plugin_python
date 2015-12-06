@@ -71,7 +71,7 @@ struct ModRepositoryFileInfo_to_python_dict
     PyDict_SetItemString(res, "description", bpy::incref(bpy::object(info.description.toUtf8().constData()).ptr()));
     PyDict_SetItemString(res, "categoryID", PyLong_FromLong(info.categoryID));
     PyDict_SetItemString(res, "fileID", PyLong_FromLong(info.fileID));
-    PyDict_SetItemString(res, "fileSize", PyLong_FromLong(info.fileSize));
+    PyDict_SetItemString(res, "fileSize", PyLong_FromLong(static_cast<long>(info.fileSize)));
     PyDict_SetItemString(res, "version", bpy::incref(bpy::object(info.version).ptr()));
     return bpy::incref(res);
   }
@@ -731,6 +731,13 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
+      .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::return_by_value>())
+      ;
+
+  bpy::class_<IProfileWrapper, boost::noncopyable>("IProfile")
+      .def("name", bpy::pure_virtual(&IProfile::name))
+      .def("absolutePath", bpy::pure_virtual(&IProfile::absolutePath))
+      .def("localSavesEnabled", bpy::pure_virtual(&IProfile::localSavesEnabled))
       ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
