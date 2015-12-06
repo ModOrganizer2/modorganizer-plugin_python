@@ -253,6 +253,7 @@ struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python:
   virtual QString extractFile(const QString &fileName) { return this->get_override("extractFile")(fileName); }
   virtual QStringList extractFiles(const QStringList &files, bool flatten) { return this->get_override("extractFiles")(files, flatten); }
   virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile) { return this->get_override("installArchive")(modName, archiveFile); }
+  virtual void setURL(QString const &url) { this->get_override("setURL")(url); }
 };
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>
@@ -324,6 +325,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual int getNexusModOrganizerID() const override { return this->get_override("getNexusModOrganizerID")(); }
   virtual int getNexusGameID() const override { return this->get_override("getNexusGameID")(); }
   virtual bool looksValid(QDir const &dir) const override { return this->get_override("looksValid")(dir); }
+  virtual QString getGameVersion() const override { return this->get_override("getGameVersion")(); }
 
   //Plugin interface. Could this bit be implemented just once?
   virtual bool init(MOBase::IOrganizer *moInfo) override { return this->get_override("init")(moInfo); }
