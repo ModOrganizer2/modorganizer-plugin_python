@@ -698,6 +698,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
 
+
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
       .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
@@ -863,6 +864,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("getNexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusModOrganizerID))
       .def("getNexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusGameID))
       .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid))
+      .def("getGameVersion", bpy::pure_virtual(&MOBase::IPluginGame::getGameVersion))
 
       //Plugin interface.
       .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
