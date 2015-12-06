@@ -11,7 +11,6 @@
 #include <QString>
 
 #include <imoinfo.h>
-#include <igameinfo.h>
 #include <imodrepositorybridge.h>
 #include <imodinterface.h>
 #include <iinstallationmanager.h>
@@ -198,10 +197,12 @@ private:
 
 struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOrganizer>
 {
-  virtual MOBase::IGameInfo &gameInfo() const {
+  /*
+   * virtual MOBase::IGameInfo &gameInfo() const {
     MOBase::IGameInfo *result = this->get_override("gameInfo")();
     return *result;
   }
+  */
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const { return this->get_override("createNexusBridge")(); }
   virtual QString profileName() const { return this->get_override("profileName")(); }
   virtual QString profilePath() const { return this->get_override("profilePath")(); }
@@ -257,6 +258,7 @@ struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python:
   virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile) { return this->get_override("installArchive")(modName, archiveFile); }
 };
 
+/*
 struct IGameInfoWrapper: MOBase::IGameInfo, boost::python::wrapper<MOBase::IGameInfo>
 {
   virtual Type type() const { return this->get_override("type")(); }
@@ -265,7 +267,7 @@ struct IGameInfoWrapper: MOBase::IGameInfo, boost::python::wrapper<MOBase::IGame
   virtual QString version() const { return this->get_override("version")(); }
   virtual QString extenderVersion() const { return this->get_override("extenderVersion")(); }
 };
-
+*/
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>
 {
   virtual QString name() const override { return this->get_override("name")();  }

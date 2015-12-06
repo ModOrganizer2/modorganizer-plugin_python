@@ -679,7 +679,7 @@ BOOST_PYTHON_MODULE(mobase)
       .value("manualRequested", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
       .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
-
+/*
   bpy::enum_<MOBase::IGameInfo::Type>("GameType")
       .value("oblivion", MOBase::IGameInfo::TYPE_OBLIVION)
       .value("fallout3", MOBase::IGameInfo::TYPE_FALLOUT3)
@@ -687,7 +687,7 @@ BOOST_PYTHON_MODULE(mobase)
       .value("falloutnv", MOBase::IGameInfo::TYPE_FALLOUTNV)
       .value("skyrim", MOBase::IGameInfo::TYPE_SKYRIM)
       ;
-
+*/
   bpy::class_<VersionInfo>("VersionInfo")
       .def(bpy::init<QString>())
       .def(bpy::init<QString, VersionInfo::VersionScheme>())
@@ -699,6 +699,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
 
+  /*
   bpy::class_<IGameInfoWrapper, boost::noncopyable>("GameInfo")
       .def("type", bpy::pure_virtual(&IGameInfo::type))
       .def("path", bpy::pure_virtual(&IGameInfo::path))
@@ -706,9 +707,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("version", bpy::pure_virtual(&IGameInfo::version))
       .def("extenderVersion", bpy::pure_virtual(&IGameInfo::extenderVersion))
       ;
-
+  */
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
-      .def("gameInfo", bpy::pure_virtual(&IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
+  //    .def("gameInfo", bpy::pure_virtual(&IOrganizer::gameInfo), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
       .def("profilePath", bpy::pure_virtual(&IOrganizer::profilePath))
@@ -758,7 +759,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
-      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
+      //.def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
       ;
 
