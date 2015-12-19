@@ -229,6 +229,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual bool onFinishedRun(const std::function<void(const QString&, unsigned int)> &func) { return this->get_override("onFinishedRun")(func); }
   virtual bool onModInstalled(const std::function<void(const QString&)> &func) { return this->get_override("onModInstalled")(func); }
   virtual MOBase::IPluginGame const *managedGame() const { return this->get_override("managedGame")(); }
+  virtual QStringList modsSortedByProfilePriority() const override { return this->get_override("modsSortedByProfilePriority")(); }
 };
 
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>

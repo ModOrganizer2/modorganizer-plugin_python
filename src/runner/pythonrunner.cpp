@@ -725,6 +725,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
       .def("managedGame", bpy::pure_virtual(&IOrganizer::managedGame), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modsSortedByProfilePriority", bpy::pure_virtual(&IOrganizer::modsSortedByProfilePriority))
       ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
