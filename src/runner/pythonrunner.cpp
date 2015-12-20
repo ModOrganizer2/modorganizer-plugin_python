@@ -750,8 +750,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
-      //not used?
-      //.def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
+      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
       ;
 
