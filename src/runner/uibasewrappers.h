@@ -322,18 +322,18 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual QDir savesDirectory() const override { return this->get_override("savesDirectory")(); }
   virtual QList<MOBase::ExecutableInfo> executables() const override { return this->get_override("executables")(); }
   virtual QString steamAPPId() const override { return this->get_override("steamAPPId")(); }
-  virtual QStringList getPrimaryPlugins() const override { return this->get_override("getPrimaryPlugins")(); }
+  virtual QStringList primaryPlugins() const override { return this->get_override("primaryPlugins")(); }
   virtual QStringList gameVariants() const override { return this->get_override("gameVariants")(); }
   virtual void setGameVariant(const QString &variant) override { this->get_override("setGameVariant")(variant); }
-  virtual QString getBinaryName() const override { return this->get_override("getBinaryName")(); }
-  virtual QString getGameShortName() const override { return this->get_override("getGameShortName")(); }
-  virtual QStringList getIniFiles() const override { return this->get_override("getIniFiles")(); }
-  virtual QStringList getDLCPlugins() const override { return this->get_override("getDLCPlugins")(); }
-  virtual LoadOrderMechanism getLoadOrderMechanism() const override { return this->get_override("getLoadorderMechanism")(); }
-  virtual int getNexusModOrganizerID() const override { return this->get_override("getNexusModOrganizerID")(); }
-  virtual int getNexusGameID() const override { return this->get_override("getNexusGameID")(); }
+  virtual QString binaryName() const override { return this->get_override("binaryName")(); }
+  virtual QString gameShortName() const override { return this->get_override("gameShortName")(); }
+  virtual QStringList iniFiles() const override { return this->get_override("iniFiles")(); }
+  virtual QStringList DLCPlugins() const override { return this->get_override("DLCPlugins")(); }
+  virtual LoadOrderMechanism loadOrderMechanism() const override { return this->get_override("loadorderMechanism")(); }
+  virtual int nexusModOrganizerID() const override { return this->get_override("nexusModOrganizerID")(); }
+  virtual int nexusGameID() const override { return this->get_override("nexusGameID")(); }
   virtual bool looksValid(QDir const &dir) const override { return this->get_override("looksValid")(dir); }
-  virtual QString getGameVersion() const override { return this->get_override("getGameVersion")(); }
+  virtual QString gameVersion() const override { return this->get_override("gameVersion")(); }
 
   //Plugin interface. Could this bit be implemented just once?
   virtual bool init(MOBase::IOrganizer *moInfo) override { return this->get_override("init")(moInfo); }
