@@ -5,6 +5,9 @@
 
 #include "iplugingame.h"
 #include <iplugininstaller.h>
+#include <iplugintool.h>
+#include <iplugingame.h>
+#include <iplugin.h>
 #include "uibasewrappers.h"
 #include "pythonpluginwrapper.h"
 #include "proxypluginwrappers.h"
@@ -757,8 +760,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
-      //not used?
-      //.def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
+      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
       ;
 
@@ -800,9 +802,12 @@ BOOST_PYTHON_MODULE(mobase)
       .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
-  bpy::class_<IPluginToolWrapper, boost::noncopyable>("IPluginTool")
+  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
+
+  bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
+
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
       ;
@@ -845,7 +850,6 @@ BOOST_PYTHON_MODULE(mobase)
       .value("savegames", MOBase::IPluginGame::SAVEGAMES)
       .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
       ;
-
 
   bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
@@ -1008,6 +1012,7 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     bpy::object pluginObj = m_PythonObjects[pluginName];
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
+    TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
     reportPythonError();
