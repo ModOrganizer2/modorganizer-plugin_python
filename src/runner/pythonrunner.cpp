@@ -5,6 +5,9 @@
 
 #include "iplugingame.h"
 #include <iplugininstaller.h>
+#include <iplugintool.h>
+#include <iplugingame.h>
+#include <iplugin.h>
 #include "uibasewrappers.h"
 #include "pythonpluginwrapper.h"
 #include "proxypluginwrappers.h"
@@ -800,9 +803,12 @@ BOOST_PYTHON_MODULE(mobase)
       .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
-  bpy::class_<IPluginToolWrapper, boost::noncopyable>("IPluginTool")
+  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
+
+  bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
+
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
       ;
@@ -846,7 +852,6 @@ BOOST_PYTHON_MODULE(mobase)
       .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
       ;
 
-
   bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
@@ -860,18 +865,18 @@ BOOST_PYTHON_MODULE(mobase)
       .def("savesDirectory", bpy::pure_virtual(&MOBase::IPluginGame::savesDirectory))
       .def("executables", bpy::pure_virtual(&MOBase::IPluginGame::executables))
       .def("steamAPPId", bpy::pure_virtual(&MOBase::IPluginGame::steamAPPId))
-      .def("getPrimaryPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getPrimaryPlugins))
+      .def("primaryPlugins", bpy::pure_virtual(&MOBase::IPluginGame::primaryPlugins))
       .def("gameVariants", bpy::pure_virtual(&MOBase::IPluginGame::gameVariants))
       .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant))
-      .def("getBinaryName", bpy::pure_virtual(&MOBase::IPluginGame::getBinaryName))
-      .def("getGameShortName", bpy::pure_virtual(&MOBase::IPluginGame::getGameShortName))
-      .def("getIniFiles", bpy::pure_virtual(&MOBase::IPluginGame::getIniFiles))
-      .def("getDLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::getDLCPlugins))
-      .def("getLoadOrderMechanism", bpy::pure_virtual(&MOBase::IPluginGame::getLoadOrderMechanism))
-      .def("getNexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusModOrganizerID))
-      .def("getNexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::getNexusGameID))
+      .def("binaryName", bpy::pure_virtual(&MOBase::IPluginGame::binaryName))
+      .def("gameShortName", bpy::pure_virtual(&MOBase::IPluginGame::gameShortName))
+      .def("iniFiles", bpy::pure_virtual(&MOBase::IPluginGame::iniFiles))
+      .def("DLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::DLCPlugins))
+      .def("loadOrderMechanism", bpy::pure_virtual(&MOBase::IPluginGame::loadOrderMechanism))
+      .def("nexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::nexusModOrganizerID))
+      .def("nexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::nexusGameID))
       .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid))
-      .def("getGameVersion", bpy::pure_virtual(&MOBase::IPluginGame::getGameVersion))
+      .def("gameVersion", bpy::pure_virtual(&MOBase::IPluginGame::gameVersion))
 
       //Plugin interface.
       .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
@@ -1008,6 +1013,7 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     bpy::object pluginObj = m_PythonObjects[pluginName];
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
+    TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
     reportPythonError();

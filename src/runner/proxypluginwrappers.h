@@ -11,8 +11,10 @@
 #endif
 
 
-class IPluginWrapper : public boost::python::wrapper<MOBase::IPlugin>
+class IPluginWrapper : public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPlugin>
 {
+  Q_INTERFACES(MOBase::IPlugin)
+
 public:
   virtual bool init(MOBase::IOrganizer *moInfo);
   virtual QString name() const;
