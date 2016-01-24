@@ -14,6 +14,57 @@ using namespace MOBase;
 
 
 /////////////////////////////
+/// IPlugin Wrapper
+bool IPluginWrapper::init(MOBase::IOrganizer *moInfo)
+{
+  try {
+    return this->get_override("init")(bpy::ptr(moInfo));
+  } PYCATCH;
+}
+
+QString IPluginWrapper::name() const
+{
+  try {
+    return this->get_override("name")().as<QString>();
+  } PYCATCH;
+}
+
+QString IPluginWrapper::author() const
+{
+  try {
+    return this->get_override("author")().as<QString>();
+  } PYCATCH;
+}
+
+QString IPluginWrapper::description() const
+{
+  try {
+    return this->get_override("description")().as<QString>();
+  } PYCATCH;
+}
+
+MOBase::VersionInfo IPluginWrapper::version() const
+{
+  try {
+    return this->get_override("version")().as<MOBase::VersionInfo>();
+  } PYCATCH;
+}
+
+bool IPluginWrapper::isActive() const
+{
+  try {
+    return this->get_override("isActive")().as<bool>();
+  } PYCATCH;
+}
+
+QList<MOBase::PluginSetting> IPluginWrapper::settings() const
+{
+  try {
+    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
+  } PYCATCH;
+}
+/// end IPlugin Wrapper
+/////////////////////////////
 /// IPluginTool Wrapper
 
 
