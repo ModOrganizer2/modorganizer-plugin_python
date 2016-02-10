@@ -230,6 +230,7 @@ struct IOrganizerWrapper: MOBase::IOrganizer, boost::python::wrapper<MOBase::IOr
   virtual bool onModInstalled(const std::function<void(const QString&)> &func) override { return this->get_override("onModInstalled")(func); }
   virtual MOBase::IProfile *profile() const override { return this->get_override("profile")(); }
   virtual MOBase::IPluginGame const *managedGame() const override { return this->get_override("managedGame")(); }
+  virtual QStringList modsSortedByProfilePriority() const override { return this->get_override("modsSortedByProfilePriority")(); }
 };
 
 struct IProfileWrapper: MOBase::IProfile, boost::python::wrapper<MOBase::IProfile>
