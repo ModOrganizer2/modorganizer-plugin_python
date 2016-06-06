@@ -188,7 +188,7 @@ struct QVariant_to_python_obj
       case QVariant::List: {
         QVariantList list = var.toList();
         PyObject *result = PyList_New(list.count());
-        foreach (QVariant var, list) {
+        for (QVariant var : list) {
           PyList_Append(result, convert(var));
         }
         return result;
@@ -722,12 +722,12 @@ BOOST_PYTHON_MODULE(mobase)
       .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), bpy::return_value_policy<bpy::return_by_value>())
-      //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), bpy::return_value_policy<bpy::return_by_value>())
+      //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
       .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
       .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList))
-      .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::return_by_value>())
+      .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("managedGame", bpy::pure_virtual(&IOrganizer::managedGame), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modsSortedByProfilePriority", bpy::pure_virtual(&IOrganizer::modsSortedByProfilePriority))
       ;
