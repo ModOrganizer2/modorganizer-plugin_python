@@ -4,12 +4,22 @@
 #include "gilock.h"
 #include <QWidget>
 
-namespace bpy = boost::python;
+namespace boost
+{
+  // See bug https://connect.microsoft.com/VisualStudio/Feedback/Details/2852624
+	template<> const volatile MOBase::IOrganizer* get_pointer(const volatile MOBase::IOrganizer* p) { return p; }
+	template<> const volatile MOBase::IModInterface* get_pointer(const volatile MOBase::IModInterface* p) { return p; }
+	template<> const volatile MOBase::IPluginGame* get_pointer(const volatile MOBase::IPluginGame* p) { return p; }
+	template<> const volatile MOBase::IProfile* get_pointer(const volatile MOBase::IProfile* p) { return p; }
+	template<> const volatile MOBase::IModList* get_pointer(const volatile MOBase::IModList* p) { return p; }
+	template<> const volatile MOBase::IPluginList* get_pointer(const volatile MOBase::IPluginList* p) { return p; }
+	template<> const volatile MOBase::IDownloadManager* get_pointer(const volatile MOBase::IDownloadManager* p) { return p; }
+	template<> const volatile MOBase::IModRepositoryBridge* get_pointer(const volatile MOBase::IModRepositoryBridge* p) { return p; }
+}
 
 using namespace MOBase;
 
-
-#define PYCATCH catch (const bpy::error_already_set &) { reportPythonError(); throw MyException("unhandled exception"); }\
+#define PYCATCH catch (const boost::python::error_already_set &) { reportPythonError(); throw MyException("unhandled exception"); }\
                 catch (...) { throw MyException("An unknown exception was thrown in python code"); }
 
 
@@ -18,7 +28,7 @@ using namespace MOBase;
 bool IPluginWrapper::init(MOBase::IOrganizer *moInfo)
 {
   try {
-    return this->get_override("init")(bpy::ptr(moInfo));
+    return this->get_override("init")(boost::python::ptr(moInfo));
   } PYCATCH;
 }
 
@@ -71,7 +81,7 @@ QList<MOBase::PluginSetting> IPluginWrapper::settings() const
 bool IPluginToolWrapper::init(MOBase::IOrganizer *moInfo)
 {
   try {
-    return this->get_override("init")(bpy::ptr(moInfo));
+    return this->get_override("init")(boost::python::ptr(moInfo));
   } PYCATCH;
 }
 
@@ -162,7 +172,7 @@ void IPluginToolWrapper::display() const
 bool IPluginInstallerCustomWrapper::init(MOBase::IOrganizer *moInfo)
 {
   try {
-    return this->get_override("init")(bpy::ptr(moInfo));
+    return this->get_override("init")(boost::python::ptr(moInfo));
   } PYCATCH;
 }
 
