@@ -6,7 +6,8 @@
 
 namespace boost
 {
-  // See bug https://connect.microsoft.com/VisualStudio/Feedback/Details/2852624
+ // See bug https://connect.microsoft.com/VisualStudio/Feedback/Details/2852624
+#if (_MSC_VER == 1900)
 	template<> const volatile MOBase::IOrganizer* get_pointer(const volatile MOBase::IOrganizer* p) { return p; }
 	template<> const volatile MOBase::IModInterface* get_pointer(const volatile MOBase::IModInterface* p) { return p; }
 	template<> const volatile MOBase::IPluginGame* get_pointer(const volatile MOBase::IPluginGame* p) { return p; }
@@ -15,6 +16,7 @@ namespace boost
 	template<> const volatile MOBase::IPluginList* get_pointer(const volatile MOBase::IPluginList* p) { return p; }
 	template<> const volatile MOBase::IDownloadManager* get_pointer(const volatile MOBase::IDownloadManager* p) { return p; }
 	template<> const volatile MOBase::IModRepositoryBridge* get_pointer(const volatile MOBase::IModRepositoryBridge* p) { return p; }
+#endif
 }
 
 using namespace MOBase;
