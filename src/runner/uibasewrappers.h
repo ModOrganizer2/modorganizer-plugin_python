@@ -218,7 +218,7 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
   {
     return this->get_override("overwritePath")();
   }
-  virtual QString basePath() const override
+  virtual QString basePath() const // override
   {
 	return this->get_override("basePath")();
   }
