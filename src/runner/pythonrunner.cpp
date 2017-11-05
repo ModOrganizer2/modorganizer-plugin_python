@@ -963,7 +963,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
 bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), bpy::object locals = bpy::object())
 {
-  return bpy::handle_exception(boost::bind(bpy::exec_file, filename, globals, locals));
+	return bpy::handle_exception(std::bind<bpy::object(&)(bpy::str, bpy::object, bpy::object)>(bpy::exec_file, filename, globals, locals));
 }
 
 
