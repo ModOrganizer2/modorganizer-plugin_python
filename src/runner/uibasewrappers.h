@@ -456,6 +456,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual QString gameNexusName() const override { return this->get_override("gameNexusName")(); }
   virtual QStringList iniFiles() const override { return this->get_override("iniFiles")(); }
   virtual QStringList DLCPlugins() const override { return this->get_override("DLCPlugins")(); }
+  virtual QStringList CCPlugins() const override { return this->get_override("CCPlugins")(); }
   virtual LoadOrderMechanism loadOrderMechanism() const override { return this->get_override("loadorderMechanism")(); }
   virtual int nexusModOrganizerID() const override { return this->get_override("nexusModOrganizerID")(); }
   virtual int nexusGameID() const override { return this->get_override("nexusGameID")(); }
