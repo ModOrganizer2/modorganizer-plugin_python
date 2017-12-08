@@ -14,6 +14,7 @@
 
 #include <Windows.h>
 #include <utility.h>
+#include <QDir>
 #include <QFile>
 #include <QCoreApplication>
 #include <QWidget>
@@ -857,6 +858,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
       .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
+      .def("savegameSEExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameSEExtension))
       .def("isInstalled", bpy::pure_virtual(&MOBase::IPluginGame::isInstalled))
       .def("gameIcon", bpy::pure_virtual(&MOBase::IPluginGame::gameIcon))
       .def("gameDirectory", bpy::pure_virtual(&MOBase::IPluginGame::gameDirectory))
@@ -891,6 +893,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
 
       ;
+
+    bpy::class_<QDir>("QDir")
+      .def("absolutePath", &QDir::absolutePath)
+    ;
 
   GuessedValue_converters<QString>();
 

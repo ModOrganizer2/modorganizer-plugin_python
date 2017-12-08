@@ -11,6 +11,7 @@
 #include <QIcon>
 #include <QString>
 #include <QUrl>
+#include <QDir>
 
 #include "iplugingame.h"
 #include <imoinfo.h>
@@ -439,6 +440,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
     this->get_override("initializeProfile")(directory, settings);
   }
   virtual QString savegameExtension() const override { return this->get_override("savegameExtension")(); }
+  virtual QString savegameSEExtension() const override { return this->get_override("savegameSEExtension")(); }
   virtual bool isInstalled() const override { return this->get_override("isInstalled")(); }
   virtual QIcon gameIcon() const override { return this->get_override("gameIcon")(); }
   virtual QDir gameDirectory() const override { return this->get_override("gameDirectory")(); }
