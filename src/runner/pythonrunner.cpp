@@ -108,7 +108,7 @@ struct QString_from_python_str
   }
 
   static void *convertible(PyObject *objPtr) {
-    return PyString_Check(objPtr) ? objPtr : nullptr;
+    return PyString_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
