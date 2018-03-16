@@ -831,6 +831,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("origin", bpy::pure_virtual(&MOBase::IPluginList::origin))
       .def("onRefreshed", bpy::pure_virtual(&MOBase::IPluginList::onRefreshed))
       .def("onPluginMoved", bpy::pure_virtual(&MOBase::IPluginList::onPluginMoved))
+      .def("pluginNames", bpy::pure_virtual(&MOBase::IPluginList::pluginNames))
+      .def("setState", bpy::pure_virtual(&MOBase::IPluginList::setState))
+      .def("setLoadOrder", bpy::pure_virtual(&MOBase::IPluginList::setLoadOrder))
       ;
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
