@@ -112,8 +112,13 @@ struct QString_from_python_str
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+    // Ensure the string uses 8-bit characters
+    PyObject *strPtr = PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
     // Extract the character data from the python string
-    const char* value = PyString_AsString(objPtr);
+    const char* value = PyString_AsString(strPtr);
+    // Deallocate local copy if one was made
+    if (strPtr != objPtr)
+      Py_DecRef(strPtr);
     assert(value != nullptr);
 
     // allocate storage
