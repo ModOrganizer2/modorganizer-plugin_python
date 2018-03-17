@@ -883,12 +883,16 @@ BOOST_PYTHON_MODULE(mobase)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
       ;
 
+  // This doesn't actually do the conversion, but might be convenient for accessing the names for enum bits
   bpy::enum_<MOBase::IPluginGame::ProfileSetting>("ProfileSetting")
       .value("mods", MOBase::IPluginGame::MODS)
       .value("configuration", MOBase::IPluginGame::CONFIGURATION)
       .value("savegames", MOBase::IPluginGame::SAVEGAMES)
       .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
       ;
+
+  py::to_python_converter<IPluginGame::ProfileSettings, QFlags_to_int<IPluginGame::ProfileSetting>>();
+  QFlags_from_python_obj<IPluginGame::ProfileSetting>();
 
   bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
