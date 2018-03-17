@@ -913,7 +913,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant))
       .def("binaryName", bpy::pure_virtual(&MOBase::IPluginGame::binaryName))
       .def("gameShortName", bpy::pure_virtual(&MOBase::IPluginGame::gameShortName))
-        .def("gameNexusName", bpy::pure_virtual(&MOBase::IPluginGame::gameNexusName))
+      .def("gameNexusName", bpy::pure_virtual(&MOBase::IPluginGame::gameNexusName))
       .def("iniFiles", bpy::pure_virtual(&MOBase::IPluginGame::iniFiles))
       .def("DLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::DLCPlugins))
       .def("CCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::CCPlugins))
@@ -1011,7 +1011,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
 bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), bpy::object locals = bpy::object())
 {
-    return bpy::handle_exception(std::bind<bpy::object(&)(bpy::str, bpy::object, bpy::object)>(bpy::exec_file, filename, globals, locals));
+  return bpy::handle_exception(std::bind<bpy::object(&)(bpy::str, bpy::object, bpy::object)>(bpy::exec_file, filename, globals, locals));
 }
 
 
