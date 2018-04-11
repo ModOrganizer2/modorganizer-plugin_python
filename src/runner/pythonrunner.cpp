@@ -9,7 +9,6 @@
 #include <iplugingame.h>
 #include <iplugin.h>
 #include "uibasewrappers.h"
-#include "pythonpluginwrapper.h"
 #include "proxypluginwrappers.h"
 
 #include <Windows.h>
