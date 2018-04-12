@@ -711,6 +711,7 @@ BOOST_PYTHON_MODULE(mobase)
       .value("decimalmark", MOBase::VersionInfo::SCHEME_DECIMALMARK)
       .value("numbersandletters", MOBase::VersionInfo::SCHEME_NUMBERSANDLETTERS)
       .value("date", MOBase::VersionInfo::SCHEME_DATE)
+      .value("literal", MOBase::VersionInfo::SCHEME_LITERAL)
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
@@ -726,8 +727,20 @@ BOOST_PYTHON_MODULE(mobase)
       .def(bpy::init<QString, VersionInfo::VersionScheme>())
       .def(bpy::init<int, int, int>())
       .def(bpy::init<int, int, int, VersionInfo::ReleaseType>())
+      .def(bpy::init<int, int, int, int>())
+      .def(bpy::init<int, int, int, int, VersionInfo::ReleaseType>())
+      .def("clear", &VersionInfo::clear)
       .def("parse", &VersionInfo::parse)
       .def("canonicalString", &VersionInfo::canonicalString)
+      .def("displayString", &VersionInfo::displayString)
+      .def("isValid", &VersionInfo::isValid)
+      .def("scheme", &VersionInfo::scheme)
+      .def(bpy::self < bpy::self)
+      .def(bpy::self > bpy::self)
+      .def(bpy::self <= bpy::self)
+      .def(bpy::self >= bpy::self)
+      .def(bpy::self != bpy::self)
+      .def(bpy::self == bpy::self)
       ;
 
   bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
