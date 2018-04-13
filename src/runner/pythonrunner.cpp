@@ -108,12 +108,17 @@ struct QString_from_python_str
   }
 
   static void *convertible(PyObject *objPtr) {
-    return PyString_Check(objPtr) ? objPtr : nullptr;
+    return PyString_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+    // Ensure the string uses 8-bit characters
+    PyObject *strPtr = PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
     // Extract the character data from the python string
-    const char* value = PyString_AsString(objPtr);
+    const char* value = PyString_AsString(strPtr);
+    // Deallocate local copy if one was made
+    if (strPtr != objPtr)
+      Py_DecRef(strPtr);
     assert(value != nullptr);
 
     // allocate storage
@@ -330,6 +335,31 @@ struct QList_from_python_obj
     for (int i = 0; i < length; ++i) {
       result->append(bpy::extract<T>(source[i]));
     }
+
+    data->convertible = storage;
+  }
+};
+
+
+template <typename T>
+struct QFlags_from_python_obj
+{
+  QFlags_from_python_obj() {
+    bpy::converter::registry::push_back(
+      &convertible,
+      &construct,
+      bpy::type_id<QFlags<T>>());
+  }
+
+  static void* convertible(PyObject *objPtr) {
+    return PyInt_Check(objPtr) ? objPtr : nullptr;
+  }
+
+  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+    int intVersion = (int)PyInt_AsLong(objPtr);
+    T tVersion = (T)intVersion;
+    void *storage = ((bpy::converter::rvalue_from_python_storage<QFlags<T>> *)data)->storage.bytes;
+    new (storage) QFlags<T>(tVersion);
 
     data->convertible = storage;
   }
@@ -815,6 +845,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
       ;
 
+  bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
+  QFlags_from_python_obj<IPluginList::PluginState>();
   Functor0_converter(); // converter for the onRefreshed-callback
 
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
@@ -826,9 +858,13 @@ BOOST_PYTHON_MODULE(mobase)
       .def("origin", bpy::pure_virtual(&MOBase::IPluginList::origin))
       .def("onRefreshed", bpy::pure_virtual(&MOBase::IPluginList::onRefreshed))
       .def("onPluginMoved", bpy::pure_virtual(&MOBase::IPluginList::onPluginMoved))
+      .def("pluginNames", bpy::pure_virtual(&MOBase::IPluginList::pluginNames))
+      .def("setState", bpy::pure_virtual(&MOBase::IPluginList::setState))
+      .def("setLoadOrder", bpy::pure_virtual(&MOBase::IPluginList::setLoadOrder))
       ;
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
+  QFlags_from_python_obj<IModList::ModState>();
   Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
 
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
@@ -847,12 +883,16 @@ BOOST_PYTHON_MODULE(mobase)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
       ;
 
+  // This doesn't actually do the conversion, but might be convenient for accessing the names for enum bits
   bpy::enum_<MOBase::IPluginGame::ProfileSetting>("ProfileSetting")
       .value("mods", MOBase::IPluginGame::MODS)
       .value("configuration", MOBase::IPluginGame::CONFIGURATION)
       .value("savegames", MOBase::IPluginGame::SAVEGAMES)
       .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
       ;
+
+  bpy::to_python_converter<IPluginGame::ProfileSettings, QFlags_to_int<IPluginGame::ProfileSetting>>();
+  QFlags_from_python_obj<IPluginGame::ProfileSetting>();
 
   bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
@@ -873,7 +913,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant))
       .def("binaryName", bpy::pure_virtual(&MOBase::IPluginGame::binaryName))
       .def("gameShortName", bpy::pure_virtual(&MOBase::IPluginGame::gameShortName))
-	    .def("gameNexusName", bpy::pure_virtual(&MOBase::IPluginGame::gameNexusName))
+      .def("gameNexusName", bpy::pure_virtual(&MOBase::IPluginGame::gameNexusName))
       .def("iniFiles", bpy::pure_virtual(&MOBase::IPluginGame::iniFiles))
       .def("DLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::DLCPlugins))
       .def("CCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::CCPlugins))
@@ -971,7 +1011,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
 bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), bpy::object locals = bpy::object())
 {
-	return bpy::handle_exception(std::bind<bpy::object(&)(bpy::str, bpy::object, bpy::object)>(bpy::exec_file, filename, globals, locals));
+  return bpy::handle_exception(std::bind<bpy::object(&)(bpy::str, bpy::object, bpy::object)>(bpy::exec_file, filename, globals, locals));
 }
 
 
