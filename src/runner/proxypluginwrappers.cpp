@@ -169,7 +169,7 @@ std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
 
 
 IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, const QString &archiveName,
-  const QString &version, int modID)
+                                                                        const QString &version, int modID)
 {
   try {
     return this->get_override("install")(modName, archiveName, version, modID);

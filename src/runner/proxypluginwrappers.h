@@ -84,7 +84,7 @@ protected:
 class IPluginInstallerCustomWrapper : public MOBase::IPluginInstallerCustom, public boost::python::wrapper<MOBase::IPluginInstallerCustom>
 {
   Q_OBJECT
-    Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
 
 public:
   virtual bool init(MOBase::IOrganizer *moInfo);
@@ -101,7 +101,7 @@ public:
   virtual bool isArchiveSupported(const QString &archiveName) const;
   virtual std::set<QString> supportedExtensions() const;
   virtual EInstallResult install(MOBase::GuessedValue<QString> &modName, const QString &archiveName,
-    const QString &version, int modID);
+                                 const QString &version, int modID);
   virtual void setParentWidget(QWidget *parent);
 
 };
