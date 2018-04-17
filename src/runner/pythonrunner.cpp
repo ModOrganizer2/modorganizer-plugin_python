@@ -423,6 +423,7 @@ template <> struct MetaData<IModRepositoryBridge> { static const char *className
 template <> struct MetaData<IDownloadManager> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
+template <> struct MetaData<QDir> { static const char *className() { return "QDir"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
 template <> struct MetaData<QStringList> { static const char *className() { return "QStringList"; } };
 template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
@@ -686,6 +687,7 @@ BOOST_PYTHON_MODULE(mobase)
   QString_from_python_str();
 
   //QClass_converters<QObject>();
+  QClass_converters<QDir>();
   QClass_converters<QWidget>();
   QClass_converters<QIcon>();
   QClass_converters<QStringList>();
@@ -954,10 +956,6 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
-
-    bpy::class_<QDir>("QDir")
-      .def("absolutePath", &QDir::absolutePath)
-    ;
 
   GuessedValue_converters<QString>();
 
