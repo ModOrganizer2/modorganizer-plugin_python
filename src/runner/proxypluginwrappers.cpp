@@ -84,122 +84,170 @@ QList<MOBase::PluginSetting> IPluginWrapper::settings() const
 
 QString IPluginGameWrapper::gameName() const
 {
-  return this->get_override("gameName")();
+  try {
+    return this->get_override("gameName")();
+  } PYCATCH;
 }
 
 void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettings settings) const
 {
-  this->get_override("initializeProfile")(directory, settings);
+  try {
+    this->get_override("initializeProfile")(directory, settings);
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::savegameExtension() const
 {
-  return this->get_override("savegameExtension")();
+  try {
+    return this->get_override("savegameExtension")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::savegameSEExtension() const
 {
-  return this->get_override("savegameSEExtension")();
+  try {
+    return this->get_override("savegameSEExtension")();
+  } PYCATCH;
 }
 
 bool IPluginGameWrapper::isInstalled() const
 {
-  return this->get_override("isInstalled")();
+  try {
+    return this->get_override("isInstalled")();
+  } PYCATCH;
 }
 
 QIcon IPluginGameWrapper::gameIcon() const
 {
-  return this->get_override("gameIcon")();
+  try {
+    return this->get_override("gameIcon")();
+  } PYCATCH;
 }
 
 QDir IPluginGameWrapper::gameDirectory() const
 {
-  return this->get_override("gameDirectory")();
+  try {
+    return this->get_override("gameDirectory")();
+  } PYCATCH;
 }
 
 QDir IPluginGameWrapper::dataDirectory() const
 {
-  return this->get_override("dataDirectory")();
+  try {
+    return this->get_override("dataDirectory")();
+  } PYCATCH;
 }
 
 void IPluginGameWrapper::setGamePath(const QString & path)
 {
-  this->get_override("setGamePath")(path);
+  try {
+    this->get_override("setGamePath")(path);
+  } PYCATCH;
 }
 
 QDir IPluginGameWrapper::documentsDirectory() const
 {
-  return this->get_override("documentsDirectory")();
+  try {
+    return this->get_override("documentsDirectory")();
+  } PYCATCH;
 }
 
 QDir IPluginGameWrapper::savesDirectory() const
 {
-  return this->get_override("savesDirectory")();
+  try {
+    return this->get_override("savesDirectory")();
+  } PYCATCH;
 }
 
 QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
 {
-  return this->get_override("executables")();
+  try {
+    return this->get_override("executables")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::steamAPPId() const
 {
-  return this->get_override("steamAPPId")();
+  try {
+    return this->get_override("steamAPPId")();
+  } PYCATCH;
 }
 
 QStringList IPluginGameWrapper::primaryPlugins() const
 {
-  return this->get_override("primaryPlugins")();
+  try {
+    return this->get_override("primaryPlugins")();
+  } PYCATCH;
 }
 
 QStringList IPluginGameWrapper::gameVariants() const
 {
-  return this->get_override("gameVariants")();
+  try {
+    return this->get_override("gameVariants")();
+  } PYCATCH;
 }
 
 void IPluginGameWrapper::setGameVariant(const QString & variant)
 {
-  this->get_override("setGameVariant")(variant);
+  try {
+    this->get_override("setGameVariant")(variant);
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::binaryName() const
 {
-  return this->get_override("binaryName")();
+  try {
+    return this->get_override("binaryName")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::gameShortName() const
 {
-  return this->get_override("gameShortName")();
+  try {
+    return this->get_override("gameShortName")();
+  } PYCATCH;
 }
 
 QStringList IPluginGameWrapper::validShortNames() const
 {
-  return this->get_override("validShortNames")();
+  try {
+    return this->get_override("validShortNames")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::gameNexusName() const
 {
-  return this->get_override("gameNexusName")();
+  try {
+    return this->get_override("gameNexusName")();
+  } PYCATCH;
 }
 
 QStringList IPluginGameWrapper::iniFiles() const
 {
-  return this->get_override("iniFiles")();
+  try {
+    return this->get_override("iniFiles")();
+  } PYCATCH;
 }
 
 QStringList IPluginGameWrapper::DLCPlugins() const
 {
-  return this->get_override("DLCPlugins")();
+  try {
+    return this->get_override("DLCPlugins")();
+  } PYCATCH;
 }
 
 QStringList IPluginGameWrapper::CCPlugins() const
 {
-  return this->get_override("CCPlugins")();
+  try {
+    return this->get_override("CCPlugins")();
+  } PYCATCH;
 }
 
 IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
 {
-  return this->get_override("loadorderMechanism")();
+  try {
+    return this->get_override("loadorderMechanism")();
+  } PYCATCH;
 }
 
 IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
@@ -209,67 +257,93 @@ IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
 
 int IPluginGameWrapper::nexusModOrganizerID() const
 {
-  return this->get_override("nexusModOrganizerID")();
+  try {
+    return this->get_override("nexusModOrganizerID")();
+  } PYCATCH;
 }
 
 int IPluginGameWrapper::nexusGameID() const
 {
-  return this->get_override("nexusGameID")();
+  try {
+    return this->get_override("nexusGameID")();
+  } PYCATCH;
 }
 
 bool IPluginGameWrapper::looksValid(QDir const & dir) const
 {
-  return this->get_override("looksValid")(dir);
+  try {
+    return this->get_override("looksValid")(dir);
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::gameVersion() const
 {
-  return this->get_override("gameVersion")();
+  try {
+    return this->get_override("gameVersion")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::getLauncherName() const
 {
-  return this->get_override("getLauncherName")();
+  try {
+    return this->get_override("getLauncherName")();
+  } PYCATCH;
 }
 
 bool IPluginGameWrapper::init(MOBase::IOrganizer * moInfo)
 {
-  return this->get_override("init")(moInfo);
+  try {
+    return this->get_override("init")(moInfo);
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::name() const
 {
-  return this->get_override("name")();
+  try {
+    return this->get_override("name")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::author() const
 {
-  return this->get_override("author")();
+  try {
+    return this->get_override("author")();
+  } PYCATCH;
 }
 
 QString IPluginGameWrapper::description() const
 {
-  return this->get_override("description")();
+  try {
+    return this->get_override("description")();
+  } PYCATCH;
 }
 
 MOBase::VersionInfo IPluginGameWrapper::version() const
 {
-  return this->get_override("version")();
+  try {
+    return this->get_override("version")();
+  } PYCATCH;
 }
 
 bool IPluginGameWrapper::isActive() const
 {
-  return this->get_override("isActive")();
+  try {
+    return this->get_override("isActive")();
+  } PYCATCH;
 }
 
 QList<MOBase::PluginSetting> IPluginGameWrapper::settings() const
 {
-  return this->get_override("settings")();
+  try {
+    return this->get_override("settings")();
+  } PYCATCH;
 }
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
-  return this->get_override("_featureList")();
+  try {
+    return this->get_override("_featureList")();
+  } PYCATCH;
 }
 /// end IPluginGame Wrapper
 /////////////////////////////////////
