@@ -26,6 +26,32 @@ public:
 };
 
 
+class IPluginInstallerCustomWrapper : public MOBase::IPluginInstallerCustom, public boost::python::wrapper<MOBase::IPluginInstallerCustom>
+{
+  Q_OBJECT
+    Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
+
+public:
+  virtual bool init(MOBase::IOrganizer *moInfo);
+  virtual QString name() const;
+  virtual QString author() const;
+  virtual QString description() const;
+  virtual MOBase::VersionInfo version() const;
+  virtual bool isActive() const;
+  virtual QList<MOBase::PluginSetting> settings() const;
+
+  virtual unsigned int priority() const;
+  virtual bool isManualInstaller() const;
+  virtual bool isArchiveSupported(const MOBase::DirectoryTree &tree) const;
+  virtual bool isArchiveSupported(const QString &archiveName) const;
+  virtual std::set<QString> supportedExtensions() const;
+  virtual EInstallResult install(MOBase::GuessedValue<QString> &modName, const QString &archiveName,
+    const QString &version, int modID);
+  virtual void setParentWidget(QWidget *parent);
+
+};
+
+
 class IPluginToolWrapper: public MOBase::IPluginTool, public boost::python::wrapper<MOBase::IPluginTool>
 {
   Q_OBJECT
@@ -47,32 +73,6 @@ public:
 
 public slots:
   virtual void display() const;
-};
-
-
-class IPluginInstallerCustomWrapper: public MOBase::IPluginInstallerCustom, public boost::python::wrapper<MOBase::IPluginInstallerCustom>
-{
-  Q_OBJECT
-  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
-
-public:
-  virtual bool init(MOBase::IOrganizer *moInfo);
-  virtual QString name() const;
-  virtual QString author() const;
-  virtual QString description() const;
-  virtual MOBase::VersionInfo version() const;
-  virtual bool isActive() const;
-  virtual QList<MOBase::PluginSetting> settings() const;
-
-  virtual unsigned int priority() const;
-  virtual bool isManualInstaller() const;
-  virtual bool isArchiveSupported(const MOBase::DirectoryTree &tree) const;
-  virtual bool isArchiveSupported(const QString &archiveName) const;
-  virtual std::set<QString> supportedExtensions() const;
-  virtual EInstallResult install(MOBase::GuessedValue<QString> &modName, const QString &archiveName,
-                                 const QString &version, int modID);
-  virtual void setParentWidget(QWidget *parent);
-
 };
 
 

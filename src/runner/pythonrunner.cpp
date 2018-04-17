@@ -3,11 +3,10 @@
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4996 )
 
-#include "iplugingame.h"
+#include <iplugin.h>
+#include <iplugingame.h>
 #include <iplugininstaller.h>
 #include <iplugintool.h>
-#include <iplugingame.h>
-#include <iplugin.h>
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
 
@@ -713,14 +712,6 @@ BOOST_PYTHON_MODULE(mobase)
       .value("literal", MOBase::VersionInfo::SCHEME_LITERAL)
       ;
 
-  bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
-      .value("success", MOBase::IPluginInstaller::RESULT_SUCCESS)
-      .value("failed", MOBase::IPluginInstaller::RESULT_FAILED)
-      .value("canceled", MOBase::IPluginInstaller::RESULT_CANCELED)
-      .value("manualRequested", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
-      .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
-      ;
-
   bpy::class_<VersionInfo>("VersionInfo")
       .def(bpy::init<QString>())
       .def(bpy::init<QString, VersionInfo::VersionScheme>())
@@ -847,16 +838,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
-  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
-
-  bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
-      ;
-
-  bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
-      ;
-
   bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
   QFlags_from_python_obj<IPluginList::PluginState>();
   Functor0_converter(); // converter for the onRefreshed-callback
@@ -889,6 +870,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
       .def("onModMoved", bpy::pure_virtual(&MOBase::IModList::onModMoved))
       ;
+
+  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
 
   bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
       .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
@@ -954,6 +937,22 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isActive", bpy::pure_virtual(&MOBase::IPluginGame::isActive))
       .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
 
+      ;
+
+  bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
+      .value("success", MOBase::IPluginInstaller::RESULT_SUCCESS)
+      .value("failed", MOBase::IPluginInstaller::RESULT_FAILED)
+      .value("canceled", MOBase::IPluginInstaller::RESULT_CANCELED)
+      .value("manualRequested", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
+      .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
+      ;
+
+  bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
+      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
+      ;
+
+  bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
+      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
 
     bpy::class_<QDir>("QDir")
@@ -1082,9 +1081,9 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
 
     bpy::object pluginObj = m_PythonObjects[pluginName];
+    TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
-    TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
     reportPythonError();
