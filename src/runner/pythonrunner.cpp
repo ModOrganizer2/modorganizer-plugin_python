@@ -984,6 +984,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
 
+  QList_from_python_obj<ExecutableInfo>();
   QList_from_python_obj<PluginSetting>();
   bpy::to_python_converter<QList<ModRepositoryFileInfo>,
       QList_to_python_list<ModRepositoryFileInfo> >();

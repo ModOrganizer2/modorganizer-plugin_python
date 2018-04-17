@@ -293,7 +293,7 @@ QString IPluginGameWrapper::getLauncherName() const
 bool IPluginGameWrapper::init(MOBase::IOrganizer * moInfo)
 {
   try {
-    return this->get_override("init")(moInfo);
+    return this->get_override("init")(boost::python::ptr(moInfo));
   } PYCATCH;
 }
 
@@ -341,6 +341,7 @@ QList<MOBase::PluginSetting> IPluginGameWrapper::settings() const
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
+  qCritical("Calling unproxied method IPluginGameWrapper::featureList()");
   try {
     return this->get_override("_featureList")();
   } PYCATCH;
