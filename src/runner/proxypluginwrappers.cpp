@@ -79,6 +79,200 @@ QList<MOBase::PluginSetting> IPluginWrapper::settings() const
 }
 /// end IPlugin Wrapper
 /////////////////////////////////////
+/// IPluginGame Wrapper
+
+
+QString IPluginGameWrapper::gameName() const
+{
+  return this->get_override("gameName")();
+}
+
+void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettings settings) const
+{
+  this->get_override("initializeProfile")(directory, settings);
+}
+
+QString IPluginGameWrapper::savegameExtension() const
+{
+  return this->get_override("savegameExtension")();
+}
+
+QString IPluginGameWrapper::savegameSEExtension() const
+{
+  return this->get_override("savegameSEExtension")();
+}
+
+bool IPluginGameWrapper::isInstalled() const
+{
+  return this->get_override("isInstalled")();
+}
+
+QIcon IPluginGameWrapper::gameIcon() const
+{
+  return this->get_override("gameIcon")();
+}
+
+QDir IPluginGameWrapper::gameDirectory() const
+{
+  return this->get_override("gameDirectory")();
+}
+
+QDir IPluginGameWrapper::dataDirectory() const
+{
+  return this->get_override("dataDirectory")();
+}
+
+void IPluginGameWrapper::setGamePath(const QString & path)
+{
+  this->get_override("setGamePath")(path);
+}
+
+QDir IPluginGameWrapper::documentsDirectory() const
+{
+  return this->get_override("documentsDirectory")();
+}
+
+QDir IPluginGameWrapper::savesDirectory() const
+{
+  return this->get_override("savesDirectory")();
+}
+
+QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
+{
+  return this->get_override("executables")();
+}
+
+QString IPluginGameWrapper::steamAPPId() const
+{
+  return this->get_override("steamAPPId")();
+}
+
+QStringList IPluginGameWrapper::primaryPlugins() const
+{
+  return this->get_override("primaryPlugins")();
+}
+
+QStringList IPluginGameWrapper::gameVariants() const
+{
+  return this->get_override("gameVariants")();
+}
+
+void IPluginGameWrapper::setGameVariant(const QString & variant)
+{
+  this->get_override("setGameVariant")(variant);
+}
+
+QString IPluginGameWrapper::binaryName() const
+{
+  return this->get_override("binaryName")();
+}
+
+QString IPluginGameWrapper::gameShortName() const
+{
+  return this->get_override("gameShortName")();
+}
+
+QStringList IPluginGameWrapper::validShortNames() const
+{
+  return this->get_override("validShortNames")();
+}
+
+QString IPluginGameWrapper::gameNexusName() const
+{
+  return this->get_override("gameNexusName")();
+}
+
+QStringList IPluginGameWrapper::iniFiles() const
+{
+  return this->get_override("iniFiles")();
+}
+
+QStringList IPluginGameWrapper::DLCPlugins() const
+{
+  return this->get_override("DLCPlugins")();
+}
+
+QStringList IPluginGameWrapper::CCPlugins() const
+{
+  return this->get_override("CCPlugins")();
+}
+
+IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
+{
+  return this->get_override("loadorderMechanism")();
+}
+
+IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
+{
+  return this->get_override("sortMechanism")();
+}
+
+int IPluginGameWrapper::nexusModOrganizerID() const
+{
+  return this->get_override("nexusModOrganizerID")();
+}
+
+int IPluginGameWrapper::nexusGameID() const
+{
+  return this->get_override("nexusGameID")();
+}
+
+bool IPluginGameWrapper::looksValid(QDir const & dir) const
+{
+  return this->get_override("looksValid")(dir);
+}
+
+QString IPluginGameWrapper::gameVersion() const
+{
+  return this->get_override("gameVersion")();
+}
+
+QString IPluginGameWrapper::getLauncherName() const
+{
+  return this->get_override("getLauncherName")();
+}
+
+bool IPluginGameWrapper::init(MOBase::IOrganizer * moInfo)
+{
+  return this->get_override("init")(moInfo);
+}
+
+QString IPluginGameWrapper::name() const
+{
+  return this->get_override("name")();
+}
+
+QString IPluginGameWrapper::author() const
+{
+  return this->get_override("author")();
+}
+
+QString IPluginGameWrapper::description() const
+{
+  return this->get_override("description")();
+}
+
+MOBase::VersionInfo IPluginGameWrapper::version() const
+{
+  return this->get_override("version")();
+}
+
+bool IPluginGameWrapper::isActive() const
+{
+  return this->get_override("isActive")();
+}
+
+QList<MOBase::PluginSetting> IPluginGameWrapper::settings() const
+{
+  return this->get_override("settings")();
+}
+
+std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
+{
+  return this->get_override("_featureList")();
+}
+/// end IPluginGame Wrapper
+/////////////////////////////////////
 /// IPluginInstallerCustom Wrapper
 
 
