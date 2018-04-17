@@ -496,7 +496,14 @@ struct QClass_converters
 
   static void *QClass_from_PyQt(PyObject *objPtr)
   {
-    if (!PyObject_TypeCheck(objPtr, sipAPI()->api_wrapper_type)) {
+    if (!PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {
+      if (std::is_same_v<T, QStringList>)
+      {
+        // QStringLists aren't wrapped by PyQt - regular Python string/unicode lists are used instead
+        bpy::extract<QList<QString>> extractor(objPtr);
+        if (extractor.check())
+          return new QStringList(extractor());
+      }
       PyErr_SetString(PyExc_TypeError, "type not wrapped");
       bpy::throw_error_already_set();
     }
@@ -964,6 +971,7 @@ BOOST_PYTHON_MODULE(mobase)
   QList_from_python_obj<PluginSetting>();
   bpy::to_python_converter<QList<ModRepositoryFileInfo>,
       QList_to_python_list<ModRepositoryFileInfo> >();
+  QList_from_python_obj<QString>();
 
   stdset_from_python_list<QString>();
 }
