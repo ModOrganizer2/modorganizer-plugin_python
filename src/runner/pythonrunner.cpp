@@ -424,6 +424,7 @@ template <> struct MetaData<IDownloadManager> { static const char *className() {
 template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
 template <> struct MetaData<QDir> { static const char *className() { return "QDir"; } };
+template <> struct MetaData<QFileInfo> { static const char *className() { return "QFileInfo"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
 template <> struct MetaData<QStringList> { static const char *className() { return "QStringList"; } };
 template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
@@ -695,6 +696,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   //QClass_converters<QObject>();
   QClass_converters<QDir>();
+  QClass_converters<QFileInfo>();
   QClass_converters<QWidget>();
   QClass_converters<QIcon>();
   QClass_converters<QStringList>();
@@ -972,6 +974,8 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<QList<ModRepositoryFileInfo>,
       QList_to_python_list<ModRepositoryFileInfo> >();
   QList_from_python_obj<QString>();
+  bpy::to_python_converter<QList<QFileInfo>,
+      QList_to_python_list<QFileInfo>>();
 
   stdset_from_python_list<QString>();
 }
