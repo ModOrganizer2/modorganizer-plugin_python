@@ -27,7 +27,11 @@ public:
 };
 
 
-struct IPluginGameWrapper : MOBase::IPluginGame, boost::python::wrapper<MOBase::IPluginGame> {
+class IPluginGameWrapper : public MOBase::IPluginGame, public boost::python::wrapper<MOBase::IPluginGame> {
+  Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginGame)
+
+public:
   virtual QString gameName() const override { return this->get_override("gameName")(); }
   virtual void initializeProfile(const QDir &directory, ProfileSettings settings) const override {
     this->get_override("initializeProfile")(directory, settings);
