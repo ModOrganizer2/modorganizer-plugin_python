@@ -25,58 +25,62 @@ using namespace MOBase;
                 catch (...) { throw MyException("An unknown exception was thrown in python code"); }
 
 
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
+bool class_name::init(MOBase::IOrganizer *moInfo) \
+{ \
+  try { \
+    return this->get_override("init")(boost::python::ptr(moInfo)); \
+  } PYCATCH; \
+} \
+ \
+QString class_name::name() const \
+{ \
+  try { \
+    return this->get_override("name")().as<QString>(); \
+  } PYCATCH; \
+} \
+ \
+QString class_name::author() const \
+{ \
+  try { \
+    return this->get_override("author")().as<QString>(); \
+  } PYCATCH; \
+} \
+ \
+QString class_name::description() const \
+{ \
+  try { \
+    return this->get_override("description")().as<QString>(); \
+  } PYCATCH; \
+} \
+ \
+MOBase::VersionInfo class_name::version() const \
+{ \
+  try { \
+    return this->get_override("version")().as<MOBase::VersionInfo>(); \
+  } PYCATCH; \
+} \
+ \
+bool class_name::isActive() const \
+{ \
+  try { \
+    return this->get_override("isActive")().as<bool>(); \
+  } PYCATCH; \
+} \
+ \
+QList<MOBase::PluginSetting> class_name::settings() const \
+{ \
+  try { \
+    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>(); \
+  } PYCATCH; \
+}
+
+/// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
 /////////////////////////////
 /// IPlugin Wrapper
 
 
-bool IPluginWrapper::init(MOBase::IOrganizer *moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
-
-QString IPluginWrapper::name() const
-{
-  try {
-    return this->get_override("name")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginWrapper::author() const
-{
-  try {
-    return this->get_override("author")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginWrapper::description() const
-{
-  try {
-    return this->get_override("description")().as<QString>();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginWrapper::version() const
-{
-  try {
-    return this->get_override("version")().as<MOBase::VersionInfo>();
-  } PYCATCH;
-}
-
-bool IPluginWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")().as<bool>();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginWrapper)
 /// end IPlugin Wrapper
 /////////////////////////////////////
 /// IPluginGame Wrapper
@@ -292,54 +296,7 @@ QString IPluginGameWrapper::getLauncherName() const
   } PYCATCH;
 }
 
-bool IPluginGameWrapper::init(MOBase::IOrganizer * moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
-
-QString IPluginGameWrapper::name() const
-{
-  try {
-    return this->get_override("name")();
-  } PYCATCH;
-}
-
-QString IPluginGameWrapper::author() const
-{
-  try {
-    return this->get_override("author")();
-  } PYCATCH;
-}
-
-QString IPluginGameWrapper::description() const
-{
-  try {
-    return this->get_override("description")();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginGameWrapper::version() const
-{
-  try {
-    return this->get_override("version")();
-  } PYCATCH;
-}
-
-bool IPluginGameWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginGameWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")();
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginGameWrapper)
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
@@ -353,54 +310,7 @@ std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 /// IPluginInstallerCustom Wrapper
 
 
-bool IPluginInstallerCustomWrapper::init(MOBase::IOrganizer *moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
-
-QString IPluginInstallerCustomWrapper::name() const
-{
-  try {
-    return this->get_override("name")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginInstallerCustomWrapper::author() const
-{
-  try {
-    return this->get_override("author")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginInstallerCustomWrapper::description() const
-{
-  try {
-    return this->get_override("description")().as<QString>();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginInstallerCustomWrapper::version() const
-{
-  try {
-    return this->get_override("version")();
-  } PYCATCH;
-}
-
-bool IPluginInstallerCustomWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginInstallerCustomWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
 
 unsigned int IPluginInstallerCustomWrapper::priority() const
 {
@@ -459,54 +369,7 @@ void IPluginInstallerCustomWrapper::setParentWidget(QWidget *parent)
 /// IPluginTool Wrapper
 
 
-bool IPluginToolWrapper::init(MOBase::IOrganizer *moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::name() const
-{
-  try {
-    return this->get_override("name")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::author() const
-{
-  try {
-    return this->get_override("author")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::description() const
-{
-  try {
-    return this->get_override("description")().as<QString>();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginToolWrapper::version() const
-{
-  try {
-    return this->get_override("version")().as<MOBase::VersionInfo>();
-  } PYCATCH;
-}
-
-bool IPluginToolWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")().as<bool>();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginToolWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginToolWrapper)
 
 QString IPluginToolWrapper::displayName() const
 {

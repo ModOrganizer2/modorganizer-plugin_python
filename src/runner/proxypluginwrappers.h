@@ -12,18 +12,21 @@
 #endif
 
 
+#define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS public: \
+virtual bool init(MOBase::IOrganizer *moInfo) override; \
+virtual QString name() const override; \
+virtual QString author() const override; \
+virtual QString description() const override; \
+virtual MOBase::VersionInfo version() const override; \
+virtual bool isActive() const override; \
+virtual QList<MOBase::PluginSetting> settings() const override;
+
+
 class IPluginWrapper : public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPlugin>
 {
   Q_INTERFACES(MOBase::IPlugin)
 
-public:
-  virtual bool init(MOBase::IOrganizer *moInfo);
-  virtual QString name() const;
-  virtual QString author() const;
-  virtual QString description() const;
-  virtual MOBase::VersionInfo version() const;
-  virtual bool isActive() const;
-  virtual QList<MOBase::PluginSetting> settings() const;
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 };
 
 
@@ -63,14 +66,7 @@ public:
   virtual QString gameVersion() const override;
   virtual QString getLauncherName() const override;
 
-  //Plugin interface. Could this bit be implemented just once?
-  virtual bool init(MOBase::IOrganizer *moInfo) override;
-  virtual QString name() const override;
-  virtual QString author() const override;
-  virtual QString description() const override;
-  virtual MOBase::VersionInfo version() const override;
-  virtual bool isActive() const override;
-  virtual QList<MOBase::PluginSetting> settings() const override;
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 
 protected:
 
@@ -86,15 +82,8 @@ class IPluginInstallerCustomWrapper : public MOBase::IPluginInstallerCustom, pub
   Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
 
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 public:
-  virtual bool init(MOBase::IOrganizer *moInfo);
-  virtual QString name() const;
-  virtual QString author() const;
-  virtual QString description() const;
-  virtual MOBase::VersionInfo version() const;
-  virtual bool isActive() const;
-  virtual QList<MOBase::PluginSetting> settings() const;
-
   virtual unsigned int priority() const;
   virtual bool isManualInstaller() const;
   virtual bool isArchiveSupported(const MOBase::DirectoryTree &tree) const;
@@ -112,15 +101,8 @@ class IPluginToolWrapper: public MOBase::IPluginTool, public boost::python::wrap
   Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginTool)
 
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 public:
-  virtual bool init(MOBase::IOrganizer *moInfo);
-  virtual QString name() const;
-  virtual QString author() const;
-  virtual QString description() const;
-  virtual MOBase::VersionInfo version() const;
-  virtual bool isActive() const;
-  virtual QList<MOBase::PluginSetting> settings() const;
-
   virtual QString displayName() const;
   virtual QString tooltip() const;
   virtual QIcon icon() const;
