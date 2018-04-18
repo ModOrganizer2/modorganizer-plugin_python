@@ -252,7 +252,9 @@ IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
 
 IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
 {
-  return this->get_override("sortMechanism")();
+  try {
+    return this->get_override("sortMechanism")();
+  } PYCATCH;
 }
 
 int IPluginGameWrapper::nexusModOrganizerID() const
