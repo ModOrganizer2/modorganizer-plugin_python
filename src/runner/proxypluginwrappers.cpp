@@ -83,6 +83,56 @@ QList<MOBase::PluginSetting> class_name::settings() const \
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginWrapper)
 /// end IPlugin Wrapper
 /////////////////////////////////////
+/// IPluginDiagnose Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginDiagnoseWrapper)
+
+std::vector<unsigned int> IPluginDiagnoseWrapper::activeProblems() const
+{
+  try {
+    GILock lock;
+
+    return this->get_override("activeProblems")();
+  } PYCATCH;
+}
+
+QString IPluginDiagnoseWrapper::shortDescription(unsigned int key) const
+{
+  try {
+    return this->get_override("shortDescription")(key);
+  } PYCATCH;
+}
+
+QString IPluginDiagnoseWrapper::fullDescription(unsigned int key) const
+{
+  try {
+    return this->get_override("fullDescription")(key);
+  } PYCATCH;
+}
+
+bool IPluginDiagnoseWrapper::hasGuidedFix(unsigned int key) const
+{
+  try {
+    return this->get_override("hasGuidedFix")(key);
+  } PYCATCH;
+}
+
+void IPluginDiagnoseWrapper::startGuidedFix(unsigned int key) const
+{
+  try {
+    GILock lock;
+
+    this->get_override("startGuidedFix")(key);
+  } PYCATCH;
+}
+
+void IPluginDiagnoseWrapper::invalidate()
+{
+  IPluginDiagnose::invalidate();
+}
+/// end IPluginDiagnose Wrapper
+/////////////////////////////////////
 /// IPluginGame Wrapper
 
 

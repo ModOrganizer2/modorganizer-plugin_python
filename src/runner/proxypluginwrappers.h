@@ -2,10 +2,11 @@
 #define PROXYPLUGINWRAPPERS_H
 
 
-#include <iplugintool.h>
+#include <iplugindiagnose.h>
 #include <iplugingame.h>
 #include <iplugininstallersimple.h>
 #include <iplugininstallercustom.h>
+#include <iplugintool.h>
 
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
@@ -25,6 +26,27 @@ virtual QList<MOBase::PluginSetting> settings() const override;
 class IPluginWrapper : public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPlugin>
 {
   Q_INTERFACES(MOBase::IPlugin)
+
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+};
+
+
+// Even though the base interface is not an IPlugin or QObject, this has to be because we have no way to pass Mod Organizer a plugin that implements multiple interfaces.
+// QObject must be the first base class because moc assumes the first base class is a QObject
+class IPluginDiagnoseWrapper : public QObject, public MOBase::IPluginDiagnose, public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPluginDiagnose>
+{
+  Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginDiagnose)
+
+public:
+  virtual std::vector<unsigned int> activeProblems() const override;
+  virtual QString shortDescription(unsigned int key) const override;
+  virtual QString fullDescription(unsigned int key) const override;
+  virtual bool hasGuidedFix(unsigned int key) const override;
+  virtual void startGuidedFix(unsigned int key) const override;
+  // Other functions exist, but shouldn't need wrapping as a default implementation exists
+  // This was protected, but Python doesn't have that, so it needs making public
+  virtual void invalidate();
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 };

@@ -340,6 +340,35 @@ struct QList_from_python_obj
 
 
 template <typename T>
+struct std_vector_from_python_obj
+{
+  std_vector_from_python_obj() {
+    bpy::converter::registry::push_back(
+      &convertible,
+      &construct,
+      bpy::type_id<std::vector<T> >());
+  }
+
+  static void* convertible(PyObject *objPtr) {
+    if (PyList_Check(objPtr)) return objPtr;
+    return nullptr;
+  }
+
+  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+    void *storage = ((bpy::converter::rvalue_from_python_storage<std::vector<T> >*)data)->storage.bytes;
+    std::vector<T> *result = new (storage) std::vector<T>();
+    bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
+    int length = bpy::len(source);
+    for (int i = 0; i < length; ++i) {
+      result->push_back(bpy::extract<T>(source[i]));
+    }
+
+    data->convertible = storage;
+  }
+};
+
+
+template <typename T>
 struct QFlags_from_python_obj
 {
   QFlags_from_python_obj() {
@@ -898,6 +927,15 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
 
+  bpy::class_<IPluginDiagnoseWrapper, boost::noncopyable>("IPluginDiagnose")
+      .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
+      .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription))
+      .def("fullDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::fullDescription))
+      .def("hasGuidedFix", bpy::pure_virtual(&MOBase::IPluginDiagnose::hasGuidedFix))
+      .def("startGuidedFix", bpy::pure_virtual(&MOBase::IPluginDiagnose::startGuidedFix))
+      .def("_invalidate", &IPluginDiagnoseWrapper::invalidate)
+      ;
+
   bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
       .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
@@ -991,6 +1029,8 @@ BOOST_PYTHON_MODULE(mobase)
   QList_from_python_obj<QString>();
   bpy::to_python_converter<QList<QFileInfo>,
       QList_to_python_list<QFileInfo>>();
+
+  std_vector_from_python_obj<unsigned int>();
 
   stdset_from_python_list<QString>();
 }
@@ -1107,6 +1147,8 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
 
     bpy::object pluginObj = m_PythonObjects[pluginName];
     TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
+    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+    TRY_PLUGIN_TYPE(IPluginDiagnoseWrapper, pluginObj);
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
   } catch (const bpy::error_already_set&) {
