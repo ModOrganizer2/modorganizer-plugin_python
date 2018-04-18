@@ -461,6 +461,7 @@ struct IPluginGameWrapper: MOBase::IPluginGame, boost::python::wrapper<MOBase::I
   virtual QStringList DLCPlugins() const override { return this->get_override("DLCPlugins")(); }
   virtual QStringList CCPlugins() const override { return this->get_override("CCPlugins")(); }
   virtual LoadOrderMechanism loadOrderMechanism() const override { return this->get_override("loadorderMechanism")(); }
+  virtual SortMechanism sortMechanism() const override { return this->get_override("sortMechanism")(); }
   virtual int nexusModOrganizerID() const override { return this->get_override("nexusModOrganizerID")(); }
   virtual int nexusGameID() const override { return this->get_override("nexusGameID")(); }
   virtual bool looksValid(QDir const &dir) const override { return this->get_override("looksValid")(dir); }

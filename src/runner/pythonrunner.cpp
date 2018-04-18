@@ -895,6 +895,13 @@ BOOST_PYTHON_MODULE(mobase)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
       ;
 
+  bpy::enum_<MOBase::IPluginGame::SortMechanism>("SortMechanism")
+      .value("NONE", MOBase::IPluginGame::SortMechanism::NONE)
+      .value("MLOX", MOBase::IPluginGame::SortMechanism::MLOX)
+      .value("BOSS", MOBase::IPluginGame::SortMechanism::BOSS)
+      .value("LOOT", MOBase::IPluginGame::SortMechanism::LOOT)
+      ;
+
   // This doesn't actually do the conversion, but might be convenient for accessing the names for enum bits
   bpy::enum_<MOBase::IPluginGame::ProfileSetting>("ProfileSetting")
       .value("mods", MOBase::IPluginGame::MODS)
@@ -931,6 +938,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("DLCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::DLCPlugins))
       .def("CCPlugins", bpy::pure_virtual(&MOBase::IPluginGame::CCPlugins))
       .def("loadOrderMechanism", bpy::pure_virtual(&MOBase::IPluginGame::loadOrderMechanism))
+      .def("sortMechanism", bpy::pure_virtual(&MOBase::IPluginGame::sortMechanism))
       .def("nexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::nexusModOrganizerID))
       .def("nexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::nexusGameID))
       .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid))
