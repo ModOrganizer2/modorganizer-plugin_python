@@ -133,6 +133,19 @@ void IPluginDiagnoseWrapper::invalidate()
 }
 /// end IPluginDiagnose Wrapper
 /////////////////////////////////////
+/// IPluginFileMapper Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginFileMapperWrapper)
+
+MappingType IPluginFileMapperWrapper::mappings() const
+{
+  try {
+    return this->get_override("mappings")();
+  } PYCATCH;
+}
+/// end IPluginFileMapper Wrapper
+/////////////////////////////////////
 /// IPluginGame Wrapper
 
 

@@ -3,6 +3,7 @@
 
 
 #include <iplugindiagnose.h>
+#include <ipluginfilemapper.h>
 #include <iplugingame.h>
 #include <iplugininstallersimple.h>
 #include <iplugininstallercustom.h>
@@ -47,6 +48,20 @@ public:
   // Other functions exist, but shouldn't need wrapping as a default implementation exists
   // This was protected, but Python doesn't have that, so it needs making public
   virtual void invalidate();
+
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+};
+
+
+// Even though the base interface is not an IPlugin or QObject, this has to be because we have no way to pass Mod Organizer a plugin that implements multiple interfaces.
+// QObject must be the first base class because moc assumes the first base class is a QObject
+class IPluginFileMapperWrapper : public QObject, public MOBase::IPluginFileMapper, public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPluginFileMapper>
+{
+  Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginFileMapper)
+
+public:
+  virtual MappingType mappings() const override;
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 };

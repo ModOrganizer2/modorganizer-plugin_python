@@ -989,6 +989,19 @@ BOOST_PYTHON_MODULE(mobase)
       .def("_invalidate", &IPluginDiagnoseWrapper::invalidate)
       ;
 
+  bpy::class_<Mapping>("Mapping")
+      .def_readwrite("source", &Mapping::source)
+      .def_readwrite("destination", &Mapping::destination)
+      .def_readwrite("isDirectory", &Mapping::isDirectory)
+      .def_readwrite("createTarget", &Mapping::createTarget)
+      ;
+
+  std_vector_from_python_obj<Mapping>();
+
+  bpy::class_<IPluginFileMapperWrapper, boost::noncopyable>("IPluginFileMapper")
+      .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
+      ;
+
   bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
       .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
@@ -1202,6 +1215,8 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
     // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
     TRY_PLUGIN_TYPE(IPluginDiagnoseWrapper, pluginObj);
+    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+    TRY_PLUGIN_TYPE(IPluginFileMapperWrapper, pluginObj);
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
   } catch (const bpy::error_already_set&) {
