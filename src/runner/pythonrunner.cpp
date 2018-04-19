@@ -181,6 +181,55 @@ struct GuessedValue_converters
 };
 
 
+template<typename key_type, typename value_type>
+struct QMap_converters
+{
+  struct QMap_to_python
+  {
+    static PyObject *convert(const QMap<key_type, value_type> &map) {
+      bpy::dict result;
+      QMapIterator<key_type, value_type> iter(map);
+      while (iter.hasNext()) {
+        iter.next();
+        result[bpy::object(iter.key())] = bpy::object(iter.value());
+      }
+      return bpy::incref(result.ptr());
+    }
+  };
+
+  struct QMap_from_python
+  {
+    QMap_from_python() {
+      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<QMap<key_type, value_type>>());
+    }
+
+    static void *convertible(PyObject *objPtr) {
+      return PyDict_Check(objPtr) ? objPtr : nullptr;
+    }
+
+    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+      void *storage = ((bpy::converter::rvalue_from_python_storage<QMap<key_type, value_type>>*)data)->storage.bytes;
+      QMap<key_type, value_type> *result = new (storage) QMap<key_type, value_type>();
+      bpy::dict source(bpy::handle<>(bpy::borrowed(objPtr)));
+      bpy::list keys = source.keys();
+      int len = bpy::len(keys);
+      for (int i = 0; i < len; ++i) {
+        bpy::object pyKey = keys[i];
+        (*result)[bpy::extract<key_type>(pyKey)] = bpy::extract<value_type>(source[pyKey]);
+      }
+
+      data->convertible = storage;
+    }
+  };
+
+  QMap_converters()
+  {
+    QMap_from_python();
+    bpy::to_python_converter<QMap<key_type, value_type>, QMap_to_python >();
+  }
+};
+
+
 struct QVariant_to_python_obj
 {
   static PyObject *convert(const QVariant &var) {
@@ -188,24 +237,12 @@ struct QVariant_to_python_obj
       case QVariant::Int: return PyLong_FromLong(var.toInt());
       case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
       case QVariant::Bool: return PyBool_FromLong(var.toBool());
-      case QVariant::String: return bpy::incref(bpy::object(var.toString().toUtf8().constData()).ptr());
+      case QVariant::String: return bpy::incref(bpy::object(var.toString()).ptr());
       case QVariant::List: {
-        QVariantList list = var.toList();
-        PyObject *result = PyList_New(list.count());
-        for (QVariant var : list) {
-          PyList_Append(result, convert(var));
-        }
-        return result;
+        return bpy::incref(bpy::object(var.toList()).ptr());
       } break;
       case QVariant::Map: {
-        QVariantMap map = var.toMap();
-        PyObject *result = PyDict_New();
-        QMapIterator<QString, QVariant> iter(map);
-        while (iter.hasNext()) {
-          iter.next();
-          PyDict_SetItem(result, convert(iter.key()), convert(iter.value()));
-        }
-        return result;
+        return bpy::incref(bpy::object(var.toMap()).ptr());
       } break;
       default: {
         PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.type());
@@ -239,49 +276,21 @@ struct QVariant_from_python_obj
     data->convertible = storage;
   }
 
-  static QVariant variantFromPyObject(PyObject *objPtr) {
-    QVariant result;
-    if (PyList_Check(objPtr)) {
-      QVariantList resultList;
-      for (int i = 0; i < PyList_Size(objPtr); ++i) {
-        resultList.append(variantFromPyObject(PyList_GetItem(objPtr, i)));
-      }
-      result = resultList;
-    } else if (PyString_Check(objPtr)) {
-      result = PyString_AsString(objPtr);
-    } else if (PyBool_Check(objPtr)) {
-      result = (objPtr == Py_True);
-    } else if (PyInt_Check(objPtr)) {
-      //QVariant doesn't have long. It has int or long long. Given that on m/s,
-      //long is 32 bits for 32- and 64- bit code...
-      result = static_cast<int>(PyInt_AsLong(objPtr));
-    } else {
-      PyErr_SetString(PyExc_TypeError, "type unsupported");
-      throw bpy::error_already_set();
-    }
-    return result;
-  }
-
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
     // PyBools will also return true for PyInt_Check but not the other way around, so the order
     // here is relevant
     if (PyList_Check(objPtr)) {
-      QVariantList result;
-      for (int i = 0; i < PyList_Size(objPtr); ++i) {
-        result.append(variantFromPyObject(PyList_GetItem(objPtr, i)));
-      }
-      constructVariant(result, data);
-    } else if (PyString_Check(objPtr)) {
-      const char *value = PyString_AsString(objPtr);
-      constructVariant(value, data);
+      constructVariant(bpy::extract<QVariantList>(objPtr)(), data);
+    } else if (PyDict_Check(objPtr)) {
+      constructVariant(bpy::extract<QVariantMap>(objPtr)(), data);
+    } else if (PyString_Check(objPtr) || PyUnicode_Check(objPtr)) {
+      constructVariant(bpy::extract<QString>(objPtr)(), data);
     } else if (PyBool_Check(objPtr)) {
-      bool value = (objPtr == Py_True);
-      constructVariant(value, data);
+      constructVariant(bpy::extract<bool>(objPtr)(), data);
     } else if (PyInt_Check(objPtr)) {
       //QVariant doesn't have long. It has int or long long. Given that on m/s,
       //long is 32 bits for 32- and 64- bit code...
-      int value = static_cast<int>(PyInt_AsLong(objPtr));
-      constructVariant(value, data);
+      constructVariant(bpy::extract<int>(objPtr)(), data);
     } else {
       PyErr_SetString(PyExc_TypeError, "type unsupported");
       throw bpy::error_already_set();
@@ -1095,6 +1104,10 @@ BOOST_PYTHON_MODULE(mobase)
   QList_from_python_obj<QString>();
   bpy::to_python_converter<QList<QFileInfo>,
       QList_to_python_list<QFileInfo>>();
+  QList_from_python_obj<QVariant>();
+  QList_to_python_list<QVariant>();
+
+  QMap_converters<QString, QVariant>();
 
   std_vector_from_python_obj<unsigned int>();
 
