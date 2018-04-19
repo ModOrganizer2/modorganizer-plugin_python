@@ -630,6 +630,7 @@ int getArgCount(PyObject *object) {
   return result;
 }
 
+template <typename RET>
 struct Functor0_converter
 {
 
@@ -638,9 +639,9 @@ struct Functor0_converter
     FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
     }
 
-    void operator()() {
+    RET operator()() {
       GILock lock;
-      m_Callable();
+      return (RET) m_Callable();
     }
 
     boost::python::object m_Callable;
@@ -648,7 +649,7 @@ struct Functor0_converter
 
   Functor0_converter()
   {
-    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<void()>>());
+    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<RET()>>());
   }
 
   static void *convertible(PyObject *object)
@@ -663,14 +664,55 @@ struct Functor0_converter
   static void construct(PyObject *object, bpy::converter::rvalue_from_python_stage1_data *data)
   {
     bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
-    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<void()>>*)data)->storage.bytes;
-    new (storage) std::function<void()>(FunctorWrapper(callable));
+    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<RET()>>*)data)->storage.bytes;
+    new (storage) std::function<RET()>(FunctorWrapper(callable));
     data->convertible = storage;
   }
 };
 
 
-template <typename PAR1, typename PAR2>
+template <typename RET, typename PAR1>
+struct Functor1_converter
+{
+
+  struct FunctorWrapper
+  {
+    FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
+    }
+
+    RET operator()(const PAR1 &param1) {
+      GILock lock;
+      return (RET) m_Callable(param1);
+    }
+
+    boost::python::object m_Callable;
+  };
+
+  Functor1_converter()
+  {
+    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<RET(PAR1)>>());
+  }
+
+  static void *convertible(PyObject *object)
+  {
+    if (!PyCallable_Check(object)
+        || (getArgCount(object) != 1)) {
+      return nullptr;
+    }
+    return object;
+  }
+
+  static void construct(PyObject *object, bpy::converter::rvalue_from_python_stage1_data *data)
+  {
+    bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
+    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<RET(PAR1)>>*)data)->storage.bytes;
+    new (storage) std::function<RET(PAR1)>(FunctorWrapper(callable));
+    data->convertible = storage;
+  }
+};
+
+
+template <typename RET, typename PAR1, typename PAR2>
 struct Functor2_converter
 {
 
@@ -679,9 +721,9 @@ struct Functor2_converter
     FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
     }
 
-    void operator()(const PAR1 &param1, const PAR2 &param2) {
+    RET operator()(const PAR1 &param1, const PAR2 &param2) {
       GILock lock;
-      m_Callable(param1, param2);
+      return (RET) m_Callable(param1, param2);
     }
 
     boost::python::object m_Callable;
@@ -689,7 +731,7 @@ struct Functor2_converter
 
   Functor2_converter()
   {
-    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<void(PAR1, PAR2)>>());
+    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<RET(PAR1, PAR2)>>());
   }
 
   static void *convertible(PyObject *object)
@@ -704,8 +746,8 @@ struct Functor2_converter
   static void construct(PyObject *object, bpy::converter::rvalue_from_python_stage1_data *data)
   {
     bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
-    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<void(PAR1, PAR2)>>*)data)->storage.bytes;
-    new (storage) std::function<void(PAR1, PAR2)>(FunctorWrapper(callable));
+    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<RET(PAR1, PAR2)>>*)data)->storage.bytes;
+    new (storage) std::function<RET(PAR1, PAR2)>(FunctorWrapper(callable));
     data->convertible = storage;
   }
 };
@@ -894,7 +936,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
   QFlags_from_python_obj<IPluginList::PluginState>();
-  Functor0_converter(); // converter for the onRefreshed-callback
+  Functor0_converter<void>(); // converter for the onRefreshed-callback
 
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
       .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
@@ -912,7 +954,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   QFlags_from_python_obj<IModList::ModState>();
-  Functor2_converter<const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+  Functor2_converter<void, const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
 
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
       .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
