@@ -67,21 +67,6 @@ using namespace MOBase;
 
 namespace bpy = boost::python;
 
-struct ModRepositoryFileInfo_to_python_dict
-{
-  static PyObject *convert(const ModRepositoryFileInfo &info) {
-    PyObject *res = PyDict_New();
-    PyDict_SetItemString(res, "uri", bpy::incref(bpy::object(info.uri).ptr()));
-    PyDict_SetItemString(res, "name", bpy::incref(bpy::object(info.name).ptr()));
-    PyDict_SetItemString(res, "description", bpy::incref(bpy::object(info.description.toUtf8().constData()).ptr()));
-    PyDict_SetItemString(res, "categoryID", PyLong_FromLong(info.categoryID));
-    PyDict_SetItemString(res, "fileID", PyLong_FromLong(info.fileID));
-    PyDict_SetItemString(res, "fileSize", PyLong_FromLong(static_cast<long>(info.fileSize)));
-    PyDict_SetItemString(res, "version", bpy::incref(bpy::object(info.version).ptr()));
-    return bpy::incref(res);
-  }
-};
-
 
 struct QString_to_python_str
 {
@@ -461,10 +446,12 @@ template <> struct MetaData<IModRepositoryBridge> { static const char *className
 template <> struct MetaData<IDownloadManager> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
 template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
+template <> struct MetaData<QDateTime> { static const char *className() { return "QDateTime"; } };
 template <> struct MetaData<QDir> { static const char *className() { return "QDir"; } };
 template <> struct MetaData<QFileInfo> { static const char *className() { return "QFileInfo"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
 template <> struct MetaData<QStringList> { static const char *className() { return "QStringList"; } };
+template <> struct MetaData<QUrl> { static const char *className() { return "QUrl"; } };
 template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
 
 
@@ -775,11 +762,13 @@ BOOST_PYTHON_MODULE(mobase)
   QString_from_python_str();
 
   //QClass_converters<QObject>();
+  QClass_converters<QDateTime>();
   QClass_converters<QDir>();
   QClass_converters<QFileInfo>();
   QClass_converters<QWidget>();
   QClass_converters<QIcon>();
   QClass_converters<QStringList>();
+  QClass_converters<QUrl>();
   QInterface_converters<IDownloadManager>();
 
 
@@ -909,6 +898,29 @@ BOOST_PYTHON_MODULE(mobase)
       .def("requestDownloadURL", bpy::pure_virtual(&IModRepositoryBridge::requestDownloadURL))
       .def("requestToggleEndorsement", bpy::pure_virtual(&IModRepositoryBridge::requestToggleEndorsement))
       ;
+
+  bpy::class_<ModRepositoryFileInfo>("ModRepositoryFileInfo")
+    .def(bpy::init<const ModRepositoryFileInfo &>())
+    .def(bpy::init<bpy::optional<QString, int, int>>())
+    .def("toString", &ModRepositoryFileInfo::toString)
+    .def("createFromJson", &ModRepositoryFileInfo::createFromJson).staticmethod("createFromJson")
+    .def_readwrite("name", &ModRepositoryFileInfo::name)
+    .def_readwrite("uri", &ModRepositoryFileInfo::uri)
+    .def_readwrite("description", &ModRepositoryFileInfo::description)
+    .def_readwrite("version", &ModRepositoryFileInfo::version)
+    .def_readwrite("newestVersion", &ModRepositoryFileInfo::newestVersion)
+    .def_readwrite("categoryID", &ModRepositoryFileInfo::categoryID)
+    .def_readwrite("modName", &ModRepositoryFileInfo::modName)
+    .def_readwrite("gameName", &ModRepositoryFileInfo::gameName)
+    .def_readwrite("modID", &ModRepositoryFileInfo::modID)
+    .def_readwrite("fileID", &ModRepositoryFileInfo::fileID)
+    .def_readwrite("fileSize", &ModRepositoryFileInfo::fileSize)
+    .def_readwrite("fileName", &ModRepositoryFileInfo::fileName)
+    .def_readwrite("fileCategory", &ModRepositoryFileInfo::fileCategory)
+    .def_readwrite("fileTime", &ModRepositoryFileInfo::fileTime)
+    .def_readwrite("repository", &ModRepositoryFileInfo::repository)
+    .def_readwrite("userData", &ModRepositoryFileInfo::userData)
+    ;
 
   bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
       .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
@@ -1095,7 +1107,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   GuessedValue_converters<QString>();
 
-  bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
+  //bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
 
   QList_from_python_obj<ExecutableInfo>();
   QList_from_python_obj<PluginSetting>();
