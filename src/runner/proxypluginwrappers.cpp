@@ -2,6 +2,7 @@
 #include <utility.h>
 #include "error.h"
 #include "gilock.h"
+#include <QUrl>
 #include <QWidget>
 
 namespace boost
@@ -428,6 +429,54 @@ void IPluginInstallerCustomWrapper::setParentWidget(QWidget *parent)
   } PYCATCH;
 }
 /// end IPluginInstallerCustom Wrapper
+/////////////////////////////
+/// IPluginModPage Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginModPageWrapper)
+
+QString IPluginModPageWrapper::displayName() const
+{
+  try {
+    return this->get_override("displayName")();
+  } PYCATCH;
+}
+
+QIcon IPluginModPageWrapper::icon() const
+{
+  try {
+    return this->get_override("icon")();
+  } PYCATCH;
+}
+
+QUrl IPluginModPageWrapper::pageURL() const
+{
+  try {
+    return this->get_override("pageURL")();
+  } PYCATCH;
+}
+
+bool IPluginModPageWrapper::useIntegratedBrowser() const
+{
+  try {
+    return this->get_override("useIntegratedBrowser")();
+  } PYCATCH;
+}
+
+bool IPluginModPageWrapper::handlesDownload(const QUrl & pageURL, const QUrl & downloadURL, MOBase::ModRepositoryFileInfo & fileInfo) const
+{
+  try {
+    return this->get_override("handlesDownload")(pageURL, downloadURL, fileInfo);
+  } PYCATCH;
+}
+
+void IPluginModPageWrapper::setParentWidget(QWidget * widget)
+{
+  try {
+    this->get_override("setParentWidget")(widget);
+  } PYCATCH;
+}
+/// end IPluginModPage Wrapper
 /////////////////////////////
 /// IPluginTool Wrapper
 

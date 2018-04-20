@@ -1101,6 +1101,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
       ;
 
+  bpy::class_<IPluginModPageWrapper, boost::noncopyable>("IPluginModPage")
+      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginModPage::setParentWidget))
+      ;
+
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
@@ -1243,6 +1247,7 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
     TRY_PLUGIN_TYPE(IPluginFileMapperWrapper, pluginObj);
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
+    TRY_PLUGIN_TYPE(IPluginModPage, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));

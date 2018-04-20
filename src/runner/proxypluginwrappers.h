@@ -7,6 +7,7 @@
 #include <iplugingame.h>
 #include <iplugininstallersimple.h>
 #include <iplugininstallercustom.h>
+#include <ipluginmodpage.h>
 #include <iplugintool.h>
 
 #ifndef Q_MOC_RUN
@@ -130,6 +131,22 @@ public:
                                  const QString &version, int modID);
   virtual void setParentWidget(QWidget *parent);
 
+};
+
+
+class IPluginModPageWrapper : public MOBase::IPluginModPage, public boost::python::wrapper<MOBase::IPluginModPage>
+{
+  Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginModPage)
+
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+public:
+  virtual QString displayName() const override;
+  virtual QIcon icon() const override;
+  virtual QUrl pageURL() const override;
+  virtual bool useIntegratedBrowser() const override;
+  virtual bool handlesDownload(const QUrl &pageURL, const QUrl &downloadURL, MOBase::ModRepositoryFileInfo &fileInfo) const override;
+  virtual void setParentWidget(QWidget *widget) override;
 };
 
 
