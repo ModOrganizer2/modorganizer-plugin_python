@@ -8,6 +8,7 @@
 #include <iplugininstallersimple.h>
 #include <iplugininstallercustom.h>
 #include <ipluginmodpage.h>
+#include <ipluginpreview.h>
 #include <iplugintool.h>
 
 #ifndef Q_MOC_RUN
@@ -147,6 +148,18 @@ public:
   virtual bool useIntegratedBrowser() const override;
   virtual bool handlesDownload(const QUrl &pageURL, const QUrl &downloadURL, MOBase::ModRepositoryFileInfo &fileInfo) const override;
   virtual void setParentWidget(QWidget *widget) override;
+};
+
+
+class IPluginPreviewWrapper : public MOBase::IPluginPreview, public boost::python::wrapper<MOBase::IPluginPreview>
+{
+  Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginPreview)
+
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+public:
+  virtual std::set<QString> supportedExtensions() const override;
+  virtual QWidget *genFilePreview(const QString &fileName, const QSize &maxSize) const override;
 };
 
 

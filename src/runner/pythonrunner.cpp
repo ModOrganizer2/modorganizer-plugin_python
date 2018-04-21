@@ -450,6 +450,7 @@ template <> struct MetaData<QDateTime> { static const char *className() { return
 template <> struct MetaData<QDir> { static const char *className() { return "QDir"; } };
 template <> struct MetaData<QFileInfo> { static const char *className() { return "QFileInfo"; } };
 template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
+template <> struct MetaData<QSize> { static const char *className() { return "QSize"; } };
 template <> struct MetaData<QStringList> { static const char *className() { return "QStringList"; } };
 template <> struct MetaData<QUrl> { static const char *className() { return "QUrl"; } };
 template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
@@ -534,7 +535,9 @@ struct QClass_converters
       bpy::throw_error_already_set();
     }
 
-    sipAPI()->api_transfer_to(objPtr, 0);
+    // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
+    // Instead, this should be called within the wrappers for functions which return deletable pointers.
+    //sipAPI()->api_transfer_to(objPtr, 0);
 
     sipSimpleWrapper *wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
     return wrapper->data;
@@ -597,7 +600,9 @@ struct QInterface_converters
       bpy::throw_error_already_set();
     }
 
-    sipAPI()->api_transfer_to(objPtr, 0);
+    // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
+    // Instead, this should be called within the wrappers for functions which return deletable pointers.
+    //sipAPI()->api_transfer_to(objPtr, 0);
 
     sipSimpleWrapper *wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
     return wrapper->data;
@@ -767,6 +772,7 @@ BOOST_PYTHON_MODULE(mobase)
   QClass_converters<QFileInfo>();
   QClass_converters<QWidget>();
   QClass_converters<QIcon>();
+  QClass_converters<QSize>();
   QClass_converters<QStringList>();
   QClass_converters<QUrl>();
   QInterface_converters<IDownloadManager>();
@@ -1105,6 +1111,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginModPage::setParentWidget))
       ;
 
+  bpy::class_<IPluginPreviewWrapper, boost::noncopyable>("IPluginPreview")
+      ;
+
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
@@ -1248,6 +1257,7 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     TRY_PLUGIN_TYPE(IPluginFileMapperWrapper, pluginObj);
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
     TRY_PLUGIN_TYPE(IPluginModPage, pluginObj);
+    TRY_PLUGIN_TYPE(IPluginPreview, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));

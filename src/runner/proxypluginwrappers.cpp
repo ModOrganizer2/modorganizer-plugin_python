@@ -4,6 +4,7 @@
 #include "gilock.h"
 #include <QUrl>
 #include <QWidget>
+#include <sip.h>
 
 namespace boost
 {
@@ -478,6 +479,40 @@ void IPluginModPageWrapper::setParentWidget(QWidget * widget)
 }
 /// end IPluginModPage Wrapper
 /////////////////////////////
+/// IPluginPreview Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginPreviewWrapper)
+
+std::set<QString> IPluginPreviewWrapper::supportedExtensions() const
+{
+  try {
+    return this->get_override("supportedExtensions")();
+  } PYCATCH;
+}
+
+// right now, this is copied and pasted from apythonrunner.cpp, but it should probably be moved int oa shared header
+static const sipAPIDef *sipAPI()
+{
+  static const sipAPIDef *sipApi = nullptr;
+  if (sipApi == nullptr) {
+    sipApi = (const sipAPIDef *)PyCapsule_Import("sip._C_API", 0);
+  }
+
+  return sipApi;
+}
+
+QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QSize &maxSize) const
+{
+  try {
+    boost::python::object pyVersion = this->get_override("genFilePreview")(fileName, maxSize);
+    // We need responsibility for deleting the QWidget to be transferred to C++
+    sipAPI()->api_transfer_to(pyVersion.ptr(), 0);
+    return boost::python::extract<QWidget *>(pyVersion)();
+  } PYCATCH;
+}
+/// end IPluginPreview Wrapper
+/////////////////////////////
 /// IPluginTool Wrapper
 
 
@@ -521,4 +556,3 @@ void IPluginToolWrapper::display() const
 }
 
 /// end IPluginTool Wrapper
-
