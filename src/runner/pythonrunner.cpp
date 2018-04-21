@@ -9,6 +9,7 @@
 #include <iplugintool.h>
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
+#include "sipApiAccess.h"
 
 #include <Windows.h>
 #include <utility.h>
@@ -415,17 +416,6 @@ struct stdset_from_python_list
     data->convertible = storage;
   }
 };
-
-
-static const sipAPIDef *sipAPI()
-{
-  static const sipAPIDef *sipApi = nullptr;
-  if (sipApi == nullptr) {
-    sipApi = (const sipAPIDef *)PyCapsule_Import("sip._C_API", 0);
-  }
-
-  return sipApi;
-}
 
 
 struct IModRepositoryBridge_to_python

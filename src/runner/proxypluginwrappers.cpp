@@ -4,7 +4,7 @@
 #include "gilock.h"
 #include <QUrl>
 #include <QWidget>
-#include <sip.h>
+#include "sipApiAccess.h"
 
 namespace boost
 {
@@ -489,17 +489,6 @@ std::set<QString> IPluginPreviewWrapper::supportedExtensions() const
   try {
     return this->get_override("supportedExtensions")();
   } PYCATCH;
-}
-
-// right now, this is copied and pasted from apythonrunner.cpp, but it should probably be moved int oa shared header
-static const sipAPIDef *sipAPI()
-{
-  static const sipAPIDef *sipApi = nullptr;
-  if (sipApi == nullptr) {
-    sipApi = (const sipAPIDef *)PyCapsule_Import("sip._C_API", 0);
-  }
-
-  return sipApi;
 }
 
 QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QSize &maxSize) const
