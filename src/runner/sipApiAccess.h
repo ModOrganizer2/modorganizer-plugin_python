@@ -1,3 +1,6 @@
+#ifndef SIPAPIACCESS_H
+#define SIPAPIACCESS_H
+
 #include <sip.h>
 
 static const sipAPIDef *sipAPI()
@@ -9,3 +12,5 @@ static const sipAPIDef *sipAPI()
 
   return sipApi;
 }
+
+#endif // SIPAPIACCESS_H
