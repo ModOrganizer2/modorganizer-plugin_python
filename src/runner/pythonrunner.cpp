@@ -9,6 +9,7 @@
 #include <iplugintool.h>
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
+#include "gamefeatureswrappers.h"
 #include "sipApiAccess.h"
 
 #include <Windows.h>
@@ -72,7 +73,11 @@ namespace bpy = boost::python;
 struct QString_to_python_str
 {
   static PyObject *convert(const QString &str) {
-    return bpy::incref(bpy::object(str.toUtf8().constData()).ptr());
+    // It's safer to explicitly convert to unicode as if we don't, this can return either str or unicode without it being easy to know which to expect
+    bpy::object pyStr = bpy::object(str.toUtf8().constData());
+    if (PyString_Check(pyStr.ptr()))
+      pyStr = pyStr.attr("decode")("utf-8");
+    return bpy::incref(pyStr.ptr());
   }
 };
 
@@ -330,6 +335,26 @@ struct QList_from_python_obj
     }
 
     data->convertible = storage;
+  }
+};
+
+
+template <typename T>
+struct std_vector_to_python_list
+{
+  static PyObject *convert(const std::vector<T> &vector)
+  {
+    bpy::list pyList;
+
+    try {
+      for (const T &item : vector)
+        pyList.append(item);
+    }
+    catch (const bpy::error_already_set&) {
+      reportPythonError();
+    }
+
+    return bpy::incref(pyList.ptr());
   }
 };
 
@@ -825,6 +850,16 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isCustom", &ExecutableInfo::isCustom)
       ;
 
+  bpy::class_<ISaveGameWrapper, boost::noncopyable>("ISaveGame")
+      .def("getFilename", bpy::pure_virtual(&ISaveGame::getFilename))
+      .def("getCreationTime", bpy::pure_virtual(&ISaveGame::getCreationTime))
+      .def("getSaveGroupIdentifier", bpy::pure_virtual(&ISaveGame::getSaveGroupIdentifier))
+      .def("allFiles", bpy::pure_virtual(&ISaveGame::allFiles))
+      .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
+      ;
+
+  // TODO: ISaveGameInfoWidget bindings
+
   Functor1_converter<bool, const IOrganizer::FileInfo&>();
   Functor1_converter<void, const QString&>();
   Functor1_converter<bool, const QString&>();
@@ -1013,8 +1048,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def_readwrite("createTarget", &Mapping::createTarget)
       ;
 
-  std_vector_from_python_obj<Mapping>();
-
   bpy::class_<IPluginFileMapperWrapper, boost::noncopyable>("IPluginFileMapper")
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
       ;
@@ -1083,6 +1116,14 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isActive", bpy::pure_virtual(&MOBase::IPluginGame::isActive))
       .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
 
+      // The syntax has to differ slightly from C++ because these are templated
+      .def("featureBSAInvalidation", &MOBase::IPluginGame::feature<BSAInvalidation>, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("featureDataArchives", &MOBase::IPluginGame::feature<DataArchives>, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("featureGamePlugins", &MOBase::IPluginGame::feature<GamePlugins>, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("featureLocalSavegames", &MOBase::IPluginGame::feature<LocalSavegames>, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("featureSaveGameInfo", &MOBase::IPluginGame::feature<SaveGameInfo>, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("featureScriptExtender", &MOBase::IPluginGame::feature<ScriptExtender>, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("featureUnmanagedMods", &MOBase::IPluginGame::feature<UnmanagedMods>, bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
@@ -1120,13 +1161,20 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<QList<QFileInfo>,
       QList_to_python_list<QFileInfo>>();
   QList_from_python_obj<QVariant>();
-  QList_to_python_list<QVariant>();
+  bpy::to_python_converter<QList<QVariant>,
+      QList_to_python_list<QVariant>>();
 
   QMap_converters<QString, QVariant>();
+  QMap_converters<QString, QStringList>();
 
   std_vector_from_python_obj<unsigned int>();
+  std_vector_from_python_obj<Mapping>();
+  bpy::to_python_converter<std::vector<Mapping>,
+      std_vector_to_python_list<Mapping>>();
 
   stdset_from_python_list<QString>();
+
+  registerGameFeaturesPythonConverters();
 }
 
 

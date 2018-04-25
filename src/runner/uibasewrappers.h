@@ -21,8 +21,12 @@
 #include <idownloadmanager.h>
 #include <ipluginlist.h>
 #include <imodlist.h>
+#include <isavegame.h>
+#include <isavegameinfowidget.h>
+
 #include "error.h"
 #include "gilock.h"
+#include "pycatch.h"
 
 extern MOBase::IOrganizer *s_Organizer;
 
@@ -431,6 +435,19 @@ struct IModListWrapper: MOBase::IModList, boost::python::wrapper<MOBase::IModLis
   virtual bool setPriority(const QString &name, int newPriority) override { return this->get_override("setPriority")(name, newPriority); }
   virtual bool onModStateChanged(const std::function<void (const QString &, ModStates)> &func) override { return this->get_override("onModStateChanged")(func); }
   virtual bool onModMoved(const std::function<void (const QString &, int, int)> &func) override { return this->get_override("onModMoved")(func); }
+};
+
+
+// This needs to be extendable in Python, so actually needs a wrapper
+// Everything else probably doesn't
+class ISaveGameWrapper : public MOBase::ISaveGame, public boost::python::wrapper<MOBase::ISaveGame>
+{
+public:
+  virtual QString getFilename() const override { try { return this->get_override("getFilename")(); } PYCATCH };
+  virtual QDateTime getCreationTime() const override { try { return this->get_override("getCreationTime")(); } PYCATCH };
+  virtual QString getSaveGroupIdentifier() const override { try { return this->get_override("getSaveGroupIdentifier")(); } PYCATCH };
+  virtual QStringList allFiles() const override { try { return this->get_override("allFiles")(); } PYCATCH };
+  virtual bool hasScriptExtenderFile() const override { try { return this->get_override("hasScriptExtenderFile")(); } PYCATCH };
 };
 
 

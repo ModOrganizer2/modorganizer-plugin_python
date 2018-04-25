@@ -108,11 +108,10 @@ public:
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 
 protected:
-
-  // TODO: implementing converters for this is required as otherwise Mod Organizer will crash on load when the game is being managed by this plugin
   // Apparently, Python developers interpret an underscore in a function name as it being protected
   virtual std::map<std::type_index, boost::any> featureList() const override;
 
+  // Thankfully, the default implementation of the templated 'T *feature()' function should allow us to get away without overriding it.
 };
 
 

@@ -1,9 +1,9 @@
 #include "proxypluginwrappers.h"
-#include <utility.h>
-#include "error.h"
+
 #include "gilock.h"
 #include <QUrl>
 #include <QWidget>
+#include "pycatch.h"
 #include "sipApiAccess.h"
 
 namespace boost
@@ -22,9 +22,6 @@ namespace boost
 }
 
 using namespace MOBase;
-
-#define PYCATCH catch (const boost::python::error_already_set &) { reportPythonError(); throw MyException("unhandled exception"); }\
-                catch (...) { throw MyException("An unknown exception was thrown in python code"); }
 
 
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
@@ -153,6 +150,7 @@ MappingType IPluginFileMapperWrapper::mappings() const
 
 QString IPluginGameWrapper::gameName() const
 {
+  GILock lock;
   try {
     return this->get_override("gameName")();
   } PYCATCH;
@@ -160,6 +158,7 @@ QString IPluginGameWrapper::gameName() const
 
 void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettings settings) const
 {
+  GILock lock;
   try {
     this->get_override("initializeProfile")(directory, settings);
   } PYCATCH;
@@ -167,6 +166,7 @@ void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettin
 
 QString IPluginGameWrapper::savegameExtension() const
 {
+  GILock lock;
   try {
     return this->get_override("savegameExtension")();
   } PYCATCH;
@@ -174,6 +174,7 @@ QString IPluginGameWrapper::savegameExtension() const
 
 QString IPluginGameWrapper::savegameSEExtension() const
 {
+  GILock lock;
   try {
     return this->get_override("savegameSEExtension")();
   } PYCATCH;
@@ -181,6 +182,7 @@ QString IPluginGameWrapper::savegameSEExtension() const
 
 bool IPluginGameWrapper::isInstalled() const
 {
+  GILock lock;
   try {
     return this->get_override("isInstalled")();
   } PYCATCH;
@@ -188,6 +190,7 @@ bool IPluginGameWrapper::isInstalled() const
 
 QIcon IPluginGameWrapper::gameIcon() const
 {
+  GILock lock;
   try {
     return this->get_override("gameIcon")();
   } PYCATCH;
@@ -195,6 +198,7 @@ QIcon IPluginGameWrapper::gameIcon() const
 
 QDir IPluginGameWrapper::gameDirectory() const
 {
+  GILock lock;
   try {
     return this->get_override("gameDirectory")();
   } PYCATCH;
@@ -202,6 +206,7 @@ QDir IPluginGameWrapper::gameDirectory() const
 
 QDir IPluginGameWrapper::dataDirectory() const
 {
+  GILock lock;
   try {
     return this->get_override("dataDirectory")();
   } PYCATCH;
@@ -209,6 +214,7 @@ QDir IPluginGameWrapper::dataDirectory() const
 
 void IPluginGameWrapper::setGamePath(const QString & path)
 {
+  GILock lock;
   try {
     this->get_override("setGamePath")(path);
   } PYCATCH;
@@ -216,6 +222,7 @@ void IPluginGameWrapper::setGamePath(const QString & path)
 
 QDir IPluginGameWrapper::documentsDirectory() const
 {
+  GILock lock;
   try {
     return this->get_override("documentsDirectory")();
   } PYCATCH;
@@ -223,6 +230,7 @@ QDir IPluginGameWrapper::documentsDirectory() const
 
 QDir IPluginGameWrapper::savesDirectory() const
 {
+  GILock lock;
   try {
     return this->get_override("savesDirectory")();
   } PYCATCH;
@@ -230,6 +238,7 @@ QDir IPluginGameWrapper::savesDirectory() const
 
 QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
 {
+  GILock lock;
   try {
     return this->get_override("executables")();
   } PYCATCH;
@@ -237,6 +246,7 @@ QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
 
 QString IPluginGameWrapper::steamAPPId() const
 {
+  GILock lock;
   try {
     return this->get_override("steamAPPId")();
   } PYCATCH;
@@ -244,6 +254,7 @@ QString IPluginGameWrapper::steamAPPId() const
 
 QStringList IPluginGameWrapper::primaryPlugins() const
 {
+  GILock lock;
   try {
     return this->get_override("primaryPlugins")();
   } PYCATCH;
@@ -251,6 +262,7 @@ QStringList IPluginGameWrapper::primaryPlugins() const
 
 QStringList IPluginGameWrapper::gameVariants() const
 {
+  GILock lock;
   try {
     return this->get_override("gameVariants")();
   } PYCATCH;
@@ -258,6 +270,7 @@ QStringList IPluginGameWrapper::gameVariants() const
 
 void IPluginGameWrapper::setGameVariant(const QString & variant)
 {
+  GILock lock;
   try {
     this->get_override("setGameVariant")(variant);
   } PYCATCH;
@@ -265,6 +278,7 @@ void IPluginGameWrapper::setGameVariant(const QString & variant)
 
 QString IPluginGameWrapper::binaryName() const
 {
+  GILock lock;
   try {
     return this->get_override("binaryName")();
   } PYCATCH;
@@ -272,6 +286,7 @@ QString IPluginGameWrapper::binaryName() const
 
 QString IPluginGameWrapper::gameShortName() const
 {
+  GILock lock;
   try {
     return this->get_override("gameShortName")();
   } PYCATCH;
@@ -279,6 +294,7 @@ QString IPluginGameWrapper::gameShortName() const
 
 QStringList IPluginGameWrapper::validShortNames() const
 {
+  GILock lock;
   try {
     return this->get_override("validShortNames")();
   } PYCATCH;
@@ -286,6 +302,7 @@ QStringList IPluginGameWrapper::validShortNames() const
 
 QString IPluginGameWrapper::gameNexusName() const
 {
+  GILock lock;
   try {
     return this->get_override("gameNexusName")();
   } PYCATCH;
@@ -293,6 +310,7 @@ QString IPluginGameWrapper::gameNexusName() const
 
 QStringList IPluginGameWrapper::iniFiles() const
 {
+  GILock lock;
   try {
     return this->get_override("iniFiles")();
   } PYCATCH;
@@ -300,6 +318,7 @@ QStringList IPluginGameWrapper::iniFiles() const
 
 QStringList IPluginGameWrapper::DLCPlugins() const
 {
+  GILock lock;
   try {
     return this->get_override("DLCPlugins")();
   } PYCATCH;
@@ -307,6 +326,7 @@ QStringList IPluginGameWrapper::DLCPlugins() const
 
 QStringList IPluginGameWrapper::CCPlugins() const
 {
+  GILock lock;
   try {
     return this->get_override("CCPlugins")();
   } PYCATCH;
@@ -314,13 +334,15 @@ QStringList IPluginGameWrapper::CCPlugins() const
 
 IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
 {
+  GILock lock;
   try {
-    return this->get_override("loadorderMechanism")();
+    return this->get_override("loadOrderMechanism")();
   } PYCATCH;
 }
 
 IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
 {
+  GILock lock;
   try {
     return this->get_override("sortMechanism")();
   } PYCATCH;
@@ -328,6 +350,7 @@ IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
 
 int IPluginGameWrapper::nexusModOrganizerID() const
 {
+  GILock lock;
   try {
     return this->get_override("nexusModOrganizerID")();
   } PYCATCH;
@@ -335,6 +358,7 @@ int IPluginGameWrapper::nexusModOrganizerID() const
 
 int IPluginGameWrapper::nexusGameID() const
 {
+  GILock lock;
   try {
     return this->get_override("nexusGameID")();
   } PYCATCH;
@@ -342,6 +366,7 @@ int IPluginGameWrapper::nexusGameID() const
 
 bool IPluginGameWrapper::looksValid(QDir const & dir) const
 {
+  GILock lock;
   try {
     return this->get_override("looksValid")(dir);
   } PYCATCH;
@@ -349,6 +374,7 @@ bool IPluginGameWrapper::looksValid(QDir const & dir) const
 
 QString IPluginGameWrapper::gameVersion() const
 {
+  GILock lock;
   try {
     return this->get_override("gameVersion")();
   } PYCATCH;
@@ -356,6 +382,7 @@ QString IPluginGameWrapper::gameVersion() const
 
 QString IPluginGameWrapper::getLauncherName() const
 {
+  GILock lock;
   try {
     return this->get_override("getLauncherName")();
   } PYCATCH;
@@ -365,7 +392,7 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginGameWrapper)
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
-  qCritical("Calling unproxied method IPluginGameWrapper::featureList()");
+  GILock lock;
   try {
     return this->get_override("_featureList")();
   } PYCATCH;
