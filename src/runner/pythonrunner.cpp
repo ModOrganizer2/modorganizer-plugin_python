@@ -499,16 +499,32 @@ struct QClass_converters
 {
   struct QClass_to_PyQt
   {
+    template <typename Q>
+    static typename std::enable_if_t<std::is_copy_constructible_v<Q>, T*> getSafeCopy(T *qClass)
+    {
+      return new T(*qClass);
+    }
+
+    template <typename Q>
+    static typename std::enable_if_t<!std::is_copy_constructible_v<Q>, T*> getSafeCopy(T *qClass)
+    {
+      return qClass;
+    }
+
     static PyObject *convert(const T &object) {
       const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
       if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
-      PyObject *sipObj = sipAPI()->api_convert_from_type((void*)(&object), type, 0);
+      PyObject *sipObj = sipAPI()->api_convert_from_type((void*)getSafeCopy<T>((T*)&object), type, 0);
       if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
+
+      if (std::is_copy_constructible_v<T>)
+        // Ensure Python deletes the C++ component
+        sipAPI()->api_transfer_back(sipObj);
 
       return bpy::incref(sipObj);
     }
@@ -523,10 +539,14 @@ struct QClass_converters
         return bpy::incref(Py_None);
       }
 
-      PyObject *sipObj = sipAPI()->api_convert_from_type(object, type, 0);
+      PyObject *sipObj = sipAPI()->api_convert_from_type(getSafeCopy<T>(object), type, 0);
       if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
+
+      if (std::is_copy_constructible_v<T>)
+        // Ensure Python deletes the C++ component
+        sipAPI()->api_transfer_back(sipObj);
 
       return bpy::incref(sipObj);
     }
