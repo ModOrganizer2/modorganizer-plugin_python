@@ -34,6 +34,7 @@ SET(project_path "${default_project_path}" CACHE PATH "path to the other mo proj
 SET(lib_path "${project_path}/../../install/libs")
 
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
+					${project_path}/game_features/src
 					${PYTHON_ROOT}/Include
 					${SIP_ROOT}
 					${PYTHON_ROOT}/PC)

@@ -1,8 +1,10 @@
 #include "proxypluginwrappers.h"
-#include <utility.h>
-#include "error.h"
+
 #include "gilock.h"
+#include <QUrl>
 #include <QWidget>
+#include "pycatch.h"
+#include "sipApiAccess.h"
 
 namespace boost
 {
@@ -21,204 +23,386 @@ namespace boost
 
 using namespace MOBase;
 
-#define PYCATCH catch (const boost::python::error_already_set &) { reportPythonError(); throw MyException("unhandled exception"); }\
-                catch (...) { throw MyException("An unknown exception was thrown in python code"); }
 
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
+bool class_name::init(MOBase::IOrganizer *moInfo) \
+{ \
+  try { \
+    return this->get_override("init")(boost::python::ptr(moInfo)); \
+  } PYCATCH; \
+} \
+ \
+QString class_name::name() const \
+{ \
+  try { \
+    return this->get_override("name")().as<QString>(); \
+  } PYCATCH; \
+} \
+ \
+QString class_name::author() const \
+{ \
+  try { \
+    return this->get_override("author")().as<QString>(); \
+  } PYCATCH; \
+} \
+ \
+QString class_name::description() const \
+{ \
+  try { \
+    return this->get_override("description")().as<QString>(); \
+  } PYCATCH; \
+} \
+ \
+MOBase::VersionInfo class_name::version() const \
+{ \
+  try { \
+    return this->get_override("version")().as<MOBase::VersionInfo>(); \
+  } PYCATCH; \
+} \
+ \
+bool class_name::isActive() const \
+{ \
+  try { \
+    return this->get_override("isActive")().as<bool>(); \
+  } PYCATCH; \
+} \
+ \
+QList<MOBase::PluginSetting> class_name::settings() const \
+{ \
+  try { \
+    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>(); \
+  } PYCATCH; \
+}
 
+/// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
 /////////////////////////////
 /// IPlugin Wrapper
-bool IPluginWrapper::init(MOBase::IOrganizer *moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
 
-QString IPluginWrapper::name() const
-{
-  try {
-    return this->get_override("name")().as<QString>();
-  } PYCATCH;
-}
 
-QString IPluginWrapper::author() const
-{
-  try {
-    return this->get_override("author")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginWrapper::description() const
-{
-  try {
-    return this->get_override("description")().as<QString>();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginWrapper::version() const
-{
-  try {
-    return this->get_override("version")().as<MOBase::VersionInfo>();
-  } PYCATCH;
-}
-
-bool IPluginWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")().as<bool>();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginWrapper)
 /// end IPlugin Wrapper
-/////////////////////////////
-/// IPluginTool Wrapper
+/////////////////////////////////////
+/// IPluginDiagnose Wrapper
 
 
-bool IPluginToolWrapper::init(MOBase::IOrganizer *moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginDiagnoseWrapper)
 
-QString IPluginToolWrapper::name() const
-{
-  try {
-    return this->get_override("name")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::author() const
-{
-  try {
-    return this->get_override("author")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::description() const
-{
-  try {
-    return this->get_override("description")().as<QString>();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginToolWrapper::version() const
-{
-  try {
-    return this->get_override("version")().as<MOBase::VersionInfo>();
-  } PYCATCH;
-}
-
-bool IPluginToolWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")().as<bool>();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginToolWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::displayName() const
-{
-  try {
-    return this->get_override("displayName")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginToolWrapper::tooltip() const
-{
-  try {
-    return this->get_override("tooltip")().as<QString>();
-  } PYCATCH;
-}
-
-QIcon IPluginToolWrapper::icon() const
-{
-  try {
-    return this->get_override("icon")().as<QIcon>();
-  } PYCATCH;
-}
-
-void IPluginToolWrapper::setParentWidget(QWidget *parent)
-{
-  try {
-    this->get_override("setParentWidget")(parent);
-  } PYCATCH;
-}
-
-void IPluginToolWrapper::display() const
+std::vector<unsigned int> IPluginDiagnoseWrapper::activeProblems() const
 {
   try {
     GILock lock;
 
-    this->get_override("display")();
+    return this->get_override("activeProblems")();
   } PYCATCH;
 }
 
-/// end IPluginTool Wrapper
+QString IPluginDiagnoseWrapper::shortDescription(unsigned int key) const
+{
+  try {
+    return this->get_override("shortDescription")(key);
+  } PYCATCH;
+}
+
+QString IPluginDiagnoseWrapper::fullDescription(unsigned int key) const
+{
+  try {
+    return this->get_override("fullDescription")(key);
+  } PYCATCH;
+}
+
+bool IPluginDiagnoseWrapper::hasGuidedFix(unsigned int key) const
+{
+  try {
+    return this->get_override("hasGuidedFix")(key);
+  } PYCATCH;
+}
+
+void IPluginDiagnoseWrapper::startGuidedFix(unsigned int key) const
+{
+  try {
+    GILock lock;
+
+    this->get_override("startGuidedFix")(key);
+  } PYCATCH;
+}
+
+void IPluginDiagnoseWrapper::invalidate()
+{
+  IPluginDiagnose::invalidate();
+}
+/// end IPluginDiagnose Wrapper
+/////////////////////////////////////
+/// IPluginFileMapper Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginFileMapperWrapper)
+
+MappingType IPluginFileMapperWrapper::mappings() const
+{
+  try {
+    return this->get_override("mappings")();
+  } PYCATCH;
+}
+/// end IPluginFileMapper Wrapper
+/////////////////////////////////////
+/// IPluginGame Wrapper
+
+
+QString IPluginGameWrapper::gameName() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameName")();
+  } PYCATCH;
+}
+
+void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettings settings) const
+{
+  GILock lock;
+  try {
+    this->get_override("initializeProfile")(directory, settings);
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::savegameExtension() const
+{
+  GILock lock;
+  try {
+    return this->get_override("savegameExtension")();
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::savegameSEExtension() const
+{
+  GILock lock;
+  try {
+    return this->get_override("savegameSEExtension")();
+  } PYCATCH;
+}
+
+bool IPluginGameWrapper::isInstalled() const
+{
+  GILock lock;
+  try {
+    return this->get_override("isInstalled")();
+  } PYCATCH;
+}
+
+QIcon IPluginGameWrapper::gameIcon() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameIcon")();
+  } PYCATCH;
+}
+
+QDir IPluginGameWrapper::gameDirectory() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameDirectory")();
+  } PYCATCH;
+}
+
+QDir IPluginGameWrapper::dataDirectory() const
+{
+  GILock lock;
+  try {
+    return this->get_override("dataDirectory")();
+  } PYCATCH;
+}
+
+void IPluginGameWrapper::setGamePath(const QString & path)
+{
+  GILock lock;
+  try {
+    this->get_override("setGamePath")(path);
+  } PYCATCH;
+}
+
+QDir IPluginGameWrapper::documentsDirectory() const
+{
+  GILock lock;
+  try {
+    return this->get_override("documentsDirectory")();
+  } PYCATCH;
+}
+
+QDir IPluginGameWrapper::savesDirectory() const
+{
+  GILock lock;
+  try {
+    return this->get_override("savesDirectory")();
+  } PYCATCH;
+}
+
+QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
+{
+  GILock lock;
+  try {
+    return this->get_override("executables")();
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::steamAPPId() const
+{
+  GILock lock;
+  try {
+    return this->get_override("steamAPPId")();
+  } PYCATCH;
+}
+
+QStringList IPluginGameWrapper::primaryPlugins() const
+{
+  GILock lock;
+  try {
+    return this->get_override("primaryPlugins")();
+  } PYCATCH;
+}
+
+QStringList IPluginGameWrapper::gameVariants() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameVariants")();
+  } PYCATCH;
+}
+
+void IPluginGameWrapper::setGameVariant(const QString & variant)
+{
+  GILock lock;
+  try {
+    this->get_override("setGameVariant")(variant);
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::binaryName() const
+{
+  GILock lock;
+  try {
+    return this->get_override("binaryName")();
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::gameShortName() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameShortName")();
+  } PYCATCH;
+}
+
+QStringList IPluginGameWrapper::validShortNames() const
+{
+  GILock lock;
+  try {
+    return this->get_override("validShortNames")();
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::gameNexusName() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameNexusName")();
+  } PYCATCH;
+}
+
+QStringList IPluginGameWrapper::iniFiles() const
+{
+  GILock lock;
+  try {
+    return this->get_override("iniFiles")();
+  } PYCATCH;
+}
+
+QStringList IPluginGameWrapper::DLCPlugins() const
+{
+  GILock lock;
+  try {
+    return this->get_override("DLCPlugins")();
+  } PYCATCH;
+}
+
+QStringList IPluginGameWrapper::CCPlugins() const
+{
+  GILock lock;
+  try {
+    return this->get_override("CCPlugins")();
+  } PYCATCH;
+}
+
+IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
+{
+  GILock lock;
+  try {
+    return this->get_override("loadOrderMechanism")();
+  } PYCATCH;
+}
+
+IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
+{
+  GILock lock;
+  try {
+    return this->get_override("sortMechanism")();
+  } PYCATCH;
+}
+
+int IPluginGameWrapper::nexusModOrganizerID() const
+{
+  GILock lock;
+  try {
+    return this->get_override("nexusModOrganizerID")();
+  } PYCATCH;
+}
+
+int IPluginGameWrapper::nexusGameID() const
+{
+  GILock lock;
+  try {
+    return this->get_override("nexusGameID")();
+  } PYCATCH;
+}
+
+bool IPluginGameWrapper::looksValid(QDir const & dir) const
+{
+  GILock lock;
+  try {
+    return this->get_override("looksValid")(dir);
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::gameVersion() const
+{
+  GILock lock;
+  try {
+    return this->get_override("gameVersion")();
+  } PYCATCH;
+}
+
+QString IPluginGameWrapper::getLauncherName() const
+{
+  GILock lock;
+  try {
+    return this->get_override("getLauncherName")();
+  } PYCATCH;
+}
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginGameWrapper)
+
+std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
+{
+  GILock lock;
+  try {
+    return this->get_override("_featureList")();
+  } PYCATCH;
+}
+/// end IPluginGame Wrapper
 /////////////////////////////////////
 /// IPluginInstallerCustom Wrapper
 
 
-bool IPluginInstallerCustomWrapper::init(MOBase::IOrganizer *moInfo)
-{
-  try {
-    return this->get_override("init")(boost::python::ptr(moInfo));
-  } PYCATCH;
-}
-
-QString IPluginInstallerCustomWrapper::name() const
-{
-  try {
-    return this->get_override("name")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginInstallerCustomWrapper::author() const
-{
-  try {
-    return this->get_override("author")().as<QString>();
-  } PYCATCH;
-}
-
-QString IPluginInstallerCustomWrapper::description() const
-{
-  try {
-    return this->get_override("description")().as<QString>();
-  } PYCATCH;
-}
-
-MOBase::VersionInfo IPluginInstallerCustomWrapper::version() const
-{
-  try {
-    return this->get_override("version")();
-  } PYCATCH;
-}
-
-bool IPluginInstallerCustomWrapper::isActive() const
-{
-  try {
-    return this->get_override("isActive")();
-  } PYCATCH;
-}
-
-QList<MOBase::PluginSetting> IPluginInstallerCustomWrapper::settings() const
-{
-  try {
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>();
-  } PYCATCH;
-}
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
 
 unsigned int IPluginInstallerCustomWrapper::priority() const
 {
@@ -272,5 +456,119 @@ void IPluginInstallerCustomWrapper::setParentWidget(QWidget *parent)
     this->get_override("setParentWidget")(parent);
   } PYCATCH;
 }
+/// end IPluginInstallerCustom Wrapper
+/////////////////////////////
+/// IPluginModPage Wrapper
 
 
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginModPageWrapper)
+
+QString IPluginModPageWrapper::displayName() const
+{
+  try {
+    return this->get_override("displayName")();
+  } PYCATCH;
+}
+
+QIcon IPluginModPageWrapper::icon() const
+{
+  try {
+    return this->get_override("icon")();
+  } PYCATCH;
+}
+
+QUrl IPluginModPageWrapper::pageURL() const
+{
+  try {
+    return this->get_override("pageURL")();
+  } PYCATCH;
+}
+
+bool IPluginModPageWrapper::useIntegratedBrowser() const
+{
+  try {
+    return this->get_override("useIntegratedBrowser")();
+  } PYCATCH;
+}
+
+bool IPluginModPageWrapper::handlesDownload(const QUrl & pageURL, const QUrl & downloadURL, MOBase::ModRepositoryFileInfo & fileInfo) const
+{
+  try {
+    return this->get_override("handlesDownload")(pageURL, downloadURL, fileInfo);
+  } PYCATCH;
+}
+
+void IPluginModPageWrapper::setParentWidget(QWidget * widget)
+{
+  try {
+    this->get_override("setParentWidget")(widget);
+  } PYCATCH;
+}
+/// end IPluginModPage Wrapper
+/////////////////////////////
+/// IPluginPreview Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginPreviewWrapper)
+
+std::set<QString> IPluginPreviewWrapper::supportedExtensions() const
+{
+  try {
+    return this->get_override("supportedExtensions")();
+  } PYCATCH;
+}
+
+QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QSize &maxSize) const
+{
+  try {
+    boost::python::object pyVersion = this->get_override("genFilePreview")(fileName, maxSize);
+    // We need responsibility for deleting the QWidget to be transferred to C++
+    sipAPI()->api_transfer_to(pyVersion.ptr(), 0);
+    return boost::python::extract<QWidget *>(pyVersion)();
+  } PYCATCH;
+}
+/// end IPluginPreview Wrapper
+/////////////////////////////
+/// IPluginTool Wrapper
+
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginToolWrapper)
+
+QString IPluginToolWrapper::displayName() const
+{
+  try {
+    return this->get_override("displayName")().as<QString>();
+  } PYCATCH;
+}
+
+QString IPluginToolWrapper::tooltip() const
+{
+  try {
+    return this->get_override("tooltip")().as<QString>();
+  } PYCATCH;
+}
+
+QIcon IPluginToolWrapper::icon() const
+{
+  try {
+    return this->get_override("icon")().as<QIcon>();
+  } PYCATCH;
+}
+
+void IPluginToolWrapper::setParentWidget(QWidget *parent)
+{
+  try {
+    this->get_override("setParentWidget")(parent);
+  } PYCATCH;
+}
+
+void IPluginToolWrapper::display() const
+{
+  try {
+    GILock lock;
+
+    this->get_override("display")();
+  } PYCATCH;
+}
+
+/// end IPluginTool Wrapper
