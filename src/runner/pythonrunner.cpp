@@ -37,7 +37,7 @@ class PythonRunner : public IPythonRunner
 public:
   PythonRunner(const MOBase::IOrganizer *moInfo);
   bool initPython(const QString &pythonDir);
-  QObject *instantiate(const QString &pluginName);
+  QList<QObject*> instantiate(const QString &pluginName);
   bool isPythonInstalled() const;
   bool isPythonVersionSupported() const;
 
@@ -1266,7 +1266,7 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
     bpy::extract<type *> extr(var); \
     if (extr.check()) { \
       QObject *res = extr; \
-      return res; \
+      interfaceList.append(res); \
     }\
   } while (false)
 
@@ -1289,7 +1289,7 @@ void PythonRunner::initPath(bpy::object &moduleNamespace)
 }
 
 
-QObject *PythonRunner::instantiate(const QString &pluginName)
+QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 {
   try {
     GILock lock;
@@ -1303,11 +1303,12 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     std::string temp = ToString(pluginName);
     if (handled_exec_file(temp.c_str(), moduleNamespace)) {
       reportPythonError();
-      return nullptr;
+      return QList<QObject*>();
     }
     m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
 
     bpy::object pluginObj = m_PythonObjects[pluginName];
+    QList<QObject *> interfaceList;
     TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
     // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
     TRY_PLUGIN_TYPE(IPluginDiagnoseWrapper, pluginObj);
@@ -1317,11 +1318,13 @@ QObject *PythonRunner::instantiate(const QString &pluginName)
     TRY_PLUGIN_TYPE(IPluginModPage, pluginObj);
     TRY_PLUGIN_TYPE(IPluginPreview, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
+
+    return interfaceList;
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
     reportPythonError();
   }
-  return nullptr;
+  return QList<QObject*>();
 }
 
 bool PythonRunner::isPythonInstalled() const
