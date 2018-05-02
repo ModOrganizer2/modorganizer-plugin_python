@@ -225,13 +225,13 @@ QStringList ProxyPython::pluginList(const QString &pluginPath) const
 }
 
 
-QObject *ProxyPython::instantiate(const QString &pluginName)
+QList<QObject*> ProxyPython::instantiate(const QString &pluginName)
 {
   if (m_Runner != nullptr) {
-    QObject *result = m_Runner->instantiate(pluginName);
+    QList<QObject*> result = m_Runner->instantiate(pluginName);
     return result;
   } else {
-    return nullptr;
+    return QList<QObject*>();
   }
 }
 
