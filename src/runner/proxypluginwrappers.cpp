@@ -27,7 +27,7 @@ using namespace MOBase;
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
 bool class_name::init(MOBase::IOrganizer *moInfo) \
 { \
-  return basicWrapperFunctionImplementation<class_name, bool, boost::python::pointer_wrapper<MOBase::IOrganizer *>>(this, "init", boost::python::ptr(moInfo)); \
+  return basicWrapperFunctionImplementation<class_name, bool>(this, "init", boost::python::ptr(moInfo)); \
 } \
  \
 QString class_name::name() const \
@@ -80,22 +80,22 @@ std::vector<unsigned int> IPluginDiagnoseWrapper::activeProblems() const
 
 QString IPluginDiagnoseWrapper::shortDescription(unsigned int key) const
 {
-  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, QString, unsigned int>(this, "shortDescription", key);
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, QString>(this, "shortDescription", key);
 }
 
 QString IPluginDiagnoseWrapper::fullDescription(unsigned int key) const
 {
-  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, QString, unsigned int>(this, "fullDescription", key);
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, QString>(this, "fullDescription", key);
 }
 
 bool IPluginDiagnoseWrapper::hasGuidedFix(unsigned int key) const
 {
-  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, bool, unsigned int>(this, "hasGuidedFix", key);
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, bool>(this, "hasGuidedFix", key);
 }
 
 void IPluginDiagnoseWrapper::startGuidedFix(unsigned int key) const
 {
-  basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, void, unsigned int>(this, "startGuidedFix", key);
+  basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, void>(this, "startGuidedFix", key);
 }
 
 void IPluginDiagnoseWrapper::invalidate()
