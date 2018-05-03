@@ -443,11 +443,14 @@ struct IModListWrapper: MOBase::IModList, boost::python::wrapper<MOBase::IModLis
 class ISaveGameWrapper : public MOBase::ISaveGame, public boost::python::wrapper<MOBase::ISaveGame>
 {
 public:
-  virtual QString getFilename() const override { try { return this->get_override("getFilename")(); } PYCATCH };
-  virtual QDateTime getCreationTime() const override { try { return this->get_override("getCreationTime")(); } PYCATCH };
-  virtual QString getSaveGroupIdentifier() const override { try { return this->get_override("getSaveGroupIdentifier")(); } PYCATCH };
-  virtual QStringList allFiles() const override { try { return this->get_override("allFiles")(); } PYCATCH };
-  virtual bool hasScriptExtenderFile() const override { try { return this->get_override("hasScriptExtenderFile")(); } PYCATCH };
+  static constexpr const char* className = "ISaveGameWrapper";
+  using boost::python::wrapper<MOBase::ISaveGame>::get_override;
+
+  virtual QString getFilename() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QString>(this, "getFilename"); };
+  virtual QDateTime getCreationTime() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QDateTime>(this, "getCreationTime"); };
+  virtual QString getSaveGroupIdentifier() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QString>(this, "getSaveGroupIdentifier"); };
+  virtual QStringList allFiles() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QStringList>(this, "allFiles"); };
+  virtual bool hasScriptExtenderFile() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, bool>(this, "hasScriptExtenderFile"); };
 };
 
 
