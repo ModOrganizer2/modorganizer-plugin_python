@@ -18,29 +18,17 @@
 
 bool BSAInvalidationWrapper::isInvalidationBSA(const QString &bsaName)
 {
-  GILock lock;
-
-  try {
-    return this->get_override("isInvalidationBSA")(bsaName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "isInvalidationBSA", bsaName);
 }
 
 void BSAInvalidationWrapper::deactivate(MOBase::IProfile *profile)
 {
-  GILock lock;
-
-  try {
-    this->get_override("deactivate")(boost::python::ptr(profile));
-  } PYCATCH;
+  basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
 }
 
 void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
 {
-  GILock lock;
-
-  try {
-    this->get_override("activate")(boost::python::ptr(profile));
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "activate", boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////
@@ -49,38 +37,22 @@ void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
 
 QStringList DataArchivesWrapper::vanillaArchives() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("vanillaArchives")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<DataArchivesWrapper, QStringList>(this, "vanillaArchives");
 }
 
 QStringList DataArchivesWrapper::archives(const MOBase::IProfile *profile) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("archives")(boost::python::ptr(profile));
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<DataArchivesWrapper, QStringList>(this, "archives", boost::python::ptr(profile));
 }
 
 void DataArchivesWrapper::addArchive(MOBase::IProfile *profile, int index, const QString &archiveName)
 {
-  GILock lock;
-
-  try {
-    this->get_override("addArchive")(boost::python::ptr(profile), index, archiveName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
 }
 
 void DataArchivesWrapper::removeArchive(MOBase::IProfile * profile, const QString & archiveName)
 {
-  GILock lock;
-
-  try {
-    this->get_override("removeArchive")(boost::python::ptr(profile), archiveName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
 }
 /// end DataArchives Wrapper
 /////////////////////////////
@@ -89,20 +61,12 @@ void DataArchivesWrapper::removeArchive(MOBase::IProfile * profile, const QStrin
 
 void GamePluginsWrapper::writePluginLists(const MOBase::IPluginList * pluginList)
 {
-  GILock lock;
-  
-  try {
-    this->get_override("writePluginLists")(boost::python::ptr(pluginList));
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "writePluginLists", boost::python::ptr(pluginList));
 }
 
 void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 {
-  GILock lock;
-  
-  try {
-    this->get_override("readPluginLists")(boost::python::ptr(pluginList));
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "readPluginLists", boost::python::ptr(pluginList));
 }
 /// end GamePlugins Wrapper
 /////////////////////////////
@@ -111,20 +75,12 @@ void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 
 MappingType LocalSavegamesWrapper::mappings(const QDir & profileSaveDir) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("mappings")(profileSaveDir);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, MappingType>(this, "mappings", profileSaveDir);
 }
 
 void LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 {
-  GILock lock;
-
-  try {
-    this->get_override("prepareProfile")(boost::python::ptr(profile));
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, void>(this, "prepareProfile", boost::python::ptr(profile));
 }
 /// end LocalSavegames Wrapper
 /////////////////////////////
@@ -133,40 +89,23 @@ void LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 
 MOBase::ISaveGame const * SaveGameInfoWrapper::getSaveGameInfo(QString const & file) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("getSaveGameInfo")(file);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGame const *>(this, "getSaveGameInfo", file);
 }
 
 SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(QString const & file) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("getMissingAssets")(file);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", file);
 }
 
 MOBase::ISaveGameInfoWidget * SaveGameInfoWrapper::getSaveGameWidget(QWidget * parent) const
 {
   qCritical("Calling method with unimplemented from_python converter.");
-
-  GILock lock;
-
-  try {
-    return this->get_override("getSaveGameWidget")(boost::python::ptr(parent));
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGameInfoWidget *>(this, "getSaveGameWidget", boost::python::ptr(parent));
 }
 
 bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("hasScriptExtenderSave")(file);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, bool>(this, "hasScriptExtenderSave", file);
 }
 /// end SaveGameInfo Wrapper
 /////////////////////////////
@@ -174,74 +113,42 @@ bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
 
 QString ScriptExtenderWrapper::BinaryName() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("BinaryName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "BinaryName");
 }
 
 QString ScriptExtenderWrapper::PluginPath() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("PluginPath")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "PluginPath");
 }
 
 QString ScriptExtenderWrapper::loaderName() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("loaderName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "loaderName");
 }
 
 QString ScriptExtenderWrapper::loaderPath() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("loaderPath")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "loaderPath");
 }
 
 QStringList ScriptExtenderWrapper::saveGameAttachmentExtensions() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("saveGameAttachmentExtensions")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QStringList>(this, "saveGameAttachmentExtensions");
 }
 
 bool ScriptExtenderWrapper::isInstalled() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("isInstalled")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, bool>(this, "isInstalled");
 }
 
 QString ScriptExtenderWrapper::getExtenderVersion() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("getExtenderVersion")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "getExtenderVersion");
 }
 
 WORD ScriptExtenderWrapper::getArch() const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("getArch")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, WORD>(this, "getArch");
 }
 
 /// end ScriptExtender Wrapper
@@ -251,38 +158,22 @@ WORD ScriptExtenderWrapper::getArch() const
 
 QStringList UnmanagedModsWrapper::mods(bool onlyOfficial) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("mods")(onlyOfficial);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QStringList>(this, "mods", onlyOfficial);
 }
 
 QString UnmanagedModsWrapper::displayName(const QString & modName) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("displayName")(modName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QString>(this, "displayName", modName);
 }
 
 QFileInfo UnmanagedModsWrapper::referenceFile(const QString & modName) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("referenceFile")(modName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QFileInfo>(this, "referenceFile", modName);
 }
 
 QStringList UnmanagedModsWrapper::secondaryFiles(const QString & modName) const
 {
-  GILock lock;
-
-  try {
-    return this->get_override("secondaryFiles")(modName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QStringList>(this, "secondaryFiles", modName);
 }
 /// end UnmanagedMods Wrapper
 /////////////////////////////
