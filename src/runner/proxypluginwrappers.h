@@ -31,6 +31,9 @@ class IPluginWrapper : public MOBase::IPlugin, public boost::python::wrapper<MOB
   Q_INTERFACES(MOBase::IPlugin)
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+public:
+  static constexpr const char* className = "IPluginWrapper";
+  using boost::python::wrapper<MOBase::IPlugin>::get_override;
 };
 
 
@@ -42,6 +45,9 @@ class IPluginDiagnoseWrapper : public QObject, public MOBase::IPluginDiagnose, p
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginDiagnose)
 
 public:
+  static constexpr const char* className = "IPluginDiagnoseWrapper";
+  using boost::python::wrapper<MOBase::IPluginDiagnose>::get_override;
+
   virtual std::vector<unsigned int> activeProblems() const override;
   virtual QString shortDescription(unsigned int key) const override;
   virtual QString fullDescription(unsigned int key) const override;
@@ -63,6 +69,9 @@ class IPluginFileMapperWrapper : public QObject, public MOBase::IPluginFileMappe
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginFileMapper)
 
 public:
+  static constexpr const char* className = "IPluginFileMapperWrapper";
+  using boost::python::wrapper<MOBase::IPluginFileMapper>::get_override;
+
   virtual MappingType mappings() const override;
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
@@ -74,6 +83,9 @@ class IPluginGameWrapper : public MOBase::IPluginGame, public boost::python::wra
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginGame)
 
 public:
+  static constexpr const char* className = "IPluginGameWrapper";
+  using boost::python::wrapper<MOBase::IPluginGame>::get_override;
+
   virtual QString gameName() const override;
   virtual void initializeProfile(const QDir &directory, ProfileSettings settings) const override;
   virtual QString savegameExtension() const override;
@@ -122,6 +134,9 @@ class IPluginInstallerCustomWrapper : public MOBase::IPluginInstallerCustom, pub
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 public:
+  static constexpr const char* className = "IPluginInstallerCustomWrapper";
+  using boost::python::wrapper<MOBase::IPluginInstallerCustom>::get_override;
+
   virtual unsigned int priority() const;
   virtual bool isManualInstaller() const;
   virtual bool isArchiveSupported(const MOBase::DirectoryTree &tree) const;
@@ -141,6 +156,9 @@ class IPluginModPageWrapper : public MOBase::IPluginModPage, public boost::pytho
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 public:
+  static constexpr const char* className = "IPluginModPageWrapper";
+  using boost::python::wrapper<MOBase::IPluginModPage>::get_override;
+
   virtual QString displayName() const override;
   virtual QIcon icon() const override;
   virtual QUrl pageURL() const override;
@@ -157,6 +175,9 @@ class IPluginPreviewWrapper : public MOBase::IPluginPreview, public boost::pytho
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 public:
+  static constexpr const char* className = "IPluginPreviewWrapper";
+  using boost::python::wrapper<MOBase::IPluginPreview>::get_override;
+
   virtual std::set<QString> supportedExtensions() const override;
   virtual QWidget *genFilePreview(const QString &fileName, const QSize &maxSize) const override;
 };
@@ -169,6 +190,9 @@ class IPluginToolWrapper: public MOBase::IPluginTool, public boost::python::wrap
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 public:
+  static constexpr const char* className = "IPluginToolWrapper";
+  using boost::python::wrapper<MOBase::IPluginTool>::get_override;
+
   virtual QString displayName() const;
   virtual QString tooltip() const;
   virtual QIcon icon() const;

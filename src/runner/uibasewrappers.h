@@ -26,7 +26,7 @@
 
 #include "error.h"
 #include "gilock.h"
-#include "pycatch.h"
+#include "pythonwrapperutilities.h"
 
 extern MOBase::IOrganizer *s_Organizer;
 

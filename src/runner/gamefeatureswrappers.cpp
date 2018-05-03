@@ -10,7 +10,7 @@
 #include <isavegameinfowidget.h>
 
 #include "gilock.h"
-#include "pycatch.h"
+#include "pythonwrapperutilities.h"
 
 /////////////////////////////
 /// BSAInvalidation Wrapper

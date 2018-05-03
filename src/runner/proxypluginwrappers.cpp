@@ -3,7 +3,7 @@
 #include "gilock.h"
 #include <QUrl>
 #include <QWidget>
-#include "pycatch.h"
+#include "pythonwrapperutilities.h"
 #include "sipApiAccess.h"
 
 namespace boost
@@ -27,51 +27,37 @@ using namespace MOBase;
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
 bool class_name::init(MOBase::IOrganizer *moInfo) \
 { \
-  try { \
-    return this->get_override("init")(boost::python::ptr(moInfo)); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, bool, boost::python::pointer_wrapper<MOBase::IOrganizer *>>(this, "init", boost::python::ptr(moInfo)); \
 } \
  \
 QString class_name::name() const \
 { \
-  try { \
-    return this->get_override("name")().as<QString>(); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, QString>(this, "name"); \
 } \
  \
 QString class_name::author() const \
 { \
-  try { \
-    return this->get_override("author")().as<QString>(); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, QString>(this, "author"); \
 } \
  \
 QString class_name::description() const \
 { \
-  try { \
-    return this->get_override("description")().as<QString>(); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, QString>(this, "description"); \
 } \
  \
 MOBase::VersionInfo class_name::version() const \
 { \
-  try { \
-    return this->get_override("version")().as<MOBase::VersionInfo>(); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, MOBase::VersionInfo>(this, "version"); \
 } \
  \
 bool class_name::isActive() const \
 { \
-  try { \
-    return this->get_override("isActive")().as<bool>(); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, bool>(this, "isActive"); \
 } \
  \
 QList<MOBase::PluginSetting> class_name::settings() const \
 { \
-  try { \
-    return this->get_override("settings")().as<QList<MOBase::PluginSetting>>(); \
-  } PYCATCH; \
+  return basicWrapperFunctionImplementation<class_name, QList<MOBase::PluginSetting>>(this, "settings"); \
 }
 
 /// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
@@ -89,41 +75,27 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginDiagnoseWrapper)
 
 std::vector<unsigned int> IPluginDiagnoseWrapper::activeProblems() const
 {
-  try {
-    GILock lock;
-
-    return this->get_override("activeProblems")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, std::vector<unsigned int>>(this, "activeProblems");
 }
 
 QString IPluginDiagnoseWrapper::shortDescription(unsigned int key) const
 {
-  try {
-    return this->get_override("shortDescription")(key);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, QString, unsigned int>(this, "shortDescription", key);
 }
 
 QString IPluginDiagnoseWrapper::fullDescription(unsigned int key) const
 {
-  try {
-    return this->get_override("fullDescription")(key);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, QString, unsigned int>(this, "fullDescription", key);
 }
 
 bool IPluginDiagnoseWrapper::hasGuidedFix(unsigned int key) const
 {
-  try {
-    return this->get_override("hasGuidedFix")(key);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, bool, unsigned int>(this, "hasGuidedFix", key);
 }
 
 void IPluginDiagnoseWrapper::startGuidedFix(unsigned int key) const
 {
-  try {
-    GILock lock;
-
-    this->get_override("startGuidedFix")(key);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, void, unsigned int>(this, "startGuidedFix", key);
 }
 
 void IPluginDiagnoseWrapper::invalidate()
@@ -139,9 +111,7 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginFileMapperWrapper)
 
 MappingType IPluginFileMapperWrapper::mappings() const
 {
-  try {
-    return this->get_override("mappings")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginFileMapperWrapper, MappingType>(this, "mappings");
 }
 /// end IPluginFileMapper Wrapper
 /////////////////////////////////////
@@ -150,252 +120,159 @@ MappingType IPluginFileMapperWrapper::mappings() const
 
 QString IPluginGameWrapper::gameName() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "gameName");
 }
 
 void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettings settings) const
 {
-  GILock lock;
-  try {
-    this->get_override("initializeProfile")(directory, settings);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginGameWrapper, void>(this, "initializeProfile", directory, settings);
 }
 
 QString IPluginGameWrapper::savegameExtension() const
 {
-  GILock lock;
-  try {
-    return this->get_override("savegameExtension")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "savegameExtension");
 }
 
 QString IPluginGameWrapper::savegameSEExtension() const
 {
-  GILock lock;
-  try {
-    return this->get_override("savegameSEExtension")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "savegameSEExtension");
 }
 
 bool IPluginGameWrapper::isInstalled() const
 {
-  GILock lock;
-  try {
-    return this->get_override("isInstalled")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, bool>(this, "isInstalled");
 }
 
 QIcon IPluginGameWrapper::gameIcon() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameIcon")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QIcon>(this, "gameIcon");
 }
 
 QDir IPluginGameWrapper::gameDirectory() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameDirectory")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QDir>(this, "gameDirectory");
 }
 
 QDir IPluginGameWrapper::dataDirectory() const
 {
-  GILock lock;
-  try {
-    return this->get_override("dataDirectory")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QDir>(this, "dataDirectory");
 }
 
 void IPluginGameWrapper::setGamePath(const QString & path)
 {
-  GILock lock;
-  try {
-    this->get_override("setGamePath")(path);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginGameWrapper, void>(this, "setGamePath", path);
 }
 
 QDir IPluginGameWrapper::documentsDirectory() const
 {
-  GILock lock;
-  try {
-    return this->get_override("documentsDirectory")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QDir>(this, "documentsDirectory");
 }
 
 QDir IPluginGameWrapper::savesDirectory() const
 {
-  GILock lock;
-  try {
-    return this->get_override("savesDirectory")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QDir>(this, "savesDirectory");
 }
 
 QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
 {
-  GILock lock;
-  try {
-    return this->get_override("executables")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QList<MOBase::ExecutableInfo>>(this, "executables");
 }
 
 QString IPluginGameWrapper::steamAPPId() const
 {
-  GILock lock;
-  try {
-    return this->get_override("steamAPPId")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "steamAPPId");
 }
 
 QStringList IPluginGameWrapper::primaryPlugins() const
 {
-  GILock lock;
-  try {
-    return this->get_override("primaryPlugins")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "primaryPlugins");
 }
 
 QStringList IPluginGameWrapper::gameVariants() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameVariants")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "gameVariants");
 }
 
 void IPluginGameWrapper::setGameVariant(const QString & variant)
 {
-  GILock lock;
-  try {
-    this->get_override("setGameVariant")(variant);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginGameWrapper, void>(this, "setGameVariant", variant);
 }
 
 QString IPluginGameWrapper::binaryName() const
 {
-  GILock lock;
-  try {
-    return this->get_override("binaryName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "binaryName");
 }
 
 QString IPluginGameWrapper::gameShortName() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameShortName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "gameShortName");
 }
 
 QStringList IPluginGameWrapper::validShortNames() const
 {
-  GILock lock;
-  try {
-    return this->get_override("validShortNames")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "validShortNames");
 }
 
 QString IPluginGameWrapper::gameNexusName() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameNexusName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "gameNexusName");
 }
 
 QStringList IPluginGameWrapper::iniFiles() const
 {
-  GILock lock;
-  try {
-    return this->get_override("iniFiles")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "iniFiles");
 }
 
 QStringList IPluginGameWrapper::DLCPlugins() const
 {
-  GILock lock;
-  try {
-    return this->get_override("DLCPlugins")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "DLCPlugins");
 }
 
 QStringList IPluginGameWrapper::CCPlugins() const
 {
-  GILock lock;
-  try {
-    return this->get_override("CCPlugins")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "CCPlugins");
 }
 
 IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
 {
-  GILock lock;
-  try {
-    return this->get_override("loadOrderMechanism")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, IPluginGame::LoadOrderMechanism>(this, "loadOrderMechanism");
 }
 
 IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
 {
-  GILock lock;
-  try {
-    return this->get_override("sortMechanism")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, IPluginGame::SortMechanism>(this, "sortMechanism");
 }
 
 int IPluginGameWrapper::nexusModOrganizerID() const
 {
-  GILock lock;
-  try {
-    return this->get_override("nexusModOrganizerID")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, int>(this, "nexusModOrganizerID");
 }
 
 int IPluginGameWrapper::nexusGameID() const
 {
-  GILock lock;
-  try {
-    return this->get_override("nexusGameID")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, int>(this, "nexusGameID");
 }
 
 bool IPluginGameWrapper::looksValid(QDir const & dir) const
 {
-  GILock lock;
-  try {
-    return this->get_override("looksValid")(dir);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, bool>(this, "looksValid", dir);
 }
 
 QString IPluginGameWrapper::gameVersion() const
 {
-  GILock lock;
-  try {
-    return this->get_override("gameVersion")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "gameVersion");
 }
 
 QString IPluginGameWrapper::getLauncherName() const
 {
-  GILock lock;
-  try {
-    return this->get_override("getLauncherName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "getLauncherName");
 }
 
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginGameWrapper)
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
-  GILock lock;
-  try {
-    return this->get_override("_featureList")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, std::map<std::type_index, boost::any>>(this, "_featureList");
 }
 /// end IPluginGame Wrapper
 /////////////////////////////////////
@@ -406,55 +283,41 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
 
 unsigned int IPluginInstallerCustomWrapper::priority() const
 {
-  try {
-    return this->get_override("priority")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, unsigned int>(this, "priority");
 }
 
 bool IPluginInstallerCustomWrapper::isManualInstaller() const
 {
-  try {
-    return this->get_override("isManualInstaller")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, bool>(this, "isManualInstaller");
 }
 
-bool IPluginInstallerCustomWrapper::isArchiveSupported(const DirectoryTree &) const
+bool IPluginInstallerCustomWrapper::isArchiveSupported(const DirectoryTree &archiveTree) const
 {
-  try {
-    //return this->get_override("isArchiveSupported")(tree);
-    return false;
-  } PYCATCH;
+  //return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, bool>(this, "isArchiveSupported", archiveTree);
+  // This was a stub implementation when I got here, and a real one won't compile.
+  return false;
 }
 
 bool IPluginInstallerCustomWrapper::isArchiveSupported(const QString &archiveName) const
 {
-  try {
-    return this->get_override("isArchiveSupported")(archiveName);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, bool>(this, "isArchiveSupported", archiveName);
 }
 
 std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
 {
-  try {
-    return this->get_override("supportedExtensions")().as<std::set<QString>>();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, std::set<QString>>(this, "supportedExtensions");
 }
-
 
 IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, const QString &archiveName,
                                                                         const QString &version, int modID)
 {
-  try {
-    return this->get_override("install")(modName, archiveName, version, modID);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, IPluginInstaller::EInstallResult>(this, "install", modName, archiveName, version, modID);
 }
 
 
 void IPluginInstallerCustomWrapper::setParentWidget(QWidget *parent)
 {
-  try {
-    this->get_override("setParentWidget")(parent);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, void>(this, "setParentWidget", parent);
 }
 /// end IPluginInstallerCustom Wrapper
 /////////////////////////////
@@ -465,44 +328,32 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginModPageWrapper)
 
 QString IPluginModPageWrapper::displayName() const
 {
-  try {
-    return this->get_override("displayName")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginModPageWrapper, QString>(this, "displayName");
 }
 
 QIcon IPluginModPageWrapper::icon() const
 {
-  try {
-    return this->get_override("icon")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginModPageWrapper, QIcon>(this, "icon");
 }
 
 QUrl IPluginModPageWrapper::pageURL() const
 {
-  try {
-    return this->get_override("pageURL")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginModPageWrapper, QUrl>(this, "pageURL");
 }
 
 bool IPluginModPageWrapper::useIntegratedBrowser() const
 {
-  try {
-    return this->get_override("useIntegratedBrowser")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginModPageWrapper, bool>(this, "useIntegratedBrowser");
 }
 
 bool IPluginModPageWrapper::handlesDownload(const QUrl & pageURL, const QUrl & downloadURL, MOBase::ModRepositoryFileInfo & fileInfo) const
 {
-  try {
-    return this->get_override("handlesDownload")(pageURL, downloadURL, fileInfo);
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginModPageWrapper, bool>(this, "handlesDownload", pageURL, downloadURL, fileInfo);
 }
 
 void IPluginModPageWrapper::setParentWidget(QWidget * widget)
 {
-  try {
-    this->get_override("setParentWidget")(widget);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginModPageWrapper, void>(this, "setParentWidget", widget);
 }
 /// end IPluginModPage Wrapper
 /////////////////////////////
@@ -513,15 +364,17 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginPreviewWrapper)
 
 std::set<QString> IPluginPreviewWrapper::supportedExtensions() const
 {
-  try {
-    return this->get_override("supportedExtensions")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginPreviewWrapper, std::set<QString>>(this, "supportedExtensions");
 }
 
 QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QSize &maxSize) const
 {
+  // This is complicated, so we can't use the basic implementation
   try {
-    boost::python::object pyVersion = this->get_override("genFilePreview")(fileName, maxSize);
+    boost::python::override implementation = this->get_override("genFilePreview");
+    if (!implementation)
+      throw MissingImplementation(this->className, "genFilePreview");
+    boost::python::object pyVersion = implementation(fileName, maxSize);
     // We need responsibility for deleting the QWidget to be transferred to C++
     sipAPI()->api_transfer_to(pyVersion.ptr(), 0);
     return boost::python::extract<QWidget *>(pyVersion)();
@@ -536,39 +389,27 @@ COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginToolWrapper)
 
 QString IPluginToolWrapper::displayName() const
 {
-  try {
-    return this->get_override("displayName")().as<QString>();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginToolWrapper, QString>(this, "displayName");
 }
 
 QString IPluginToolWrapper::tooltip() const
 {
-  try {
-    return this->get_override("tooltip")().as<QString>();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginToolWrapper, QString>(this, "tooltip");
 }
 
 QIcon IPluginToolWrapper::icon() const
 {
-  try {
-    return this->get_override("icon")().as<QIcon>();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginToolWrapper, QIcon>(this, "icon");
 }
 
 void IPluginToolWrapper::setParentWidget(QWidget *parent)
 {
-  try {
-    this->get_override("setParentWidget")(parent);
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginToolWrapper, void>(this, "setParentWidget", parent);
 }
 
 void IPluginToolWrapper::display() const
 {
-  try {
-    GILock lock;
-
-    this->get_override("display")();
-  } PYCATCH;
+  basicWrapperFunctionImplementation<IPluginToolWrapper, void>(this, "display");
 }
 
 /// end IPluginTool Wrapper
