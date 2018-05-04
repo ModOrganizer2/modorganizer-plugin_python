@@ -17,6 +17,10 @@
 
 class BSAInvalidationWrapper : public BSAInvalidation, public boost::python::wrapper<BSAInvalidation>
 {
+public:
+  static constexpr const char* className = "BSAInvalidationWrapper";
+  using boost::python::wrapper<BSAInvalidation>::get_override;
+
   virtual bool isInvalidationBSA(const QString &bsaName) override;
   virtual void deactivate(MOBase::IProfile *profile) override;
   virtual void activate(MOBase::IProfile *profile) override;
@@ -24,6 +28,10 @@ class BSAInvalidationWrapper : public BSAInvalidation, public boost::python::wra
 
 class DataArchivesWrapper : public DataArchives, public boost::python::wrapper<DataArchives>
 {
+public:
+  static constexpr const char* className = "DataArchivesWrapper";
+  using boost::python::wrapper<DataArchives>::get_override;
+
   virtual QStringList vanillaArchives() const override;
   virtual QStringList archives(const MOBase::IProfile *profile) const override;
   virtual void addArchive(MOBase::IProfile *profile, int index, const QString &archiveName) override;
@@ -32,18 +40,30 @@ class DataArchivesWrapper : public DataArchives, public boost::python::wrapper<D
 
 class GamePluginsWrapper : public GamePlugins, public boost::python::wrapper<GamePlugins>
 {
+public:
+  static constexpr const char* className = "GamePluginsWrapper";
+  using boost::python::wrapper<GamePlugins>::get_override;
+
   virtual void writePluginLists(const MOBase::IPluginList *pluginList) override;
   virtual void readPluginLists(MOBase::IPluginList *pluginList) override;
 };
 
 class LocalSavegamesWrapper : public LocalSavegames, public boost::python::wrapper<LocalSavegames>
 {
+public:
+  static constexpr const char* className = "LocalSavegamesWrapper";
+  using boost::python::wrapper<LocalSavegames>::get_override;
+
   virtual MappingType mappings(const QDir &profileSaveDir) const override;
   virtual void prepareProfile(MOBase::IProfile *profile) override;
 };
 
 class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<SaveGameInfo>
 {
+public:
+  static constexpr const char* className = "SaveGameInfoWrapper";
+  using boost::python::wrapper<SaveGameInfo>::get_override;
+
   virtual MOBase::ISaveGame const *getSaveGameInfo(QString const &file) const override;
   virtual MissingAssets getMissingAssets(QString const &file) const override;
   virtual MOBase::ISaveGameInfoWidget *getSaveGameWidget(QWidget *parent = 0) const override;
@@ -52,6 +72,10 @@ class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<S
 
 class ScriptExtenderWrapper : public ScriptExtender, public boost::python::wrapper<ScriptExtender>
 {
+public:
+  static constexpr const char* className = "ScriptExtenderWrapper";
+  using boost::python::wrapper<ScriptExtender>::get_override;
+
   virtual QString BinaryName() const override;
   virtual QString PluginPath() const override;
   virtual QString loaderName() const override;
@@ -64,6 +88,10 @@ class ScriptExtenderWrapper : public ScriptExtender, public boost::python::wrapp
 
 class UnmanagedModsWrapper : public UnmanagedMods, public boost::python::wrapper<UnmanagedMods>
 {
+public:
+  static constexpr const char* className = "UnmanagedModsWrapper";
+  using boost::python::wrapper<UnmanagedMods>::get_override;
+
   virtual QStringList mods(bool onlyOfficial) const override;
   virtual QString displayName(const QString &modName) const override;
   virtual QFileInfo referenceFile(const QString &modName) const override;
