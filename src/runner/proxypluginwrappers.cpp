@@ -210,10 +210,7 @@ QString IPluginGameWrapper::gameShortName() const
 
 QStringList IPluginGameWrapper::primarySources() const
 {
-  GILock lock;
-  try {
-    return this->get_override("primarySources")();
-  } PYCATCH;
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QStringList>(this, "primarySources");
 }
 
 QStringList IPluginGameWrapper::validShortNames() const
