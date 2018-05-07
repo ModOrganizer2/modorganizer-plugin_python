@@ -313,10 +313,10 @@ std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
   return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, std::set<QString>>(this, "supportedExtensions");
 }
 
-IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, const QString &archiveName,
+IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, QString gameName, const QString &archiveName,
                                                                         const QString &version, int modID)
 {
-  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, IPluginInstaller::EInstallResult>(this, "install", modName, archiveName, version, modID);
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, IPluginInstaller::EInstallResult>(this, "install", modName, gameName, archiveName, version, modID);
 }
 
 

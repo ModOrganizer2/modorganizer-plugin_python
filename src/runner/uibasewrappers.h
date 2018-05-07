@@ -240,6 +240,10 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
   {
     return this->get_override("createMod")(name);
   }
+  virtual MOBase::IPluginGame *getGame(const QString &gameName) const override
+  {
+    return this->get_override("getGame")(gameName);
+  }
   virtual bool removeMod(MOBase::IModInterface *mod) override
   {
     return this->get_override("removeMod")(mod);
