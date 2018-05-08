@@ -49,7 +49,7 @@ public:
   virtual QList<MOBase::PluginSetting> settings() const;
 
   QStringList pluginList(const QString &pluginPath) const;
-  QObject *instantiate(const QString &pluginName);
+  QList<QObject*> instantiate(const QString &pluginName);
 
   /**
    * @return the parent widget for newly created dialogs
