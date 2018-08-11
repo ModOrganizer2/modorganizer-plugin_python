@@ -43,7 +43,7 @@ public:
 
 private:
 
-  void initPath(boost::python::object &moduleNamespace);
+  void initPath();
 
 private:
   std::map<QString, boost::python::object> m_PythonObjects;
@@ -562,15 +562,11 @@ struct QClass_converters
     // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
     // Instead, this should be called within the wrappers for functions which return deletable pointers.
     //sipAPI()->api_transfer_to(objPtr, 0);
-    /*if (PyObject_TypeCheck(objPtr, sipAPI()->api_wrapper_type)) {
-      sipWrapper *wrapper;
-      wrapper = reinterpret_cast<sipWrapper*>(objPtr);
-      return wrapper->super.data;
-    } else if (PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {*/
+    if (PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {
       sipSimpleWrapper *wrapper;
       wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
       return wrapper->data;
-    /*} else if (PyObject_TypeCheck(objPtr, sipAPI()->api_wrappertype_type)) {
+    } else if (PyObject_TypeCheck(objPtr, sipAPI()->api_wrapper_type)) {
       sipWrapper *wrapper;
       wrapper = reinterpret_cast<sipWrapper*>(objPtr);
       return wrapper->super.data;
@@ -582,11 +578,10 @@ struct QClass_converters
         if (extractor.check())
           return new QStringList(extractor());
       }
-      if (!std::is_same_v<T, QIcon>) {
-        PyErr_SetString(PyExc_TypeError, "type not wrapped");
-        bpy::throw_error_already_set();
-      }
-    }*/
+      PyErr_SetString(PyExc_TypeError, "type not wrapped");
+      bpy::throw_error_already_set();
+    }
+    return new void*;
   }
 
   QClass_converters()
@@ -666,7 +661,7 @@ struct QInterface_converters
 
 int getArgCount(PyObject *object) {
   int result = 0;
-  PyObject *funcCode = PyObject_GetAttrString(object, "func_code");
+  PyObject *funcCode = PyObject_GetAttrString(object, "__code__");
   if (funcCode) {
     PyObject *argCount = PyObject_GetAttrString(funcCode, "co_argcount");
     if(argCount) {
@@ -1240,6 +1235,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
     PyImport_AppendInittab("mobase", &PyInit_mobase);
     Py_OptimizeFlag = 2;
     Py_NoSiteFlag = 1;
+    initPath();
     Py_InitializeEx(0);
 
     if (!Py_IsInitialized()) {
@@ -1251,7 +1247,6 @@ bool PythonRunner::initPython(const QString &pythonPath)
     bpy::object mainModule = bpy::import("__main__");
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
-    initPath(mainNamespace);
     bpy::import("site");
     mainNamespace["io"] = bpy::import("io");
     bpy::exec("s_ErrIO = io.StringIO()\n"
@@ -1286,17 +1281,14 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
   } while (false)
 
 
-void PythonRunner::initPath(bpy::object &moduleNamespace)
+void PythonRunner::initPath()
 {
-  static QString paths[] = {
-      m_MOInfo->pluginDataPath(),
-      QCoreApplication::applicationDirPath()
-    };
+  static QStringList paths = {
+    QCoreApplication::applicationDirPath() + "/pythoncore",
+    m_MOInfo->pluginDataPath()
+  };
 
-  for (int i = 0; i < sizeof(paths) / sizeof(QString); ++i) {
-    QString expr = QString("sys.path.insert(%1, \"%2\")").arg(i).arg(paths[i]);
-    bpy::eval(expr.toUtf8().constData(), moduleNamespace);
-  }
+  Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
 
@@ -1349,6 +1341,6 @@ bool PythonRunner::isPythonInstalled() const
 bool PythonRunner::isPythonVersionSupported() const
 {
   const char *version = Py_GetVersion();
-  return strstr(version, "2.7") == version;
+  return strstr(version, "3.7") == version;
 }
 

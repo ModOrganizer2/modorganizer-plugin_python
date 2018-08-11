@@ -8,14 +8,15 @@ static const sipAPIDef *sipAPI()
   static const sipAPIDef *sipApi = nullptr;
   if (sipApi == nullptr) {
 #if defined(SIP_USE_PYCAPSULE)
-    sipApi = (const sipAPIDef *)PyCapsule_Import("sip._C_API", 0);
+    PyImport_ImportModule("PyQt5.sip");
+    sipApi = (const sipAPIDef *)PyCapsule_Import("PyQt5.sip._C_API", 0);
 #else
     PyObject *sip_module;
     PyObject *sip_module_dict;
     PyObject *c_api;
 
     /* Import the SIP module. */
-    sip_module = PyImport_ImportModule("sip");
+    sip_module = PyImport_ImportModule("PyQt5.sip");
 
     if (sip_module == NULL)
       return NULL;
