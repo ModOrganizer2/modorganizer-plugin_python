@@ -1320,6 +1320,8 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     TRY_PLUGIN_TYPE(IPluginModPage, pluginObj);
     TRY_PLUGIN_TYPE(IPluginPreview, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
+    if (interfaceList.isEmpty())
+      TRY_PLUGIN_TYPE(IPluginWrapper, pluginObj);
 
     return interfaceList;
   } catch (const bpy::error_already_set&) {
