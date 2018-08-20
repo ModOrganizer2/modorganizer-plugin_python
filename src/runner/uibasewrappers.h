@@ -63,8 +63,8 @@ public:
     { m_Wrapped->requestFiles(gameName, modID, userData); }
   void requestFileInfo(QString gameName, int modID, int fileID, QVariant userData)
     { m_Wrapped->requestFileInfo(gameName, modID, fileID, userData); }
-  void requestToggleEndorsement(QString gameName, int modID, bool endorse, QVariant userData)
-    { m_Wrapped->requestToggleEndorsement(gameName, modID, endorse, userData); }
+  void requestToggleEndorsement(QString gameName, int modID, QString modVersion, bool endorse, QVariant userData)
+    { m_Wrapped->requestToggleEndorsement(gameName, modID, modVersion, endorse, userData); }
 
   void onFilesAvailable(boost::python::object callback) {
     m_FilesAvailableHandler = callback;
@@ -387,7 +387,7 @@ struct IModRepositoryBridgeWrapper: MOBase::IModRepositoryBridge, boost::python:
   virtual void requestFiles(QString gameName, int modID, QVariant userData) { this->get_override("requestFiles")(gameName, modID, userData); }
   virtual void requestFileInfo(QString gameName, int modID, int fileID, QVariant userData) { this->get_override("requestFileInfo")(gameName, modID, fileID, userData); }
   virtual void requestDownloadURL(QString gameName, int modID, int fileID, QVariant userData) { this->get_override("requestDownloadURL")(gameName, modID, fileID, userData); }
-  virtual void requestToggleEndorsement(QString gameName, int modID, bool endorse, QVariant userData) { this->get_override("requestToggleEndorsement")(gameName, modID, endorse, userData); }
+  virtual void requestToggleEndorsement(QString gameName, int modID, QString modVersion, bool endorse, QVariant userData) { this->get_override("requestToggleEndorsement")(gameName, modID, endorse, userData); }
 };
 
 struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python::wrapper<MOBase::IInstallationManager>
