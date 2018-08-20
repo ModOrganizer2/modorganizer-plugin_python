@@ -69,8 +69,6 @@ using namespace MOBase;
 
 namespace bpy = boost::python;
 
-static sipWrapperType sipWrapper_Type;
-
 struct QString_to_python_str
 {
   static PyObject *convert(const QString &str) {
