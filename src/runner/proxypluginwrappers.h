@@ -26,8 +26,11 @@ virtual bool isActive() const override; \
 virtual QList<MOBase::PluginSetting> settings() const override;
 
 
-class IPluginWrapper : public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPlugin>
+// Even though the base interface is not a QObject, this has to be because we have no way to pass Mod Organizer a plugin that implements multiple interfaces.
+// QObject must be the first base class because moc assumes the first base class is a QObject
+class IPluginWrapper : public QObject, public MOBase::IPlugin, public boost::python::wrapper<MOBase::IPlugin>
 {
+  Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin)
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
