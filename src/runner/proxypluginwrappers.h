@@ -202,7 +202,7 @@ public:
   virtual QIcon icon() const;
   virtual void setParentWidget(QWidget *parent);
 
-public slots:
+public Q_SLOTS:
   virtual void display() const;
 };
 

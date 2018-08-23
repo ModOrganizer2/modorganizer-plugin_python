@@ -105,7 +105,7 @@ private:
 
   Q_DISABLE_COPY(ModRepositoryBridgeWrapper)
 
-private slots:
+private Q_SLOTS:
 
   void filesAvailable(int modID, QVariant userData, const QList<ModRepositoryFileInfo> &resultData)
   {
