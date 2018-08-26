@@ -56,6 +56,7 @@ public:
 
   virtual MappingType mappings(const QDir &profileSaveDir) const override;
   virtual void prepareProfile(MOBase::IProfile *profile) override;
+  virtual bool updateSaveGames(MOBase::IProfile *profile) override;
 };
 
 class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<SaveGameInfo>
