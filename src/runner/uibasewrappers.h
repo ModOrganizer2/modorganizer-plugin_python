@@ -392,7 +392,7 @@ struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python:
 {
   virtual QString extractFile(const QString &fileName) { return this->get_override("extractFile")(fileName); }
   virtual QStringList extractFiles(const QStringList &files, bool flatten) { return this->get_override("extractFiles")(files, flatten); }
-  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile) { return this->get_override("installArchive")(modName, archiveFile); }
+  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, const int &modId = 0) { return this->get_override("installArchive")(modName, archiveFile, modId); }
   virtual void setURL(QString const &url) { this->get_override("setURL")(url); }
 };
 
