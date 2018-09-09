@@ -50,7 +50,7 @@ void DataArchivesWrapper::addArchive(MOBase::IProfile *profile, int index, const
   return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
 }
 
-void DataArchivesWrapper::removeArchive(MOBase::IProfile * profile, const QString & archiveName)
+void DataArchivesWrapper::removeArchive(MOBase::IProfile *profile, const QString &archiveName)
 {
   return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
 }
@@ -68,6 +68,12 @@ void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 {
   return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "readPluginLists", boost::python::ptr(pluginList));
 }
+
+void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
+{
+  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "getLoadOrder", loadOrder);
+}
+
 /// end GamePlugins Wrapper
 /////////////////////////////
 /// LocalSavegames Wrapper
@@ -253,6 +259,7 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<GamePluginsWrapper, boost::noncopyable>("GamePlugins")
       .def("writePluginLists", bpy::pure_virtual(&GamePlugins::writePluginLists))
       .def("readPluginLists", bpy::pure_virtual(&GamePlugins::readPluginLists))
+      .def("getLoadOrder", bpy::pure_virtual(&GamePlugins::getLoadOrder))
       ;
 
   bpy::class_<LocalSavegamesWrapper, boost::noncopyable>("LocalSavegames")
