@@ -250,7 +250,7 @@ struct QVariant_from_python_obj
   }
 
   static void *convertible(PyObject *objPtr) {
-    if (!SIPBytes_Check(objPtr) && !PyLong_Check(objPtr) &&
+    if (!SIPBytes_Check(objPtr) && !PyUnicode_Check(objPtr) && !PyLong_Check(objPtr) &&
         !PyBool_Check(objPtr) && !PyList_Check(objPtr)) {
       return nullptr;
     }
