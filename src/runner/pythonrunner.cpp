@@ -224,6 +224,7 @@ struct QVariant_to_python_obj
 {
   static PyObject *convert(const QVariant &var) {
     switch (var.type()) {
+      case QVariant::Invalid: return bpy::incref(Py_None);
       case QVariant::Int: return SIPLong_FromLong(var.toInt());
       case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
       case QVariant::Bool: return PyBool_FromLong(var.toBool());
@@ -251,7 +252,8 @@ struct QVariant_from_python_obj
 
   static void *convertible(PyObject *objPtr) {
     if (!SIPBytes_Check(objPtr) && !PyUnicode_Check(objPtr) && !PyLong_Check(objPtr) &&
-        !PyBool_Check(objPtr) && !PyList_Check(objPtr) && !PyDict_Check(objPtr)) {
+        !PyBool_Check(objPtr) && !PyList_Check(objPtr) && !PyDict_Check(objPtr) &&
+        objPtr != Py_None) {
       return nullptr;
     }
     return objPtr;
@@ -266,11 +268,21 @@ struct QVariant_from_python_obj
     data->convertible = storage;
   }
 
+  static void constructVariant(bpy::converter::rvalue_from_python_stage1_data *data) {
+    void* storage = ((bpy::converter::rvalue_from_python_storage<QVariant>*)data)->storage.bytes;
+
+    new (storage) QVariant();
+
+    data->convertible = storage;
+  }
+
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
     // PyBools will also return true for SIPLong_Check but not the other way around, so the order
     // here is relevant
     if (PyList_Check(objPtr)) {
       constructVariant(bpy::extract<QVariantList>(objPtr)(), data);
+    } else if (objPtr == Py_None) {
+      constructVariant(data);
     } else if (PyDict_Check(objPtr)) {
       constructVariant(bpy::extract<QVariantMap>(objPtr)(), data);
     } else if (SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr)) {
