@@ -119,6 +119,44 @@ struct QString_from_python_str
 };
 
 
+struct HANDLE_converters
+{
+  struct HANDLE_to_python
+  {
+    static PyObject *convert(HANDLE handle) {
+      size_t size_t_version = (size_t)handle;
+      return bpy::incref(bpy::object(size_t_version).ptr());
+    }
+  };
+
+  // bpy isn't keen on actually using this.
+  // maybe it's detecting that the function receives a pointer, and assumes that it needs to convert to the pointer's target.
+  // the issue can be worked around by wrapping the function to take a size_t and converting it there
+  struct HANDLE_from_python
+  {
+    HANDLE_from_python() {
+      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<HANDLE>());
+    }
+
+    static void *convertible(PyObject *objPtr) {
+      return PyLong_Check(objPtr) ? objPtr : nullptr;
+    }
+
+    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+      void *storage = ((bpy::converter::rvalue_from_python_storage<HANDLE>*)data)->storage.bytes;
+      HANDLE *result = new (storage) HANDLE;
+      *result = (HANDLE)bpy::extract<size_t>(objPtr)();
+    }
+  };
+
+  HANDLE_converters()
+  {
+    HANDLE_from_python();
+    bpy::to_python_converter<HANDLE, HANDLE_to_python>();
+  }
+};
+
+
 template <typename T>
 struct GuessedValue_converters
 {
@@ -794,6 +832,16 @@ struct Functor2_converter
 };
 
 
+// We must wrap IOrganizer::waitForApplication to convert the out parameter to a return value and also because bpy doesn't like coverting to void* (HANDLE) even if a converter exists.
+static PyObject *waitForApplication(const bpy::object &self, size_t handle)
+{
+  IOrganizer& organizer = bpy::extract<IOrganizer&>(self)();
+  DWORD returnCode;
+  bool result = organizer.waitForApplication((HANDLE)handle, &returnCode);
+  return bpy::incref(bpy::make_tuple(result, returnCode).ptr());
+}
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<QString>::update, 2, 2)
 
 
@@ -920,6 +968,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")="")), bpy::return_value_policy<bpy::return_by_value>())
       //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
+      // Use wrapped version
+      .def("waitForApplication", waitForApplication)
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
       .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
@@ -1177,6 +1227,8 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   GuessedValue_converters<QString>();
+
+  HANDLE_converters();
 
   //bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
 
