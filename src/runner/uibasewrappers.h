@@ -201,6 +201,7 @@ private:
 
 };
 
+// NOTE: Completely unnecessary - we're never going to override IOrganizer from within Python
 struct IOrganizerWrapper : MOBase::IOrganizer,
                            boost::python::wrapper<MOBase::IOrganizer> {
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const override
@@ -324,12 +325,12 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
                                   const QString &cwd      = "",
                                   const QString &profile = "") override
   {
-    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile).as<unsigned long>());
+    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile).as<size_t>());
   }
   virtual bool waitForApplication(HANDLE handle,
                                   LPDWORD exitCode = nullptr) const override
   {
-    return this->get_override("waitForApplication")(reinterpret_cast<unsigned long>(handle), exitCode);
+    return this->get_override("waitForApplication")(reinterpret_cast<size_t>(handle), exitCode);
   }
   virtual void refreshModList(bool saveChanges = true) override
   {
