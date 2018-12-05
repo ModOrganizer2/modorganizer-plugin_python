@@ -23,12 +23,17 @@ bool BSAInvalidationWrapper::isInvalidationBSA(const QString &bsaName)
 
 void BSAInvalidationWrapper::deactivate(MOBase::IProfile *profile)
 {
-  basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
 }
 
 void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
 {
   return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "activate", boost::python::ptr(profile));
+}
+
+void BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
+{
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "prepareProfile", boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////

@@ -995,6 +995,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("absolutePath", bpy::pure_virtual(&IProfile::absolutePath))
       .def("localSavesEnabled", bpy::pure_virtual(&IProfile::localSavesEnabled))
       .def("localSettingsEnabled", bpy::pure_virtual(&IProfile::localSettingsEnabled))
+      .def("invalidationActive", bpy::pure_virtual(&IProfile::invalidationActive))
       ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")

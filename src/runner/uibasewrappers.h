@@ -371,6 +371,7 @@ struct IProfileWrapper: MOBase::IProfile, boost::python::wrapper<MOBase::IProfil
   virtual QString absolutePath() const override { return this->get_override("absolutePath")(); }
   virtual bool localSavesEnabled() const override { return this->get_override("localSavesEnabled")(); }
   virtual bool localSettingsEnabled() const override { return this->get_override("localSettingsEnabled")(); }
+  virtual bool invalidationActive(bool *supported) const override { return this->get_override("invalidationActive")(supported); }
 };
 
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>

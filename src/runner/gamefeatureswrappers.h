@@ -24,6 +24,7 @@ public:
   virtual bool isInvalidationBSA(const QString &bsaName) override;
   virtual void deactivate(MOBase::IProfile *profile) override;
   virtual void activate(MOBase::IProfile *profile) override;
+  virtual void prepareProfile(MOBase::IProfile *profile) override;
 };
 
 class DataArchivesWrapper : public DataArchives, public boost::python::wrapper<DataArchives>
