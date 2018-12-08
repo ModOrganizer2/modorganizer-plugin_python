@@ -31,9 +31,9 @@ void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
   return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "activate", boost::python::ptr(profile));
 }
 
-void BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
+bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////
@@ -89,15 +89,11 @@ MappingType LocalSavegamesWrapper::mappings(const QDir & profileSaveDir) const
   return basicWrapperFunctionImplementation<LocalSavegamesWrapper, MappingType>(this, "mappings", profileSaveDir);
 }
 
-void LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
+bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 {
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, void>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 
-bool LocalSavegamesWrapper::updateSaveGames(MOBase::IProfile * profile)
-{
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, bool>(this, "updateSaveGames", boost::python::ptr(profile));
-}
 /// end LocalSavegames Wrapper
 /////////////////////////////
 /// SaveGameInfo Wrapper
@@ -270,7 +266,6 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<LocalSavegamesWrapper, boost::noncopyable>("LocalSavegames")
       .def("mappings", bpy::pure_virtual(&LocalSavegames::mappings))
       .def("prepareProfile", bpy::pure_virtual(&LocalSavegames::prepareProfile))
-      .def("updateSaveGames", bpy::pure_virtual(&LocalSavegames::updateSaveGames));
       ;
 
   bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
