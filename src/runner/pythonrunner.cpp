@@ -102,16 +102,23 @@ struct QString_from_python_str
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
     // Ensure the string uses 8-bit characters
     PyObject *strPtr = PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
+
     // Extract the character data from the python string
     const char* value = SIPBytes_AsString(strPtr);
+    assert(value != nullptr);
+
+    // TODO: This sometimes causes a crash when QString is called below (error 5, access denied, etc.).
+    //       This may cause a memory leak that'll need to be fixed at some point but the impact is fairly low.
+#if false
     // Deallocate local copy if one was made
     if (strPtr != objPtr)
       Py_DecRef(strPtr);
-    assert(value != nullptr);
+#endif
 
     // allocate storage
     void *storage = ((bpy::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
-    // construct QString in the allocated mr
+
+    // construct QString in the allocated memory
     new (storage) QString(value);
 
     data->convertible = storage;
