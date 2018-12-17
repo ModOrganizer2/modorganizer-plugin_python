@@ -107,14 +107,6 @@ struct QString_from_python_str
     const char* value = SIPBytes_AsString(strPtr);
     assert(value != nullptr);
 
-    // TODO: This sometimes causes a crash when QString is called below (error 5, access denied, etc.).
-    //       This may cause a memory leak that'll need to be fixed at some point but the impact is fairly low.
-#if false
-    // Deallocate local copy if one was made
-    if (strPtr != objPtr)
-      Py_DecRef(strPtr);
-#endif
-
     // allocate storage
     void *storage = ((bpy::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
 
@@ -122,6 +114,10 @@ struct QString_from_python_str
     new (storage) QString(value);
 
     data->convertible = storage;
+
+    // Deallocate local copy if one was made
+    if (strPtr != objPtr)
+      Py_DecRef(strPtr);
   }
 };
 
