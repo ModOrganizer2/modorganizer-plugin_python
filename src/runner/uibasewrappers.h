@@ -105,7 +105,7 @@ private:
 
   Q_DISABLE_COPY(ModRepositoryBridgeWrapper)
 
-private slots:
+private Q_SLOTS:
 
   void filesAvailable(int modID, QVariant userData, const QList<ModRepositoryFileInfo> &resultData)
   {
@@ -201,6 +201,7 @@ private:
 
 };
 
+// NOTE: Completely unnecessary - we're never going to override IOrganizer from within Python
 struct IOrganizerWrapper : MOBase::IOrganizer,
                            boost::python::wrapper<MOBase::IOrganizer> {
   virtual MOBase::IModRepositoryBridge *createNexusBridge() const override
@@ -324,12 +325,12 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
                                   const QString &cwd      = "",
                                   const QString &profile = "") override
   {
-    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile).as<unsigned long>());
+    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile).as<size_t>());
   }
   virtual bool waitForApplication(HANDLE handle,
                                   LPDWORD exitCode = nullptr) const override
   {
-    return this->get_override("waitForApplication")(reinterpret_cast<unsigned long>(handle), exitCode);
+    return this->get_override("waitForApplication")(reinterpret_cast<size_t>(handle), exitCode);
   }
   virtual void refreshModList(bool saveChanges = true) override
   {
@@ -370,6 +371,7 @@ struct IProfileWrapper: MOBase::IProfile, boost::python::wrapper<MOBase::IProfil
   virtual QString absolutePath() const override { return this->get_override("absolutePath")(); }
   virtual bool localSavesEnabled() const override { return this->get_override("localSavesEnabled")(); }
   virtual bool localSettingsEnabled() const override { return this->get_override("localSettingsEnabled")(); }
+  virtual bool invalidationActive(bool *supported) const override { return this->get_override("invalidationActive")(supported); }
 };
 
 struct IDownloadManagerWrapper: MOBase::IDownloadManager, boost::python::wrapper<MOBase::IDownloadManager>
@@ -392,7 +394,7 @@ struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python:
 {
   virtual QString extractFile(const QString &fileName) { return this->get_override("extractFile")(fileName); }
   virtual QStringList extractFiles(const QStringList &files, bool flatten) { return this->get_override("extractFiles")(files, flatten); }
-  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile) { return this->get_override("installArchive")(modName, archiveFile); }
+  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, const int &modId = 0) { return this->get_override("installArchive")(modName, archiveFile, modId); }
   virtual void setURL(QString const &url) { this->get_override("setURL")(url); }
 };
 

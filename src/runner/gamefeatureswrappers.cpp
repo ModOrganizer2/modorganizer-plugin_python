@@ -23,12 +23,17 @@ bool BSAInvalidationWrapper::isInvalidationBSA(const QString &bsaName)
 
 void BSAInvalidationWrapper::deactivate(MOBase::IProfile *profile)
 {
-  basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
 }
 
 void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
 {
   return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "activate", boost::python::ptr(profile));
+}
+
+bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
+{
+  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////
@@ -50,7 +55,7 @@ void DataArchivesWrapper::addArchive(MOBase::IProfile *profile, int index, const
   return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
 }
 
-void DataArchivesWrapper::removeArchive(MOBase::IProfile * profile, const QString & archiveName)
+void DataArchivesWrapper::removeArchive(MOBase::IProfile *profile, const QString &archiveName)
 {
   return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
 }
@@ -68,6 +73,12 @@ void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 {
   return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "readPluginLists", boost::python::ptr(pluginList));
 }
+
+void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
+{
+  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "getLoadOrder", loadOrder);
+}
+
 /// end GamePlugins Wrapper
 /////////////////////////////
 /// LocalSavegames Wrapper
@@ -78,10 +89,11 @@ MappingType LocalSavegamesWrapper::mappings(const QDir & profileSaveDir) const
   return basicWrapperFunctionImplementation<LocalSavegamesWrapper, MappingType>(this, "mappings", profileSaveDir);
 }
 
-void LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
+bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 {
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, void>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
+
 /// end LocalSavegames Wrapper
 /////////////////////////////
 /// SaveGameInfo Wrapper
@@ -248,6 +260,7 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<GamePluginsWrapper, boost::noncopyable>("GamePlugins")
       .def("writePluginLists", bpy::pure_virtual(&GamePlugins::writePluginLists))
       .def("readPluginLists", bpy::pure_virtual(&GamePlugins::readPluginLists))
+      .def("getLoadOrder", bpy::pure_virtual(&GamePlugins::getLoadOrder))
       ;
 
   bpy::class_<LocalSavegamesWrapper, boost::noncopyable>("LocalSavegames")

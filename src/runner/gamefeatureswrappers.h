@@ -24,6 +24,7 @@ public:
   virtual bool isInvalidationBSA(const QString &bsaName) override;
   virtual void deactivate(MOBase::IProfile *profile) override;
   virtual void activate(MOBase::IProfile *profile) override;
+  virtual bool prepareProfile(MOBase::IProfile *profile) override;
 };
 
 class DataArchivesWrapper : public DataArchives, public boost::python::wrapper<DataArchives>
@@ -46,6 +47,7 @@ public:
 
   virtual void writePluginLists(const MOBase::IPluginList *pluginList) override;
   virtual void readPluginLists(MOBase::IPluginList *pluginList) override;
+  virtual void getLoadOrder(QStringList &loadOrder) override;
 };
 
 class LocalSavegamesWrapper : public LocalSavegames, public boost::python::wrapper<LocalSavegames>
@@ -55,7 +57,7 @@ public:
   using boost::python::wrapper<LocalSavegames>::get_override;
 
   virtual MappingType mappings(const QDir &profileSaveDir) const override;
-  virtual void prepareProfile(MOBase::IProfile *profile) override;
+  virtual bool prepareProfile(MOBase::IProfile *profile) override;
 };
 
 class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<SaveGameInfo>

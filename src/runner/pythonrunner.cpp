@@ -43,12 +43,12 @@ public:
 
 private:
 
-  void initPath(boost::python::object &moduleNamespace);
+  void initPath();
 
 private:
   std::map<QString, boost::python::object> m_PythonObjects;
   const MOBase::IOrganizer *m_MOInfo;
-  char *m_PythonHome;
+  wchar_t *m_PythonHome;
 };
 
 
@@ -69,13 +69,12 @@ using namespace MOBase;
 
 namespace bpy = boost::python;
 
-
 struct QString_to_python_str
 {
   static PyObject *convert(const QString &str) {
     // It's safer to explicitly convert to unicode as if we don't, this can return either str or unicode without it being easy to know which to expect
     bpy::object pyStr = bpy::object(str.toUtf8().constData());
-    if (PyString_Check(pyStr.ptr()))
+    if (SIPBytes_Check(pyStr.ptr()))
       pyStr = pyStr.attr("decode")("utf-8");
     return bpy::incref(pyStr.ptr());
   }
@@ -97,25 +96,66 @@ struct QString_from_python_str
   }
 
   static void *convertible(PyObject *objPtr) {
-    return PyString_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
+    return SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
     // Ensure the string uses 8-bit characters
     PyObject *strPtr = PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
+
     // Extract the character data from the python string
-    const char* value = PyString_AsString(strPtr);
-    // Deallocate local copy if one was made
-    if (strPtr != objPtr)
-      Py_DecRef(strPtr);
+    const char* value = SIPBytes_AsString(strPtr);
     assert(value != nullptr);
 
     // allocate storage
     void *storage = ((bpy::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
-    // construct QString in the allocated mr
+
+    // construct QString in the allocated memory
     new (storage) QString(value);
 
     data->convertible = storage;
+
+    // Deallocate local copy if one was made
+    if (strPtr != objPtr)
+      Py_DecRef(strPtr);
+  }
+};
+
+
+struct HANDLE_converters
+{
+  struct HANDLE_to_python
+  {
+    static PyObject *convert(HANDLE handle) {
+      size_t size_t_version = (size_t)handle;
+      return bpy::incref(bpy::object(size_t_version).ptr());
+    }
+  };
+
+  // bpy isn't keen on actually using this.
+  // maybe it's detecting that the function receives a pointer, and assumes that it needs to convert to the pointer's target.
+  // the issue can be worked around by wrapping the function to take a size_t and converting it there
+  struct HANDLE_from_python
+  {
+    HANDLE_from_python() {
+      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<HANDLE>());
+    }
+
+    static void *convertible(PyObject *objPtr) {
+      return PyLong_Check(objPtr) ? objPtr : nullptr;
+    }
+
+    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
+      void *storage = ((bpy::converter::rvalue_from_python_storage<HANDLE>*)data)->storage.bytes;
+      HANDLE *result = new (storage) HANDLE;
+      *result = (HANDLE)bpy::extract<size_t>(objPtr)();
+    }
+  };
+
+  HANDLE_converters()
+  {
+    HANDLE_from_python();
+    bpy::to_python_converter<HANDLE, HANDLE_to_python>();
   }
 };
 
@@ -225,7 +265,8 @@ struct QVariant_to_python_obj
 {
   static PyObject *convert(const QVariant &var) {
     switch (var.type()) {
-      case QVariant::Int: return PyLong_FromLong(var.toInt());
+      case QVariant::Invalid: return bpy::incref(Py_None);
+      case QVariant::Int: return SIPLong_FromLong(var.toInt());
       case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
       case QVariant::Bool: return PyBool_FromLong(var.toBool());
       case QVariant::String: return bpy::incref(bpy::object(var.toString()).ptr());
@@ -251,8 +292,9 @@ struct QVariant_from_python_obj
   }
 
   static void *convertible(PyObject *objPtr) {
-    if (!PyString_Check(objPtr) && !PyInt_Check(objPtr) &&
-        !PyBool_Check(objPtr) && !PyList_Check(objPtr)) {
+    if (!SIPBytes_Check(objPtr) && !PyUnicode_Check(objPtr) && !PyLong_Check(objPtr) &&
+        !PyBool_Check(objPtr) && !PyList_Check(objPtr) && !PyDict_Check(objPtr) &&
+        objPtr != Py_None) {
       return nullptr;
     }
     return objPtr;
@@ -267,18 +309,28 @@ struct QVariant_from_python_obj
     data->convertible = storage;
   }
 
+  static void constructVariant(bpy::converter::rvalue_from_python_stage1_data *data) {
+    void* storage = ((bpy::converter::rvalue_from_python_storage<QVariant>*)data)->storage.bytes;
+
+    new (storage) QVariant();
+
+    data->convertible = storage;
+  }
+
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    // PyBools will also return true for PyInt_Check but not the other way around, so the order
+    // PyBools will also return true for SIPLong_Check but not the other way around, so the order
     // here is relevant
     if (PyList_Check(objPtr)) {
       constructVariant(bpy::extract<QVariantList>(objPtr)(), data);
+    } else if (objPtr == Py_None) {
+      constructVariant(data);
     } else if (PyDict_Check(objPtr)) {
       constructVariant(bpy::extract<QVariantMap>(objPtr)(), data);
-    } else if (PyString_Check(objPtr) || PyUnicode_Check(objPtr)) {
+    } else if (SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr)) {
       constructVariant(bpy::extract<QString>(objPtr)(), data);
     } else if (PyBool_Check(objPtr)) {
       constructVariant(bpy::extract<bool>(objPtr)(), data);
-    } else if (PyInt_Check(objPtr)) {
+    } else if (SIPLong_Check(objPtr)) {
       //QVariant doesn't have long. It has int or long long. Given that on m/s,
       //long is 32 bits for 32- and 64- bit code...
       constructVariant(bpy::extract<int>(objPtr)(), data);
@@ -399,11 +451,11 @@ struct QFlags_from_python_obj
   }
 
   static void* convertible(PyObject *objPtr) {
-    return PyInt_Check(objPtr) ? objPtr : nullptr;
+    return SIPLong_Check(objPtr) ? objPtr : nullptr;
   }
 
   static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    int intVersion = (int)PyInt_AsLong(objPtr);
+    int intVersion = (int)SIPLong_AsLong(objPtr);
     T tVersion = (T)intVersion;
     void *storage = ((bpy::converter::rvalue_from_python_storage<QFlags<T>> *)data)->storage.bytes;
     new (storage) QFlags<T>(tVersion);
@@ -558,7 +610,18 @@ struct QClass_converters
 
   static void *QClass_from_PyQt(PyObject *objPtr)
   {
-    if (!PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {
+    // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
+    // Instead, this should be called within the wrappers for functions which return deletable pointers.
+    //sipAPI()->api_transfer_to(objPtr, 0);
+    if (PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {
+      sipSimpleWrapper *wrapper;
+      wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
+      return wrapper->data;
+    } else if (PyObject_TypeCheck(objPtr, sipAPI()->api_wrapper_type)) {
+      sipWrapper *wrapper;
+      wrapper = reinterpret_cast<sipWrapper*>(objPtr);
+      return wrapper->super.data;
+    } else {
       if (std::is_same_v<T, QStringList>)
       {
         // QStringLists aren't wrapped by PyQt - regular Python string/unicode lists are used instead
@@ -569,14 +632,9 @@ struct QClass_converters
       PyErr_SetString(PyExc_TypeError, "type not wrapped");
       bpy::throw_error_already_set();
     }
-
-    // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
-    // Instead, this should be called within the wrappers for functions which return deletable pointers.
-    //sipAPI()->api_transfer_to(objPtr, 0);
-
-    sipSimpleWrapper *wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
-    return wrapper->data;
+    return new void*;
   }
+
   QClass_converters()
   {
     bpy::converter::registry::insert(&QClass_from_PyQt, bpy::type_id<T>());
@@ -654,11 +712,11 @@ struct QInterface_converters
 
 int getArgCount(PyObject *object) {
   int result = 0;
-  PyObject *funcCode = PyObject_GetAttrString(object, "func_code");
+  PyObject *funcCode = PyObject_GetAttrString(object, "__code__");
   if (funcCode) {
     PyObject *argCount = PyObject_GetAttrString(funcCode, "co_argcount");
     if(argCount) {
-      result = PyInt_AsLong(argCount);
+      result = SIPLong_AsLong(argCount);
       Py_DECREF(argCount);
     }
     Py_DECREF(funcCode);
@@ -789,6 +847,16 @@ struct Functor2_converter
 };
 
 
+// We must wrap IOrganizer::waitForApplication to convert the out parameter to a return value and also because bpy doesn't like coverting to void* (HANDLE) even if a converter exists.
+static PyObject *waitForApplication(const bpy::object &self, size_t handle)
+{
+  IOrganizer& organizer = bpy::extract<IOrganizer&>(self)();
+  DWORD returnCode;
+  bool result = organizer.waitForApplication((HANDLE)handle, &returnCode);
+  return bpy::incref(bpy::make_tuple(result, returnCode).ptr());
+}
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<QString>::update, 2, 2)
 
 
@@ -899,7 +967,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("removeMod", bpy::pure_virtual(&IOrganizer::removeMod))
       .def("modDataChanged", bpy::pure_virtual(&IOrganizer::modDataChanged))
       .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
-      .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
+      .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::setPluginSetting))
       .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
       .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
       .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
@@ -915,6 +983,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")="")), bpy::return_value_policy<bpy::return_by_value>())
       //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
+      // Use wrapped version
+      .def("waitForApplication", waitForApplication)
       .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
       .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
       .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
@@ -928,6 +998,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("absolutePath", bpy::pure_virtual(&IProfile::absolutePath))
       .def("localSavesEnabled", bpy::pure_virtual(&IProfile::localSavesEnabled))
       .def("localSettingsEnabled", bpy::pure_virtual(&IProfile::localSettingsEnabled))
+      .def("invalidationActive", bpy::pure_virtual(&IProfile::invalidationActive))
       ;
 
   bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
@@ -1173,6 +1244,8 @@ BOOST_PYTHON_MODULE(mobase)
 
   GuessedValue_converters<QString>();
 
+  HANDLE_converters();
+
   //bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
 
   QList_from_python_obj<ExecutableInfo>();
@@ -1203,7 +1276,7 @@ BOOST_PYTHON_MODULE(mobase)
 PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
   : m_MOInfo(moInfo)
 {
-  m_PythonHome = new char[MAX_PATH + 1];
+  m_PythonHome = new wchar_t[MAX_PATH + 1];
 }
 
 static const char *argv0 = "ModOrganizer.exe";
@@ -1215,33 +1288,34 @@ bool PythonRunner::initPython(const QString &pythonPath)
     if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
       return false;
     }
-    strncpy(m_PythonHome, pythonPath.toUtf8().constData(), MAX_PATH);
+    pythonPath.toWCharArray(m_PythonHome);
     if (!pythonPath.isEmpty()) {
       Py_SetPythonHome(m_PythonHome);
     }
 
-    char argBuffer[MAX_PATH];
-    strcpy(argBuffer, argv0);
+    wchar_t argBuffer[MAX_PATH];
+    const size_t cSize = strlen(argv0) + 1;
+    mbstowcs(argBuffer, argv0, MAX_PATH);
 
     Py_SetProgramName(argBuffer);
-    PyImport_AppendInittab("mobase", &initmobase);
+    PyImport_AppendInittab("mobase", &PyInit_mobase);
     Py_OptimizeFlag = 2;
     Py_NoSiteFlag = 1;
+    initPath();
     Py_InitializeEx(0);
 
     if (!Py_IsInitialized()) {
       return false;
     }
 
-    PySys_SetArgv(0, (char**)&argBuffer);
+    PySys_SetArgv(0, (wchar_t**)&argBuffer);
 
     bpy::object mainModule = bpy::import("__main__");
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
-    initPath(mainNamespace);
     bpy::import("site");
-    mainNamespace["cStringIO"] = bpy::import("cStringIO");
-    bpy::exec("s_ErrIO = cStringIO.StringIO()\n"
+    mainNamespace["io"] = bpy::import("io");
+    bpy::exec("s_ErrIO = io.StringIO()\n"
                         "sys.stderr = s_ErrIO",
                         mainNamespace);
     return true;
@@ -1273,21 +1347,14 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
   } while (false)
 
 
-void PythonRunner::initPath(bpy::object &moduleNamespace)
+void PythonRunner::initPath()
 {
-  static QString paths[] = {
-      m_MOInfo->pluginDataPath(),
-      QCoreApplication::applicationDirPath(),
-      QCoreApplication::applicationDirPath() + "/python27.zip",
-      QCoreApplication::applicationDirPath() + "/python27.zip/Lib",
-      QCoreApplication::applicationDirPath() + "/python27.zip/DLLs",
-      QCoreApplication::applicationDirPath() + "/python27.zip/Lib/site-packages",
-    };
+  static QStringList paths = {
+    QCoreApplication::applicationDirPath() + "/pythoncore",
+    m_MOInfo->pluginDataPath()
+  };
 
-  for (int i = 0; i < sizeof(paths) / sizeof(QString); ++i) {
-    QString expr = QString("sys.path.insert(%1, \"%2\")").arg(i).arg(paths[i]);
-    bpy::eval(expr.toUtf8().constData(), moduleNamespace);
-  }
+  Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
 
@@ -1340,6 +1407,6 @@ bool PythonRunner::isPythonInstalled() const
 bool PythonRunner::isPythonVersionSupported() const
 {
   const char *version = Py_GetVersion();
-  return strstr(version, "2.7") == version;
+  return strstr(version, "3.7") == version;
 }
 

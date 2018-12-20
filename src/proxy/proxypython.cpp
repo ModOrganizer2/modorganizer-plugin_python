@@ -196,7 +196,7 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-  return VersionInfo(1, 3, 1, VersionInfo::RELEASE_FINAL);
+  return VersionInfo(2, 0, 0, VersionInfo::RELEASE_FINAL);
 }
 
 bool ProxyPython::isActive() const
