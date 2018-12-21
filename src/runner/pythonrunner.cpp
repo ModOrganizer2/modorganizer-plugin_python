@@ -1093,6 +1093,12 @@ BOOST_PYTHON_MODULE(mobase)
   QFlags_from_python_obj<IPluginList::PluginState>();
   Functor0_converter<void>(); // converter for the onRefreshed-callback
 
+  bpy::enum_<IPluginList::PluginState>("PluginState")
+      .value("missing", IPluginList::STATE_MISSING)
+      .value("inactive", IPluginList::STATE_INACTIVE)
+      .value("active", IPluginList::STATE_ACTIVE)
+      ;
+
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
       .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
       .def("priority", bpy::pure_virtual(&MOBase::IPluginList::priority))
@@ -1110,6 +1116,16 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   QFlags_from_python_obj<IModList::ModState>();
   Functor2_converter<void, const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+
+  bpy::enum_<IModList::ModState>("ModState")
+      .value("exists", IModList::STATE_EXISTS)
+      .value("active", IModList::STATE_ACTIVE)
+      .value("essential", IModList::STATE_ESSENTIAL)
+      .value("empty", IModList::STATE_EMPTY)
+      .value("endorsed", IModList::STATE_ENDORSED)
+      .value("valid", IModList::STATE_VALID)
+      .value("alternate", IModList::STATE_ALTERNATE)
+      ;
 
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
       .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
