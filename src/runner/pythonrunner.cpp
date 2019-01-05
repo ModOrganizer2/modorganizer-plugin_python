@@ -1408,7 +1408,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 
     return interfaceList;
   } catch (const bpy::error_already_set&) {
-    qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
+    qWarning("failed to run python script \"%s\"", qUtf8Printable(pluginName));
     reportPythonError();
   }
   return QList<QObject*>();

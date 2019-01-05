@@ -171,7 +171,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
     return true;
   } else {
     DWORD error = ::GetLastError();
-    qCritical("Failed to load python runner (%s): %s", qPrintable(m_TempRunnerFile), qPrintable(windowsErrorString(error)));
+    qCritical("Failed to load python runner (%s): %s", qUtf8Printable(m_TempRunnerFile), qUtf8Printable(windowsErrorString(error)));
     if (error == ERROR_MOD_NOT_FOUND) {
       m_LoadFailure = FAIL_MISSINGDEPENDENCIES;
     }
