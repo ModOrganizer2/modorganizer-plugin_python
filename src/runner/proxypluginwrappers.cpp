@@ -178,6 +178,11 @@ QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
   return basicWrapperFunctionImplementation<IPluginGameWrapper, QList<MOBase::ExecutableInfo>>(this, "executables");
 }
 
+QList<MOBase::ExecutableForcedLoadSetting> IPluginGameWrapper::executableForcedLoads() const
+{
+  return basicWrapperFunctionImplementation<IPluginGameWrapper, QList<MOBase::ExecutableForcedLoadSetting>>(this, "executableForcedLoads");
+}
+
 QString IPluginGameWrapper::steamAPPId() const
 {
   return basicWrapperFunctionImplementation<IPluginGameWrapper, QString>(this, "steamAPPId");
