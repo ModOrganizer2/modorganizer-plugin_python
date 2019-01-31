@@ -73,7 +73,7 @@ struct QString_to_python_str
 {
   static PyObject *convert(const QString &str) {
     // It's safer to explicitly convert to unicode as if we don't, this can return either str or unicode without it being easy to know which to expect
-    bpy::object pyStr = bpy::object(str.toUtf8().constData());
+    bpy::object pyStr = bpy::object(qUtf8Printable(str));
     if (SIPBytes_Check(pyStr.ptr()))
       pyStr = pyStr.attr("decode")("utf-8");
     return bpy::incref(pyStr.ptr());
