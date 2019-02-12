@@ -34,8 +34,7 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
                     ${project_path}/plugin_python/src/runner/
-                    ${PYTHON_ROOT}/Include
-                    ${PYTHON_ROOT}/PC)
+                    ${PYTHON_ROOT}/Include)
 LINK_DIRECTORIES(${lib_path})
 
 

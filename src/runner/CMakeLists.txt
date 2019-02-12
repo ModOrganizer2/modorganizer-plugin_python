@@ -37,13 +37,11 @@ SET(lib_path "${project_path}/../../install/libs")
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
 					${project_path}/game_features/src
 					${PYTHON_ROOT}/Include
-					${SIP_ROOT}
 					${PYTHON_ROOT}/PC)
 
 LINK_DIRECTORIES(${lib_path}
 				 ${PYTHON_ROOT}/PCbuild
-				 ${Boost_LIBRARY_DIRS}
-				 ${SIP_ROOT})
+				 ${Boost_LIBRARY_DIRS})
 
 ADD_LIBRARY(${PROJ_NAME} SHARED ${${PROJ_NAME}_HDRS} ${${PROJ_NAME}_SRCS} ${${PROJ_NAME}_translations_qm})
 TARGET_LINK_LIBRARIES(${PROJ_NAME}
