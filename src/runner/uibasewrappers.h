@@ -228,6 +228,10 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
   {
 	return this->get_override("basePath")();
   }
+  virtual QString modsPath() const override
+  {
+  return this->get_override("modsPath")();
+  }
   virtual MOBase::VersionInfo appVersion() const override
   {
     return this->get_override("appVersion")();
