@@ -1069,6 +1069,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("addCategory", bpy::pure_virtual(&IModInterface::addCategory))
       .def("removeCategory", bpy::pure_virtual(&IModInterface::removeCategory))
       .def("categories", bpy::pure_virtual(&IModInterface::categories))
+      .def("setGameName", bpy::pure_virtual(&IModInterface::setGameName))
       .def("setName", bpy::pure_virtual(&IModInterface::setName))
       .def("remove", bpy::pure_virtual(&IModInterface::remove))
       ;
