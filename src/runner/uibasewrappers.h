@@ -356,9 +356,11 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
   virtual HANDLE startApplication(const QString &executable,
                                   const QStringList &args = QStringList(),
                                   const QString &cwd      = "",
-                                  const QString &profile = "") override
+                                  const QString &profile = "",
+                                  const QString &forcedCustomOverwrite = "",
+                                  bool ignoreCustomOverwrite = false) override
   {
-    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile).as<size_t>());
+    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite).as<size_t>());
   }
   virtual bool waitForApplication(HANDLE handle,
                                   LPDWORD exitCode = nullptr) const override

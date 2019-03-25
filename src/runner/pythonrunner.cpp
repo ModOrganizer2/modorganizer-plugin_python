@@ -982,7 +982,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")="")), bpy::return_value_policy<bpy::return_by_value>())
+      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")=""), (bpy::arg("forcedCustomOverwrite")=""), (bpy::arg("ignoreCustomOverwrite")=false)), bpy::return_value_policy<bpy::return_by_value>())
       //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
       // Use wrapped version
       .def("waitForApplication", waitForApplication)
