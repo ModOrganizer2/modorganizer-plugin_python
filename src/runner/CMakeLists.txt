@@ -29,7 +29,7 @@ IF (Boost_FOUND)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF (Boost_FOUND)
 
-SET(default_project_path "${CMAKE_SOURCE_DIR}/..")
+SET(default_project_path "${DEPENDENCIES_DIR}/modorganizer_super")
 GET_FILENAME_COMPONENT(${default_project_path} ${default_project_path} REALPATH)
 
 SET(project_path "${default_project_path}" CACHE PATH "path to the other mo projects")
