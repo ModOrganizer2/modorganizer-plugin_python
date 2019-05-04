@@ -101,6 +101,7 @@ public:
   virtual QDir documentsDirectory() const override;
   virtual QDir savesDirectory() const override;
   virtual QList<MOBase::ExecutableInfo> executables() const override;
+  virtual QList<MOBase::ExecutableForcedLoadSetting> executableForcedLoads() const override;
   virtual QString steamAPPId() const override;
   virtual QStringList primaryPlugins() const override;
   virtual QStringList gameVariants() const override;

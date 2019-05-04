@@ -63,8 +63,8 @@ public:
     { m_Wrapped->requestFiles(gameName, modID, userData); }
   void requestFileInfo(QString gameName, int modID, int fileID, QVariant userData)
     { m_Wrapped->requestFileInfo(gameName, modID, fileID, userData); }
-  void requestToggleEndorsement(QString gameName, int modID, bool endorse, QVariant userData)
-    { m_Wrapped->requestToggleEndorsement(gameName, modID, endorse, userData); }
+  void requestToggleEndorsement(QString gameName, int modID, QString modVersion, bool endorse, QVariant userData)
+    { m_Wrapped->requestToggleEndorsement(gameName, modID, modVersion, endorse, userData); }
 
   void onFilesAvailable(boost::python::object callback) {
     m_FilesAvailableHandler = callback;
@@ -92,6 +92,14 @@ public:
     connect(m_Wrapped, SIGNAL(endorsementToggled(int,QVariant,QVariant)),
             this, SLOT(endorsementToggled(int,QVariant,QVariant)),
             Qt::UniqueConnection);
+  }
+
+  void onTrackingToggled(boost::python::object callback) {
+    m_TrackingToggledHandler = callback;
+    connect(m_Wrapped, SIGNAL(trackingToggled(int,QVariant,bool)),
+            this, SLOT(trackingToggled(int,QVariant,bool)),
+            Qt::UniqueConnection);
+
   }
 
   void onRequestFailed(boost::python::object callback) {
@@ -180,6 +188,26 @@ private Q_SLOTS:
     }
   }
 
+  void trackingToggled(int modID, QVariant userData, bool tracked)
+  {
+    try {
+      if (m_TrackingToggledHandler.is_none()) {
+        qCritical("no handler connected");
+        return;
+      }
+      try {
+        GILock lock;
+        m_TrackingToggledHandler(modID, userData, tracked);
+      } catch (const boost::python::error_already_set&) {
+        reportPythonError();
+      }
+    } catch (const std::exception &e) {
+      qCritical("failed to report event: %s", e.what());
+    } catch (...) {
+      qCritical("failed to report event");
+    }
+  }
+
   void requestFailed(int modID, int fileID, QVariant userData, const QString &errorMessage)
   {
     try {
@@ -197,6 +225,7 @@ private:
   boost::python::object m_DescriptionAvailableHandler;
   boost::python::object m_FileInfoHandler;
   boost::python::object m_EndorsementToggledHandler;
+  boost::python::object m_TrackingToggledHandler;
   boost::python::object m_FailedHandler;
 
 };
@@ -227,6 +256,10 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
   virtual QString basePath() const // override
   {
 	return this->get_override("basePath")();
+  }
+  virtual QString modsPath() const override
+  {
+  return this->get_override("modsPath")();
   }
   virtual MOBase::VersionInfo appVersion() const override
   {
@@ -323,9 +356,11 @@ struct IOrganizerWrapper : MOBase::IOrganizer,
   virtual HANDLE startApplication(const QString &executable,
                                   const QStringList &args = QStringList(),
                                   const QString &cwd      = "",
-                                  const QString &profile = "") override
+                                  const QString &profile = "",
+                                  const QString &forcedCustomOverwrite = "",
+                                  bool ignoreCustomOverwrite = false) override
   {
-    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile).as<size_t>());
+    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite).as<size_t>());
   }
   virtual bool waitForApplication(HANDLE handle,
                                   LPDWORD exitCode = nullptr) const override
@@ -387,7 +422,7 @@ struct IModRepositoryBridgeWrapper: MOBase::IModRepositoryBridge, boost::python:
   virtual void requestFiles(QString gameName, int modID, QVariant userData) { this->get_override("requestFiles")(gameName, modID, userData); }
   virtual void requestFileInfo(QString gameName, int modID, int fileID, QVariant userData) { this->get_override("requestFileInfo")(gameName, modID, fileID, userData); }
   virtual void requestDownloadURL(QString gameName, int modID, int fileID, QVariant userData) { this->get_override("requestDownloadURL")(gameName, modID, fileID, userData); }
-  virtual void requestToggleEndorsement(QString gameName, int modID, bool endorse, QVariant userData) { this->get_override("requestToggleEndorsement")(gameName, modID, endorse, userData); }
+  virtual void requestToggleEndorsement(QString gameName, int modID, QString modVersion, bool endorse, QVariant userData) { this->get_override("requestToggleEndorsement")(gameName, modID, endorse, userData); }
 };
 
 struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python::wrapper<MOBase::IInstallationManager>
@@ -408,6 +443,7 @@ struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBas
   virtual void setNexusID(int nexusID) override { this->get_override("setNexusID")(nexusID); }
   virtual void setInstallationFile(const QString &fileName) override { this->get_override("setInstallationFile")(fileName); }
   virtual void addNexusCategory(int categoryID) override { this->get_override("addNexusCategory")(categoryID); }
+  virtual void setGameName(const QString &gameName) override { this->get_override("setGameName")(gameName); }
   virtual bool setName(const QString &name) override { return this->get_override("setName")(name); }
   virtual bool remove() override { return this->get_override("remove")(); }
   virtual void addCategory(const QString &categoryName) override { this->get_override("addCategory")(categoryName); }

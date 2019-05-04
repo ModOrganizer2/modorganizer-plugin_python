@@ -171,7 +171,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
     return true;
   } else {
     DWORD error = ::GetLastError();
-    qCritical("Failed to load python runner (%s): %s", qPrintable(m_TempRunnerFile), qPrintable(windowsErrorString(error)));
+    qCritical("Failed to load python runner (%s): %s", qUtf8Printable(m_TempRunnerFile), qUtf8Printable(windowsErrorString(error)));
     if (error == ERROR_MOD_NOT_FOUND) {
       m_LoadFailure = FAIL_MISSINGDEPENDENCIES;
     }
@@ -196,7 +196,7 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-  return VersionInfo(2, 0, 0, VersionInfo::RELEASE_FINAL);
+  return VersionInfo(2, 0, 1, VersionInfo::RELEASE_FINAL);
 }
 
 bool ProxyPython::isActive() const

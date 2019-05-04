@@ -73,7 +73,7 @@ struct QString_to_python_str
 {
   static PyObject *convert(const QString &str) {
     // It's safer to explicitly convert to unicode as if we don't, this can return either str or unicode without it being easy to know which to expect
-    bpy::object pyStr = bpy::object(str.toUtf8().constData());
+    bpy::object pyStr = bpy::object(qUtf8Printable(str));
     if (SIPBytes_Check(pyStr.ptr()))
       pyStr = pyStr.attr("decode")("utf-8");
     return bpy::incref(pyStr.ptr());
@@ -960,6 +960,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("downloadsPath", bpy::pure_virtual(&IOrganizer::downloadsPath))
       .def("overwritePath", bpy::pure_virtual(&IOrganizer::overwritePath))
       .def("basePath", bpy::pure_virtual(&IOrganizer::basePath))
+      .def("modsPath", bpy::pure_virtual(&IOrganizer::modsPath))
       .def("appVersion", bpy::pure_virtual(&IOrganizer::appVersion))
       .def("getMod", bpy::pure_virtual(&IOrganizer::getMod), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("createMod", bpy::pure_virtual(&IOrganizer::createMod), bpy::return_value_policy<bpy::reference_existing_object>())
@@ -981,7 +982,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")="")), bpy::return_value_policy<bpy::return_by_value>())
+      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")=""), (bpy::arg("forcedCustomOverwrite")=""), (bpy::arg("ignoreCustomOverwrite")=false)), bpy::return_value_policy<bpy::return_by_value>())
       //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
       // Use wrapped version
       .def("waitForApplication", waitForApplication)
@@ -1069,6 +1070,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("addCategory", bpy::pure_virtual(&IModInterface::addCategory))
       .def("removeCategory", bpy::pure_virtual(&IModInterface::removeCategory))
       .def("categories", bpy::pure_virtual(&IModInterface::categories))
+      .def("setGameName", bpy::pure_virtual(&IModInterface::setGameName))
       .def("setName", bpy::pure_virtual(&IModInterface::setName))
       .def("remove", bpy::pure_virtual(&IModInterface::remove))
       ;
@@ -1093,6 +1095,12 @@ BOOST_PYTHON_MODULE(mobase)
   QFlags_from_python_obj<IPluginList::PluginState>();
   Functor0_converter<void>(); // converter for the onRefreshed-callback
 
+  bpy::enum_<IPluginList::PluginState>("PluginState")
+      .value("missing", IPluginList::STATE_MISSING)
+      .value("inactive", IPluginList::STATE_INACTIVE)
+      .value("active", IPluginList::STATE_ACTIVE)
+      ;
+
   bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
       .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
       .def("priority", bpy::pure_virtual(&MOBase::IPluginList::priority))
@@ -1110,6 +1118,16 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   QFlags_from_python_obj<IModList::ModState>();
   Functor2_converter<void, const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+
+  bpy::enum_<IModList::ModState>("ModState")
+      .value("exists", IModList::STATE_EXISTS)
+      .value("active", IModList::STATE_ACTIVE)
+      .value("essential", IModList::STATE_ESSENTIAL)
+      .value("empty", IModList::STATE_EMPTY)
+      .value("endorsed", IModList::STATE_ENDORSED)
+      .value("valid", IModList::STATE_VALID)
+      .value("alternate", IModList::STATE_ALTERNATE)
+      ;
 
   bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
       .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
@@ -1392,7 +1410,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 
     return interfaceList;
   } catch (const bpy::error_already_set&) {
-    qWarning("failed to run python script \"%s\"", qPrintable(pluginName));
+    qWarning("failed to run python script \"%s\"", qUtf8Printable(pluginName));
     reportPythonError();
   }
   return QList<QObject*>();

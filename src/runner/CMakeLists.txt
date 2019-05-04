@@ -15,6 +15,7 @@ SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTOUIC ON)
 ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 FIND_PACKAGE(Qt5Widgets REQUIRED)
+FIND_PACKAGE(Qt5Network REQUIRED)
 #QT5_WRAP_UI(${PROJ_NAME}_UIHDRS ${${PROJ_NAME}_FORMS})
 FIND_PACKAGE(Qt5LinguistTools)
 QT5_CREATE_TRANSLATION(${PROJ_NAME}_translations_qm ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/${PROJ_NAME}_en.ts)
@@ -28,7 +29,7 @@ IF (Boost_FOUND)
   INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ENDIF (Boost_FOUND)
 
-SET(default_project_path "${CMAKE_SOURCE_DIR}/..")
+SET(default_project_path "${DEPENDENCIES_DIR}/modorganizer_super")
 GET_FILENAME_COMPONENT(${default_project_path} ${default_project_path} REALPATH)
 
 SET(project_path "${default_project_path}" CACHE PATH "path to the other mo projects")
@@ -37,17 +38,16 @@ SET(lib_path "${project_path}/../../install/libs")
 INCLUDE_DIRECTORIES(${project_path}/uibase/src
 					${project_path}/game_features/src
 					${PYTHON_ROOT}/Include
-					${SIP_ROOT}
 					${PYTHON_ROOT}/PC)
 
 LINK_DIRECTORIES(${lib_path}
 				 ${PYTHON_ROOT}/PCbuild
-				 ${Boost_LIBRARY_DIRS}
-				 ${SIP_ROOT})
+				 ${Boost_LIBRARY_DIRS})
 
 ADD_LIBRARY(${PROJ_NAME} SHARED ${${PROJ_NAME}_HDRS} ${${PROJ_NAME}_SRCS} ${${PROJ_NAME}_translations_qm})
 TARGET_LINK_LIBRARIES(${PROJ_NAME}
                       Qt5::Widgets
+					  Qt5::Network
                       uibase)
 
 ADD_DEFINITIONS(-DPYTHONRUNNER_LIBRARY)
