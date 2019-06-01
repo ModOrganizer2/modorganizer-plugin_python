@@ -612,7 +612,7 @@ struct QClass_converters
   {
     // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
     // Instead, this should be called within the wrappers for functions which return deletable pointers.
-    //sipAPI()->api_transfer_to(objPtr, 0);
+    //sipAPI()->api_transfer_to(objPtr, Py_None);
     if (PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {
       sipSimpleWrapper *wrapper;
       wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
@@ -695,7 +695,7 @@ struct QInterface_converters
 
     // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
     // Instead, this should be called within the wrappers for functions which return deletable pointers.
-    //sipAPI()->api_transfer_to(objPtr, 0);
+    //sipAPI()->api_transfer_to(objPtr, Py_None);
 
     sipSimpleWrapper *wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
     return wrapper->data;
