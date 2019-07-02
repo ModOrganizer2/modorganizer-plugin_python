@@ -387,7 +387,7 @@ QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QS
       throw MissingImplementation(this->className, "genFilePreview");
     boost::python::object pyVersion = implementation(fileName, maxSize);
     // We need responsibility for deleting the QWidget to be transferred to C++
-    sipAPI()->api_transfer_to(pyVersion.ptr(), Py_None);
+    sipAPIAccess::sipAPI()->api_transfer_to(pyVersion.ptr(), Py_None);
     return boost::python::extract<QWidget *>(pyVersion)();
   } PYCATCH;
 }

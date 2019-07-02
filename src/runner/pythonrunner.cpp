@@ -530,14 +530,14 @@ PyObject *toPyQt(T *objPtr)
     qDebug("no input object");
     return bpy::incref(Py_None);
   }
-  const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
+  const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
 
   if (type == nullptr) {
     qDebug("failed to determine type: %s", MetaData<T>::className());
     return bpy::incref(Py_None);
   }
 
-  PyObject *sipObj = sipAPI()->api_convert_from_type(objPtr, type, 0);
+  PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(objPtr, type, 0);
   if (sipObj == nullptr) {
     qDebug("failed to convert");
     return bpy::incref(Py_None);
@@ -564,19 +564,19 @@ struct QClass_converters
     }
 
     static PyObject *convert(const T &object) {
-      const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
+      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
       if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
-      PyObject *sipObj = sipAPI()->api_convert_from_type((void*)getSafeCopy<T>((T*)&object), type, 0);
+      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type((void*)getSafeCopy<T>((T*)&object), type, 0);
       if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
 
       if (std::is_copy_constructible_v<T>)
         // Ensure Python deletes the C++ component
-        sipAPI()->api_transfer_back(sipObj);
+        sipAPIAccess::sipAPI()->api_transfer_back(sipObj);
 
       return bpy::incref(sipObj);
     }
@@ -586,19 +586,19 @@ struct QClass_converters
         return bpy::incref(Py_None);
       }
 
-      const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
+      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
       if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
-      PyObject *sipObj = sipAPI()->api_convert_from_type(getSafeCopy<T>(object), type, 0);
+      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(getSafeCopy<T>(object), type, 0);
       if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
 
       if (std::is_copy_constructible_v<T>)
         // Ensure Python deletes the C++ component
-        sipAPI()->api_transfer_back(sipObj);
+        sipAPIAccess::sipAPI()->api_transfer_back(sipObj);
 
       return bpy::incref(sipObj);
     }
@@ -613,11 +613,11 @@ struct QClass_converters
     // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
     // Instead, this should be called within the wrappers for functions which return deletable pointers.
     //sipAPI()->api_transfer_to(objPtr, Py_None);
-    if (PyObject_TypeCheck(objPtr, sipAPI()->api_simplewrapper_type)) {
+    if (PyObject_TypeCheck(objPtr, sipAPIAccess::sipAPI()->api_simplewrapper_type)) {
       sipSimpleWrapper *wrapper;
       wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
       return wrapper->data;
-    } else if (PyObject_TypeCheck(objPtr, sipAPI()->api_wrapper_type)) {
+    } else if (PyObject_TypeCheck(objPtr, sipAPIAccess::sipAPI()->api_wrapper_type)) {
       sipWrapper *wrapper;
       wrapper = reinterpret_cast<sipWrapper*>(objPtr);
       return wrapper->super.data;
@@ -651,12 +651,12 @@ struct QInterface_converters
   struct QInterface_to_PyQt
   {
     static PyObject *convert(const T &object) {
-      const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
+      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
       if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
-      PyObject *sipObj = sipAPI()->api_convert_from_type((void*)(&object), type, 0);
+      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type((void*)(&object), type, 0);
       if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
@@ -669,12 +669,12 @@ struct QInterface_converters
         return bpy::incref(Py_None);
       }
 
-      const sipTypeDef *type = sipAPI()->api_find_type(MetaData<T>::className());
+      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
       if (type == nullptr) {
         return bpy::incref(Py_None);
       }
 
-      PyObject *sipObj = sipAPI()->api_convert_from_type(object, type, 0);
+      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(object, type, 0);
       if (sipObj == nullptr) {
         return bpy::incref(Py_None);
       }
@@ -689,7 +689,7 @@ struct QInterface_converters
 
   static void *QInterface_from_PyQt(PyObject *objPtr)
   {
-    if (!PyObject_TypeCheck(objPtr, sipAPI()->api_wrapper_type)) {
+    if (!PyObject_TypeCheck(objPtr, sipAPIAccess::sipAPI()->api_wrapper_type)) {
       bpy::throw_error_already_set();
     }
 
