@@ -39,12 +39,14 @@ const sipAPIDef* sipAPIAccess::sipAPI()
                 PyErr_Fetch(&type, &value, &traceback);
                 PyErr_NormalizeException(&type, &value, &traceback);
                 if (traceback != NULL) {
+                    boost::python::handle<> h_type(type);
+                    boost::python::handle<> h_val(value);
                     boost::python::handle<> h_tb(traceback);
                     boost::python::object tb(boost::python::import("traceback"));
-                    boost::python::object fmt_tb(tb.attr("format_tb"));
-                    boost::python::object tb_list(fmt_tb(h_tb));
-                    boost::python::object tb_str(boost::python::str("\n").join(tb_list));
-                    boost::python::extract<std::string> returned(tb_str);
+                    boost::python::object fmt_exp(tb.attr("format_exception"));
+                    boost::python::object exp_list(fmt_exp(h_type, h_val, h_tb));
+                    boost::python::object exp_str(boost::python::str("\n").join(exp_list));
+                    boost::python::extract<std::string> returned(exp_str);
                     exception = QString::fromStdString(returned());
                 }
                 PyErr_Restore(type, value, traceback);
