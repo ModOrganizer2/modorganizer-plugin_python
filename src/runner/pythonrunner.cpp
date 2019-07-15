@@ -1299,6 +1299,43 @@ PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
 
 static const char *argv0 = "ModOrganizer.exe";
 
+struct PrintWrapper
+{
+  void write(const char * message)
+  {
+    buffer << message;
+    if (buffer.tellp() != 0 && buffer.str().back() == '\n')
+    {
+      qDebug().nospace().noquote() << buffer.str().substr(0, buffer.str().length() - 1).c_str();
+      buffer = std::stringstream();
+    }
+  }
+
+  std::stringstream buffer;
+};
+
+struct ErrWrapper
+{
+  void write(const char * message)
+  {
+    buffer << message;
+    if (buffer.tellp() != 0 && buffer.str().back() == '\n')
+    {
+      qCritical().nospace().noquote() << buffer.str().substr(0, buffer.str().length() - 1).c_str();
+      buffer = std::stringstream();
+    }
+  }
+
+  std::stringstream buffer;
+};
+
+BOOST_PYTHON_MODULE(moprivate)
+{
+  bpy::class_<PrintWrapper, boost::noncopyable>("PrintWrapper", bpy::init<>())
+    .def("write", &PrintWrapper::write);
+  bpy::class_<ErrWrapper, boost::noncopyable>("ErrWrapper", bpy::init<>())
+    .def("write", &ErrWrapper::write);
+}
 
 bool PythonRunner::initPython(const QString &pythonPath)
 {
@@ -1317,6 +1354,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
     Py_SetProgramName(argBuffer);
     PyImport_AppendInittab("mobase", &PyInit_mobase);
+    PyImport_AppendInittab("moprivate", &PyInit_moprivate);
     Py_OptimizeFlag = 2;
     Py_NoSiteFlag = 1;
     initPath();
@@ -1331,11 +1369,12 @@ bool PythonRunner::initPython(const QString &pythonPath)
     bpy::object mainModule = bpy::import("__main__");
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
+    mainNamespace["moprivate"] = bpy::import("moprivate");
     bpy::import("site");
-    mainNamespace["io"] = bpy::import("io");
-    bpy::exec("s_ErrIO = io.StringIO()\n"
-                        "sys.stderr = s_ErrIO",
+    bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
+              "sys.stderr = moprivate.ErrWrapper()\n",
                         mainNamespace);
+
     return true;
   } catch (const bpy::error_already_set&) {
     qDebug("failed to init python");
