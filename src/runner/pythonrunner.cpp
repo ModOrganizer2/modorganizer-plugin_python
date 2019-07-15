@@ -1372,7 +1372,8 @@ bool PythonRunner::initPython(const QString &pythonPath)
     mainNamespace["moprivate"] = bpy::import("moprivate");
     bpy::import("site");
     bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
-              "sys.stderr = moprivate.ErrWrapper()\n",
+              "sys.stderr = moprivate.ErrWrapper()\n"
+              "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)",
                         mainNamespace);
 
     return true;
