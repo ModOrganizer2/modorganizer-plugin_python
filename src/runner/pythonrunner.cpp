@@ -1306,7 +1306,9 @@ struct PrintWrapper
     buffer << message;
     if (buffer.tellp() != 0 && buffer.str().back() == '\n')
     {
-      qDebug().nospace().noquote() << buffer.str().substr(0, buffer.str().length() - 1).c_str();
+      // actually put the string in a variable so it doesn't get destroyed as soon as we get a pointer to its data
+      std::string string = buffer.str().substr(0, buffer.str().length() - 1);
+      qDebug().nospace().noquote() << string.c_str();
       buffer = std::stringstream();
     }
   }
@@ -1314,27 +1316,18 @@ struct PrintWrapper
   std::stringstream buffer;
 };
 
-struct ErrWrapper
-{
-  void write(const char * message)
-  {
-    buffer << message;
-    if (buffer.tellp() != 0 && buffer.str().back() == '\n')
-    {
-      qCritical().nospace().noquote() << buffer.str().substr(0, buffer.str().length() - 1).c_str();
-      buffer = std::stringstream();
-    }
-  }
-
-  std::stringstream buffer;
-};
+// ErrWrapper is in error.h
 
 BOOST_PYTHON_MODULE(moprivate)
 {
   bpy::class_<PrintWrapper, boost::noncopyable>("PrintWrapper", bpy::init<>())
     .def("write", &PrintWrapper::write);
   bpy::class_<ErrWrapper, boost::noncopyable>("ErrWrapper", bpy::init<>())
-    .def("write", &ErrWrapper::write);
+    .def("instance", &ErrWrapper::instance, bpy::return_value_policy<bpy::reference_existing_object>()).staticmethod("instance")
+    .def("write", &ErrWrapper::write)
+    .def("startRecordingExceptionMessage", &ErrWrapper::startRecordingExceptionMessage)
+    .def("stopRecordingExceptionMessage", &ErrWrapper::stopRecordingExceptionMessage)
+    .def("getLastExceptionMessage", &ErrWrapper::getLastExceptionMessage);
 }
 
 bool PythonRunner::initPython(const QString &pythonPath)
@@ -1372,8 +1365,8 @@ bool PythonRunner::initPython(const QString &pythonPath)
     mainNamespace["moprivate"] = bpy::import("moprivate");
     bpy::import("site");
     bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
-              "sys.stderr = moprivate.ErrWrapper()\n"
-              "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)",
+              "sys.stderr = moprivate.ErrWrapper.instance()\n"
+              "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
 
     return true;
