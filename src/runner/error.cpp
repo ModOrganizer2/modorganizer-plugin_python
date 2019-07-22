@@ -1,8 +1,9 @@
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
 #endif
-#include <QString>
 #include <utility.h>
+#include <QDebug>
+#include "error.h"
 
 using namespace MOBase;
 namespace bpy = boost::python;
@@ -10,17 +11,55 @@ namespace bpy = boost::python;
 void reportPythonError()
 {
   if (PyErr_Occurred()) {
-    // prints to s_ErrIO buffer
+    ErrWrapper &errWrapper = ErrWrapper::instance();
+
+    errWrapper.startRecordingExceptionMessage();
     PyErr_Print();
-    // extract data from python buffer
-    bpy::object mainModule = bpy::import("__main__");
-    bpy::object mainNamespace = mainModule.attr("__dict__");
-    bpy::object errMsgObj = bpy::eval("s_ErrIO.getvalue()", mainNamespace);
-    QString errMsg = bpy::extract<QString>(errMsgObj.ptr());
-    bpy::eval("s_ErrIO.truncate(0)", mainNamespace);
+    errWrapper.stopRecordingExceptionMessage();
+
+    QString errMsg = errWrapper.getLastExceptionMessage();
 
     throw MyException(errMsg);
   } else {
     throw MyException("An unexpected C++ exception was thrown in python code");
   }
+}
+
+ErrWrapper & ErrWrapper::instance()
+{
+  static ErrWrapper err;
+  return err;
+}
+
+void ErrWrapper::write(const char * message)
+{
+  buffer << message;
+  if (buffer.tellp() != 0 && buffer.str().back() == '\n')
+  {
+    // actually put the string in a variable so it doesn't get destroyed as soon as we get a pointer to its data
+    std::string string = buffer.str().substr(0, buffer.str().length() - 1);
+    qCritical().nospace().noquote() << string.c_str();
+    buffer = std::stringstream();
+  }
+  
+  if (recordingExceptionMessage)
+  {
+    lastException << message;
+  }
+}
+
+void ErrWrapper::startRecordingExceptionMessage()
+{
+  recordingExceptionMessage = true;
+  lastException = std::stringstream();
+}
+
+void ErrWrapper::stopRecordingExceptionMessage()
+{
+  recordingExceptionMessage = false;
+}
+
+QString ErrWrapper::getLastExceptionMessage()
+{
+  return QString::fromStdString(lastException.str());
 }
