@@ -201,7 +201,7 @@ VersionInfo ProxyPython::version() const
 
 bool ProxyPython::isActive() const
 {
-  return m_LoadFailure == FAIL_NONE;
+  return m_LoadFailure == FAIL_NOTINIT;
 }
 
 QList<PluginSetting> ProxyPython::settings() const
