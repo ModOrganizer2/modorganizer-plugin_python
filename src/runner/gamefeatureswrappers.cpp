@@ -79,6 +79,11 @@ void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
   return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "getLoadOrder", loadOrder);
 }
 
+bool GamePluginsWrapper::lightPluginsAreSupported()
+{
+    return basicWrapperFunctionImplementation<GamePluginsWrapper, bool>(this, "lightPluginsAreSupported");
+}
+
 /// end GamePlugins Wrapper
 /////////////////////////////
 /// LocalSavegames Wrapper
@@ -261,6 +266,7 @@ void registerGameFeaturesPythonConverters()
       .def("writePluginLists", bpy::pure_virtual(&GamePlugins::writePluginLists))
       .def("readPluginLists", bpy::pure_virtual(&GamePlugins::readPluginLists))
       .def("getLoadOrder", bpy::pure_virtual(&GamePlugins::getLoadOrder))
+      .def("lightPluginsAreSupported", bpy::pure_virtual(&GamePlugins::lightPluginsAreSupported))
       ;
 
   bpy::class_<LocalSavegamesWrapper, boost::noncopyable>("LocalSavegames")

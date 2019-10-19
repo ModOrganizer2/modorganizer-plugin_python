@@ -48,6 +48,7 @@ public:
   virtual void writePluginLists(const MOBase::IPluginList *pluginList) override;
   virtual void readPluginLists(MOBase::IPluginList *pluginList) override;
   virtual void getLoadOrder(QStringList &loadOrder) override;
+  virtual bool lightPluginsAreSupported() override;
 };
 
 class LocalSavegamesWrapper : public LocalSavegames, public boost::python::wrapper<LocalSavegames>
