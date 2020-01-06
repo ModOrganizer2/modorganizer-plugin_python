@@ -12,12 +12,12 @@ SET(DEPENDENCIES_DIR CACHE PATH "")
 LIST(APPEND CMAKE_PREFIX_PATH ${QT_ROOT}/lib/cmake)
 
 # need to install python
-IF(EXISTS "${PYTHON_ROOT}/PCbuild/python27.dll")
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/python27.dll DESTINATION bin)
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/python27.pdb DESTINATION pdb)
+IF(EXISTS "${PYTHON_ROOT}/PCbuild/python37.dll")
+    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/python37.dll DESTINATION bin)
+    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/python37.pdb DESTINATION pdb)
 ELSEIF(EXISTS "${PYTHON_ROOT}/PCbuild/amd64/python27.dll")
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/amd64/python27.dll DESTINATION bin)
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/amd64/python27.pdb DESTINATION pdb)
+    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/amd64/python37.dll DESTINATION bin)
+    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/amd64/python37.pdb DESTINATION pdb)
 ENDIF()
 
 

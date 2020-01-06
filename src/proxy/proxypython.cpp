@@ -196,12 +196,12 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-  return VersionInfo(2, 0, 1, VersionInfo::RELEASE_FINAL);
+  return VersionInfo(2, 1, 0, VersionInfo::RELEASE_FINAL);
 }
 
 bool ProxyPython::isActive() const
 {
-  return m_LoadFailure == FAIL_NONE;
+  return m_LoadFailure == FAIL_NOTINIT;
 }
 
 QList<PluginSetting> ProxyPython::settings() const
