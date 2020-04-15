@@ -1347,6 +1347,8 @@ BOOST_PYTHON_MODULE(moprivate)
 
 bool PythonRunner::initPython(const QString &pythonPath)
 {
+  if (Py_IsInitialized())
+    return true;
   try {
     if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
       return false;
