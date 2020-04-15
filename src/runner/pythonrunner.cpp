@@ -733,6 +733,11 @@ struct Functor0_converter
     FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
     }
 
+    ~FunctorWrapper() {
+      GILock lock;
+      m_Callable = bpy::object();
+    }
+
     RET operator()() {
       GILock lock;
       return (RET) m_Callable();
@@ -774,6 +779,11 @@ struct Functor1_converter
     FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
     }
 
+    ~FunctorWrapper() {
+      GILock lock;
+      m_Callable = bpy::object();
+    }
+
     RET operator()(const PAR1 &param1) {
       GILock lock;
       return (RET) m_Callable(param1);
@@ -813,6 +823,11 @@ struct Functor2_converter
   struct FunctorWrapper
   {
     FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
+    }
+
+    ~FunctorWrapper() {
+      GILock lock;
+      m_Callable = bpy::object();
     }
 
     RET operator()(const PAR1 &param1, const PAR2 &param2) {
@@ -1354,6 +1369,8 @@ bool PythonRunner::initPython(const QString &pythonPath)
     Py_InitializeEx(0);
 
     if (!Py_IsInitialized()) {
+      if (PyGILState_Check())
+        PyEval_SaveThread();
       return false;
     }
 
@@ -1369,6 +1386,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
               "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
 
+    PyEval_SaveThread();
     return true;
   } catch (const bpy::error_already_set&) {
     qDebug("failed to init python");
@@ -1378,6 +1396,8 @@ bool PythonRunner::initPython(const QString &pythonPath)
     } else {
       qCritical("An unexpected C++ exception was thrown in python code");
     }
+    if (PyGILState_Check())
+      PyEval_SaveThread();
     return false;
   }
 }
