@@ -1,77 +1,16 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.16)
 
-SET(PROJ_NAME pythonrunner)
+project(pythonrunner)
+set(project_type plugin)
+set(enable_warnings OFF)
+set(install_dir bin/plugins/data)
 
-PROJECT(${PROJ_NAME})
+add_compile_definitions(
+	QT_NO_KEYWORDS
+	PYTHONRUNNER_LIBRARY)
 
-CMAKE_POLICY(SET CMP0020 NEW)
+include(../../../cmake_common/project.cmake)
+include(../../../cmake_common/src.cmake)
 
-
-FILE(GLOB ${PROJ_NAME}_SRCS *.cpp)
-FILE(GLOB ${PROJ_NAME}_HDRS *.h)
-
-SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-SET(CMAKE_AUTOMOC ON)
-SET(CMAKE_AUTOUIC ON)
-ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
-FIND_PACKAGE(Qt5Widgets REQUIRED)
-FIND_PACKAGE(Qt5Network REQUIRED)
-#QT5_WRAP_UI(${PROJ_NAME}_UIHDRS ${${PROJ_NAME}_FORMS})
-FIND_PACKAGE(Qt5LinguistTools)
-QT5_CREATE_TRANSLATION(${PROJ_NAME}_translations_qm ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/${PROJ_NAME}_en.ts)
-
-SET(Boost_USE_STATIC_LIBS        OFF)
-SET(Boost_USE_MULTITHREADED      ON)
-SET(Boost_USE_STATIC_RUNTIME     OFF)
-FIND_PACKAGE(Boost REQUIRED)
-
-IF (Boost_FOUND)
-  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-ENDIF (Boost_FOUND)
-
-SET(default_project_path "${DEPENDENCIES_DIR}/modorganizer_super")
-GET_FILENAME_COMPONENT(${default_project_path} ${default_project_path} REALPATH)
-
-SET(project_path "${default_project_path}" CACHE PATH "path to the other mo projects")
-SET(lib_path "${project_path}/../../install/libs")
-
-INCLUDE_DIRECTORIES(${project_path}/uibase/src
-					${project_path}/game_features/src
-					${PYTHON_ROOT}/Include
-					${PYTHON_ROOT}/PC)
-
-LINK_DIRECTORIES(${lib_path}
-				 ${PYTHON_ROOT}/PCbuild
-				 ${Boost_LIBRARY_DIRS})
-
-ADD_LIBRARY(${PROJ_NAME} SHARED ${${PROJ_NAME}_HDRS} ${${PROJ_NAME}_SRCS} ${${PROJ_NAME}_translations_qm})
-TARGET_LINK_LIBRARIES(${PROJ_NAME}
-                      Qt5::Widgets
-					  Qt5::Network
-                      uibase)
-
-ADD_DEFINITIONS(-DPYTHONRUNNER_LIBRARY)
-
-IF (MSVC)
-	SET_TARGET_PROPERTIES(${PROJ_NAME} PROPERTIES COMPILE_FLAGS "/std:c++latest")
-ENDIF()
-IF (MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-	# 32 bits
-	SET_TARGET_PROPERTIES(${PROJ_NAME} PROPERTIES LINK_FLAGS "/LARGEADDRESSAWARE")
-ENDIF()
-
-IF (NOT "${OPTIMIZE_COMPILE_FLAGS}" STREQUAL "")
-  SET_TARGET_PROPERTIES(${PROJ_NAME} PROPERTIES COMPILE_FLAGS_RELWITHDEBINFO ${OPTIMIZE_COMPILE_FLAGS})
-ENDIF()
-IF (NOT "${OPTIMIZE_LINK_FLAGS}" STREQUAL "")
-  SET_TARGET_PROPERTIES(${PROJ_NAME} PROPERTIES LINK_FLAGS_RELWITHDEBINFO ${OPTIMIZE_LINK_FLAGS})
-ENDIF()
-
-###############
-## Installation
-
-INSTALL(TARGETS ${PROJ_NAME}
-        RUNTIME DESTINATION bin/plugins/data
-        ARCHIVE DESTINATION libs)
-INSTALL(FILES $<TARGET_PDB_FILE:${PROJ_NAME}>
-		DESTINATION pdb)
+requires_project(game_features)
+requires_library(python)
