@@ -1,25 +1,10 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.16)
 
-ADD_COMPILE_OPTIONS($<$<CXX_COMPILER_ID:MSVC>:/MP> $<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:RELEASE>:/O2>> $<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:RELWITHDEBINFO>:/O2>>)
+project(plugin_python)
+set(project_type plugin)
+set(enable_warnings OFF)
 
-SET(PROJ_NAME plugin_python)
+include(../cmake_common/project.cmake)
+add_subdirectory(src/proxy)
 
-PROJECT(${PROJ_NAME})
-
-SET(DEPENDENCIES_DIR CACHE PATH "")
-
-# hint to find qt in dependencies path
-LIST(APPEND CMAKE_PREFIX_PATH ${QT_ROOT}/lib/cmake)
-
-# need to install python
-IF(EXISTS "${PYTHON_ROOT}/PCbuild/python37.dll")
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/python37.dll DESTINATION bin)
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/python37.pdb DESTINATION pdb)
-ELSEIF(EXISTS "${PYTHON_ROOT}/PCbuild/amd64/python27.dll")
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/amd64/python37.dll DESTINATION bin)
-    INSTALL(FILES ${PYTHON_ROOT}/PCbuild/amd64/python37.pdb DESTINATION pdb)
-ENDIF()
-
-
-ADD_SUBDIRECTORY(src/runner)
-ADD_SUBDIRECTORY(src/proxy)
+add_subdirectory(src/runner)
