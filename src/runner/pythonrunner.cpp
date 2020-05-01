@@ -826,6 +826,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<Q
 BOOST_PYTHON_MODULE(mobase)
 {
   PyEval_InitThreads();
+
+  bpy::import("PyQt5.QtCore");
+
   bpy::to_python_converter<QVariant, QVariant_to_python_obj>();
   QVariant_from_python_obj();
 
