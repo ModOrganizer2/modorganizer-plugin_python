@@ -132,25 +132,47 @@ protected:
 };
 
 
+#define COMMON_I_PLUGIN_INSTALLER_WRAPPER_DECLARATIONS public: \
+using IPluginInstaller::parentWidget; \
+using IPluginInstaller::manager; \
+virtual unsigned int priority() const override; \
+virtual bool isManualInstaller() const override; \
+virtual bool isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> tree) const override; 
+
+
+class IPluginInstallerSimpleWrapper : public MOBase::IPluginInstallerSimple, public boost::python::wrapper<MOBase::IPluginInstallerSimple>
+{
+  Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerSimple)
+
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+  COMMON_I_PLUGIN_INSTALLER_WRAPPER_DECLARATIONS
+
+public:
+  static constexpr const char* className = "IPluginInstallerSimpleWrapper";
+  using boost::python::wrapper<MOBase::IPluginInstallerSimple>::get_override;
+
+  virtual EInstallResult install(MOBase::GuessedValue<QString>& modName, std::shared_ptr<MOBase::IFileTree>& tree,
+    QString& version, int& nexusID) override;
+};
+
 class IPluginInstallerCustomWrapper : public MOBase::IPluginInstallerCustom, public boost::python::wrapper<MOBase::IPluginInstallerCustom>
 {
   Q_OBJECT
   Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+
+  COMMON_I_PLUGIN_INSTALLER_WRAPPER_DECLARATIONS
+
 public:
   static constexpr const char* className = "IPluginInstallerCustomWrapper";
   using boost::python::wrapper<MOBase::IPluginInstallerCustom>::get_override;
 
-  virtual unsigned int priority() const;
-  virtual bool isManualInstaller() const;
-  virtual bool isArchiveSupported(const MOBase::DirectoryTree &tree) const;
-  virtual bool isArchiveSupported(const QString &archiveName) const;
-  virtual std::set<QString> supportedExtensions() const;
+  virtual bool isArchiveSupported(const QString &archiveName) const override;
+  virtual std::set<QString> supportedExtensions() const override;
   virtual EInstallResult install(MOBase::GuessedValue<QString> &modName, QString gameName, const QString &archiveName,
-                                 const QString &version, int modID);
-  virtual void setParentWidget(QWidget *parent);
-
+                                 const QString &version, int modID) override;
 };
 
 

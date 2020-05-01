@@ -3,8 +3,11 @@
 #include "gilock.h"
 #include <QUrl>
 #include <QWidget>
+
 #include "pythonwrapperutilities.h"
 #include "sipApiAccess.h"
+
+#include <boost/variant.hpp>
 
 namespace boost
 {
@@ -286,27 +289,55 @@ std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 }
 /// end IPluginGame Wrapper
 /////////////////////////////////////
+/// IPluginInstaller macro
+
+#define COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(class_name) \
+unsigned int class_name::priority() const { return basicWrapperFunctionImplementation<class_name, unsigned int>(this, "priority"); } \
+bool class_name::isManualInstaller() const { return basicWrapperFunctionImplementation<class_name, bool>(this, "isManualInstaller"); } \
+bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const { return basicWrapperFunctionImplementation<class_name, bool>(this, "isArchiveSupported", tree); } 
+
+/// end IPluginInstaller macro
+/////////////////////////////////////
+/// IPluginInstaller Wrapper
+
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerSimpleWrapper)
+COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(IPluginInstallerSimpleWrapper)
+
+IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
+  GuessedValue<QString>& modName, std::shared_ptr<IFileTree>& tree,
+  QString& version, int& nexusID)
+{
+  namespace bpy = boost::python;
+
+  using return_type = boost::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>> ;
+  auto ret = basicWrapperFunctionImplementation<IPluginInstallerSimpleWrapper, return_type>(this, "install", boost::ref(modName), tree, version, nexusID);
+
+  return boost::apply_visitor([&](auto const& t) {
+    using type = std::decay_t<decltype(t)>;
+    if constexpr (std::is_same_v<type, IPluginInstaller::EInstallResult>) {
+      return t;
+    }
+    else if constexpr (std::is_same_v<type, std::shared_ptr<IFileTree>>) {
+      tree = t;
+      return IPluginInstaller::RESULT_SUCCESS;
+    }
+    else if constexpr (std::is_same_v<type, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>) {
+      tree = boost::get<0>(t);
+      version = boost::get<1>(t);
+      nexusID = boost::get<2>(t);
+      return IPluginInstaller::RESULT_SUCCESS;
+    }
+    else {
+      static_assert("Type not handled in boost::apply_visitor.");
+    }
+    }, ret);
+}
+
+/// end IPluginInstallerSimple Wrapper
+/////////////////////////////////////
 /// IPluginInstallerCustom Wrapper
-
-
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
-
-unsigned int IPluginInstallerCustomWrapper::priority() const
-{
-  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, unsigned int>(this, "priority");
-}
-
-bool IPluginInstallerCustomWrapper::isManualInstaller() const
-{
-  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, bool>(this, "isManualInstaller");
-}
-
-bool IPluginInstallerCustomWrapper::isArchiveSupported(const DirectoryTree &archiveTree) const
-{
-  //return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, bool>(this, "isArchiveSupported", archiveTree);
-  // This was a stub implementation when I got here, and a real one won't compile.
-  return false;
-}
+COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
 
 bool IPluginInstallerCustomWrapper::isArchiveSupported(const QString &archiveName) const
 {
@@ -324,11 +355,6 @@ IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedV
   return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, IPluginInstaller::EInstallResult>(this, "install", modName, gameName, archiveName, version, modID);
 }
 
-
-void IPluginInstallerCustomWrapper::setParentWidget(QWidget *parent)
-{
-  basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, void>(this, "setParentWidget", parent);
-}
 /// end IPluginInstallerCustom Wrapper
 /////////////////////////////
 /// IPluginModPage Wrapper

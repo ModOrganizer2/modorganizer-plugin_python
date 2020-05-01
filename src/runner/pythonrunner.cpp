@@ -25,8 +25,9 @@
 
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
+#include <boost/mp11.hpp>
+#include "tuple_helper.h"
 #endif
-
 
 MOBase::IOrganizer *s_Organizer = nullptr;
 
@@ -69,6 +70,7 @@ IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pyt
 using namespace MOBase;
 
 namespace bpy = boost::python;
+namespace mp11 = boost::mp11;
 
 struct QString_to_python_str
 {
@@ -157,58 +159,6 @@ struct HANDLE_converters
   {
     HANDLE_from_python();
     bpy::to_python_converter<HANDLE, HANDLE_to_python>();
-  }
-};
-
-
-template <typename T>
-struct GuessedValue_converters
-{
-  struct GuessedValue_to_python
-  {
-    static PyObject *convert(const GuessedValue<T> &var) {
-      bpy::list result;
-      const std::set<T> &values = var.variants();
-      for (auto iter = values.begin(); iter != values.end(); ++iter) {
-        result.append(bpy::make_tuple(*iter, GUESS_GOOD));
-      }
-      return bpy::incref(result.ptr());
-    }
-  };
-
-  struct GuessedValue_from_python
-  {
-    GuessedValue_from_python() {
-      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<GuessedValue<T> >());
-    }
-
-    static void *convertible(PyObject *objPtr) {
-      if PyList_Check(objPtr) {
-        return objPtr;
-      } else {
-        return nullptr;
-      }
-    }
-
-    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
-      void *storage = ((bpy::converter::rvalue_from_python_storage<GuessedValue<T> >*)data)->storage.bytes;
-      GuessedValue<T> *result = new (storage) GuessedValue<T>();
-
-      bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
-      int length = bpy::len(source);
-      for (int i = 0; i < length; ++i) {
-        bpy::tuple cell = bpy::extract<bpy::tuple>(source[i]);
-        result->update(bpy::extract<T>(cell[0]), bpy::extract<EGuessQuality>(cell[1]));
-      }
-
-      data->convertible = storage;
-    }
-  };
-
-  GuessedValue_converters()
-  {
-    GuessedValue_from_python();
-    bpy::to_python_converter<GuessedValue<T>, GuessedValue_to_python>();
   }
 };
 
@@ -819,8 +769,19 @@ struct DowncastReturn {
 
 };
 
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<QString>::update, 2, 2)
+/**
+ * @brief Register implicit conversion from any of the decayed type from the variant
+ *     to the variant type.
+ */
+template <class... Args>
+void register_implicit_variant() {
+  mp11::mp_for_each<
+    mp11::mp_list<Args... >> (
+      [](auto t) {
+        // take advantage of built-in conversions
+        bpy::implicitly_convertible<std::decay_t<decltype(t)>, boost::variant<Args... >>();
+      });
+}
 
 
 BOOST_PYTHON_MODULE(mobase)
@@ -962,7 +923,9 @@ BOOST_PYTHON_MODULE(mobase)
 
   // FileTreeEntry and IFileTree are only managed by shared ptr.
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
 
   // FileTreeEntry Scope:
   auto fileTreeEntryClass = bpy::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>, boost::noncopyable>("FileTreeEntry", bpy::no_init);
@@ -1162,11 +1125,15 @@ BOOST_PYTHON_MODULE(mobase)
       .value("user", MOBase::GUESS_USER)
       ;
 
-  bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
+  bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString", bpy::no_init)
       .def("update",
-           static_cast<GuessedValue<QString> &(GuessedValue<QString>::*)(const QString&, EGuessQuality)>(&GuessedValue<QString>::update),
-           bpy::return_value_policy<bpy::reference_existing_object>(), updateWithQuality())
+           static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&)>(&GuessedValue<QString>::update),
+           bpy::return_self<>())
+      .def("update",
+           static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&, EGuessQuality)>(&GuessedValue<QString>::update),
+           bpy::return_self<>())
       .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
+      .def("__str__", &MOBase::GuessedValue<QString>::operator const QString&, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
   bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
@@ -1315,6 +1282,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("featureUnmanagedMods", &MOBase::IPluginGame::feature<UnmanagedMods>, bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
+  bpy::register_tuple<boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
+  register_implicit_variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
       .value("success", MOBase::IPluginInstaller::RESULT_SUCCESS)
       .value("failed", MOBase::IPluginInstaller::RESULT_FAILED)
@@ -1323,8 +1292,18 @@ BOOST_PYTHON_MODULE(mobase)
       .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
 
+  bpy::class_<IPluginInstallerSimpleWrapper, boost::noncopyable>("IPluginInstallerSimple")
+    .def("install", &IPluginInstallerSimple::install)
+    .def("getParentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("getManager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
+    ;
+
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginInstallerCustom::setParentWidget))
+      .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
+      .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
+      .def("install", &IPluginInstallerCustom::install)
+      .def("getParentWidget", &IPluginInstallerCustomWrapper::parentWidget, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("getManager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
   bpy::class_<IPluginModPageWrapper, boost::noncopyable>("IPluginModPage")
@@ -1337,8 +1316,6 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
       ;
-
-  GuessedValue_converters<QString>();
 
   HANDLE_converters();
 
@@ -1521,6 +1498,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
     TRY_PLUGIN_TYPE(IPluginFileMapperWrapper, pluginObj);
     TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
+    TRY_PLUGIN_TYPE(IPluginInstallerSimple, pluginObj);
     TRY_PLUGIN_TYPE(IPluginModPage, pluginObj);
     TRY_PLUGIN_TYPE(IPluginPreview, pluginObj);
     TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
