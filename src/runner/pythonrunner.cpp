@@ -3,6 +3,7 @@
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4996 )
 
+#include <ifiletree.h>
 #include <iplugin.h>
 #include <iplugingame.h>
 #include <iplugininstaller.h>
@@ -781,6 +782,44 @@ static PyObject *waitForApplication(const bpy::object &self, size_t handle)
 }
 
 
+/**
+ * @brief Call policy that automatically downcast shared pointer of type FromType
+ * to shared pointer of type ToType.
+ */
+template <class FromType, class ToType>
+struct DowncastConverter {
+
+  bool convertible() const { return true; }
+
+  inline PyObject* operator()(std::shared_ptr<FromType> p) const {
+    if (p == nullptr) {
+      return bpy::detail::none();
+    }
+    else {
+      auto downcast_p = std::dynamic_pointer_cast<ToType>(p);
+      bpy::object p_value = downcast_p == nullptr ? bpy::object{ p } : bpy::object{ downcast_p };
+      return bpy::incref(p_value.ptr());
+    }
+  }
+
+  inline PyTypeObject const* get_pytype() const {
+    return bpy::converter::registered_pytype<FromType>::get_pytype();
+  }
+
+};
+
+template <class FromType, class ToType>
+struct DowncastReturn {
+
+  template <class T>
+  struct apply {
+    static_assert(std::is_convertible_v<T, std::shared_ptr<FromType>>);
+    using type = DowncastConverter<FromType, ToType>;
+  };
+
+};
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(updateWithQuality, MOBase::GuessedValue<QString>::update, 2, 2)
 
 
@@ -918,6 +957,118 @@ BOOST_PYTHON_MODULE(mobase)
       .def("modsSortedByProfilePriority", bpy::pure_virtual(&IOrganizer::modsSortedByProfilePriority))
       ;
 
+  // FileTreeEntry and IFileTree are only managed by shared ptr.
+  bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
+  bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
+
+  // FileTreeEntry Scope:
+  auto fileTreeEntryClass = bpy::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>, boost::noncopyable>("FileTreeEntry", bpy::no_init);
+  {
+    
+    bpy::scope scope = fileTreeEntryClass;
+
+    
+    bpy::enum_<FileTreeEntry::FileTypes>("FileType")
+    .value("FILE_OR_DIRECTORY", FileTreeEntry::FILE_OR_DIRECTORY)
+    .value("FILE", FileTreeEntry::FILE)
+    .value("DIRECTORY", FileTreeEntry::DIRECTORY)
+    .export_values()
+    ;
+
+    fileTreeEntryClass
+
+      .def("isFile", &FileTreeEntry::isFile)
+      .def("isDir", &FileTreeEntry::isDir)
+      .def("getFileType", &FileTreeEntry::fileType)
+      // This should probably not be exposed in python since we provide automatic downcast:
+      // .def("getTree", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::astree))
+      .def("getName", &FileTreeEntry::name)
+      .def("getSuffix", &FileTreeEntry::suffix)
+      .def("getTime", &FileTreeEntry::time)
+      .def("getParent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent))
+      .def("getPath", &FileTreeEntry::path, bpy::arg("sep") = "\\")
+      .def("getPathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
+
+      // Mutable operation:
+      .def("setTime", &FileTreeEntry::setTime)
+      .def("detach", &FileTreeEntry::detach)
+      .def("moveTo", &FileTreeEntry::moveTo)
+
+      // Special methods for debug:
+      .def("__str__", &FileTreeEntry::name)
+      .def("__repr__", +[](const FileTreeEntry* entry) { return "FileTreeEntry(" + entry->name() + ")"; })
+      ;
+  }
+
+  // IFileTree scope:
+  auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);;
+  {
+    
+    bpy::scope scope = iFileTreeClass;
+
+    bpy::enum_<IFileTree::InsertPolicy>("InsertPolicy")
+      .value("FAIL_IF_EXISTS", IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+      .value("REPLACE", IFileTree::InsertPolicy::REPLACE)
+      .value("MERGE", IFileTree::InsertPolicy::MERGE)
+      .export_values()
+      ;
+
+    iFileTreeClass
+
+      // Non-mutable operations (note: iterator and some methods are at the end with 
+      // special python methods):
+      .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists), (bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
+      .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find), 
+        bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>())
+      .def("getPathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
+
+      // Kind-of-static operations:
+      .def("createOrphanTree", &IFileTree::createOrphanTree, bpy::arg("name") = "")
+
+      // Mutable operations:
+      .def("addFile", &IFileTree::addFile, bpy::arg("time") = QDateTime())
+      .def("addDirectory", &IFileTree::addDirectory)
+      .def("insert", +[](
+        IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
+          return p->insert(entry, insertPolicy) != p->end(); }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+
+      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> bpy::object {
+            IFileTree::OverwritesType overwrites;
+            auto result = p->merge(other, returnOverwrites ? &overwrites : nullptr);
+            if (result == IFileTree::MERGE_FAILED) {
+              return bpy::object{ false };
+            }
+            if (returnOverwrites) {
+              return bpy::object{ overwrites };
+            }
+            return bpy::object{ result };
+        }, bpy::arg("overwrites") = false)
+
+      .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+
+      .def("remove", +[](IFileTree* p, QString name) { return p->erase(name).first != p->end(); })
+      .def("remove", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry) { return p->erase(entry) != p->end(); })
+
+      .def("clear", &IFileTree::clear)
+      .def("removeAll", &IFileTree::removeAll)
+      .def("removeIf", +[](IFileTree* p, boost::python::object fn) {
+          return p->removeIf(fn);
+        })
+
+      // Special methods:
+      .def("__getitem__", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(std::size_t)>(&IFileTree::at),
+        bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>())
+      .def("__iter__", bpy::range<bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>>(
+        static_cast<IFileTree::iterator(IFileTree::*)()>(&IFileTree::begin),
+        static_cast<IFileTree::iterator(IFileTree::*)()>(&IFileTree::end)))
+      .def("__len__", &IFileTree::size)
+      .def("__bool__", +[](const IFileTree* tree) { return !tree->empty(); })
+      .def("__str__", &FileTreeEntry::name)
+      .def("__repr__", +[](const IFileTree* entry) { return "IFileTree(" + entry->name() + ")"; })
+      ;
+  }
+  
+
   bpy::class_<IProfileWrapper, boost::noncopyable>("IProfile")
       .def("name", bpy::pure_virtual(&IProfile::name))
       .def("absolutePath", bpy::pure_virtual(&IProfile::absolutePath))
@@ -977,11 +1128,11 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IInstallationManagerWrapper, boost::noncopyable>("IInstallationManager")
-      .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
-      .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
-      .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
-      .def("setURL", bpy::pure_virtual(&IInstallationManager::setURL))
-      ;
+    .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
+    .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
+    .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
+    .def("setURL", bpy::pure_virtual(&IInstallationManager::setURL))
+    ;
 
   bpy::class_<IModInterfaceWrapper, boost::noncopyable>("IModInterface")
       .def("name", bpy::pure_virtual(&IModInterface::name))

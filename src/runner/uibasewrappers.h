@@ -23,6 +23,7 @@
 #include <imodlist.h>
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
+#include "ifiletree.h"
 
 #include "error.h"
 #include "gilock.h"
@@ -427,10 +428,11 @@ struct IModRepositoryBridgeWrapper: MOBase::IModRepositoryBridge, boost::python:
 
 struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python::wrapper<MOBase::IInstallationManager>
 {
-  virtual QString extractFile(const QString &fileName) { return this->get_override("extractFile")(fileName); }
-  virtual QStringList extractFiles(const QStringList &files, bool flatten) { return this->get_override("extractFiles")(files, flatten); }
-  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, const int &modId = 0) { return this->get_override("installArchive")(modName, archiveFile, modId); }
-  virtual void setURL(QString const &url) { this->get_override("setURL")(url); }
+  virtual QString extractFile(std::shared_ptr<const MOBase::FileTreeEntry> entry) override { return this->get_override("extractFile")(entry); }
+  virtual QStringList extractFiles(std::vector<std::shared_ptr<const MOBase::FileTreeEntry>> const& entries) override { return this->get_override("extractFiles")(entries); }
+  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, int modId = 0) override {
+    return this->get_override("installArchive")(modName, archiveFile, modId); }
+  virtual void setURL(QString const &url) override { this->get_override("setURL")(url); }
 };
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>
