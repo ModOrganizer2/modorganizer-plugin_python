@@ -622,7 +622,7 @@ struct QClass_converters
       wrapper = reinterpret_cast<sipWrapper*>(objPtr);
       return wrapper->super.data;
     } else {
-      if (std::is_same_v<T, QStringList>)
+      if constexpr (std::is_same_v<T, QStringList>)
       {
         // QStringLists aren't wrapped by PyQt - regular Python string/unicode lists are used instead
         bpy::extract<QList<QString>> extractor(objPtr);
@@ -994,7 +994,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("addCategory", bpy::pure_virtual(&IModInterface::addCategory))
       .def("removeCategory", bpy::pure_virtual(&IModInterface::removeCategory))
       .def("categories", bpy::pure_virtual(&IModInterface::categories))
-      .def("setGameName", bpy::pure_virtual(&IModInterface::setGameName))
+      .def("setGamePlugin", bpy::pure_virtual(&IModInterface::setGamePlugin))
       .def("setName", bpy::pure_virtual(&IModInterface::setName))
       .def("remove", bpy::pure_virtual(&IModInterface::remove))
       ;
