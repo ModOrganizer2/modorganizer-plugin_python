@@ -1117,12 +1117,12 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::enum_<MOBase::EGuessQuality>("GuessQuality")
-      .value("invalid", MOBase::GUESS_INVALID)
-      .value("fallback", MOBase::GUESS_FALLBACK)
-      .value("good", MOBase::GUESS_GOOD)
-      .value("meta", MOBase::GUESS_META)
-      .value("preset", MOBase::GUESS_PRESET)
-      .value("user", MOBase::GUESS_USER)
+      .value("INVALID", MOBase::GUESS_INVALID)
+      .value("FALLBACK", MOBase::GUESS_FALLBACK)
+      .value("GOOD", MOBase::GUESS_GOOD)
+      .value("META", MOBase::GUESS_META)
+      .value("PRESET", MOBase::GUESS_PRESET)
+      .value("USER", MOBase::GUESS_USER)
       ;
 
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString", bpy::no_init)
@@ -1132,6 +1132,14 @@ BOOST_PYTHON_MODULE(mobase)
       .def("update",
            static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&, EGuessQuality)>(&GuessedValue<QString>::update),
            bpy::return_self<>())
+
+      // Methods to simulate the assignment operator:
+      .def("reset", +[](GuessedValue<QString>* gv) { *gv = GuessedValue<QString>(); }, bpy::return_self<>())
+      .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) { *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>())
+
+      // Use an intermediate lambda to avoid having to register the std::function conversion:
+      .def("setFilter", +[](GuessedValue<QString>* gv, bpy::object fn) { gv->setFilter(fn); })
+
       .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
       .def("__str__", &MOBase::GuessedValue<QString>::operator const QString&, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
@@ -1285,11 +1293,11 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_tuple<boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
   register_implicit_variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
-      .value("success", MOBase::IPluginInstaller::RESULT_SUCCESS)
-      .value("failed", MOBase::IPluginInstaller::RESULT_FAILED)
-      .value("canceled", MOBase::IPluginInstaller::RESULT_CANCELED)
-      .value("manualRequested", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
-      .value("notAttempted", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
+      .value("SUCCESS", MOBase::IPluginInstaller::RESULT_SUCCESS)
+      .value("FAILED", MOBase::IPluginInstaller::RESULT_FAILED)
+      .value("CANCELED", MOBase::IPluginInstaller::RESULT_CANCELED)
+      .value("MANUAL_REQUESTED", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
+      .value("NOT_ATTEMPTED", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
 
   bpy::class_<IPluginInstallerSimpleWrapper, boost::noncopyable>("IPluginInstallerSimple")
