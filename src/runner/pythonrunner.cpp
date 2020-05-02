@@ -1140,7 +1140,15 @@ BOOST_PYTHON_MODULE(mobase)
       // Use an intermediate lambda to avoid having to register the std::function conversion:
       .def("setFilter", +[](GuessedValue<QString>* gv, bpy::object fn) { gv->setFilter(fn); })
 
-      .def("variants", &MOBase::GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
+      // Exposing the set does not work, but even if it worked, we would lose the order since it would be
+      // converted to a python set() so we expose a cusotm iterator. This works because variants() returns
+      // a reference, otherwize this would be more complex to do (also, needs to use references instead of
+      // pointers instead of the lambda due to the range() requirements):
+      .def("variants", bpy::range<
+        bpy::return_value_policy<bpy::copy_const_reference>>(
+        +[](GuessedValue<QString> &gv) { return std::begin(gv.variants()); },
+        +[](GuessedValue<QString> &gv) { return std::end(gv.variants()); }
+        ))
       .def("__str__", &MOBase::GuessedValue<QString>::operator const QString&, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
