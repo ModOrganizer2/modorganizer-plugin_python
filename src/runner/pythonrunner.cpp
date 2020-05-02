@@ -1125,7 +1125,9 @@ BOOST_PYTHON_MODULE(mobase)
       .value("USER", MOBase::GUESS_USER)
       ;
 
-  bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString", bpy::no_init)
+  bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
+      .def(bpy::init<>())
+      .def(bpy::init<QString const&, EGuessQuality>())
       .def("update",
            static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&)>(&GuessedValue<QString>::update),
            bpy::return_self<>())
@@ -1136,6 +1138,7 @@ BOOST_PYTHON_MODULE(mobase)
       // Methods to simulate the assignment operator:
       .def("reset", +[](GuessedValue<QString>* gv) { *gv = GuessedValue<QString>(); }, bpy::return_self<>())
       .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) { *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>())
+      .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { *gv = other; }, bpy::return_self<>())
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
       .def("setFilter", +[](GuessedValue<QString>* gv, bpy::object fn) { gv->setFilter(fn); })
