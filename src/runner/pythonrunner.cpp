@@ -945,15 +945,15 @@ BOOST_PYTHON_MODULE(mobase)
 
       .def("isFile", &FileTreeEntry::isFile)
       .def("isDir", &FileTreeEntry::isDir)
-      .def("getFileType", &FileTreeEntry::fileType)
+      .def("fileType", &FileTreeEntry::fileType)
       // This should probably not be exposed in python since we provide automatic downcast:
       // .def("getTree", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::astree))
-      .def("getName", &FileTreeEntry::name)
-      .def("getSuffix", &FileTreeEntry::suffix)
-      .def("getTime", &FileTreeEntry::time)
-      .def("getParent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent))
-      .def("getPath", &FileTreeEntry::path, bpy::arg("sep") = "\\")
-      .def("getPathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
+      .def("name", &FileTreeEntry::name)
+      .def("suffix", &FileTreeEntry::suffix)
+      .def("time", &FileTreeEntry::time)
+      .def("parent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent))
+      .def("path", &FileTreeEntry::path, bpy::arg("sep") = "\\")
+      .def("pathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
 
       // Mutable operation:
       .def("setTime", &FileTreeEntry::setTime)
@@ -986,7 +986,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists), (bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
       .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find), 
         bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>())
-      .def("getPathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
+      .def("pathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
 
       // Kind-of-static operations:
       .def("createOrphanTree", &IFileTree::createOrphanTree, bpy::arg("name") = "")
