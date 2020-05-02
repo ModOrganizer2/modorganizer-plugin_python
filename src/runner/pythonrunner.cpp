@@ -1302,7 +1302,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginInstallerSimpleWrapper, boost::noncopyable>("IPluginInstallerSimple")
     .def("install", &IPluginInstallerSimple::install)
-    .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     .def("manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
@@ -1310,7 +1310,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
       .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
       .def("install", &IPluginInstallerCustom::install)
-      .def("parentWidget", &IPluginInstallerCustomWrapper::parentWidget, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
       .def("manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
