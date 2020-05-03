@@ -7,7 +7,8 @@
 #include "pythonwrapperutilities.h"
 #include "sipApiAccess.h"
 
-#include <boost/variant.hpp>
+#include <variant>
+#include <tuple>
 
 namespace boost
 {
@@ -309,10 +310,10 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
 {
   namespace bpy = boost::python;
 
-  using return_type = boost::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>> ;
+  using return_type = std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<std::shared_ptr<IFileTree>, QString, int>> ;
   auto ret = basicWrapperFunctionImplementation<IPluginInstallerSimpleWrapper, return_type>(this, "install", boost::ref(modName), tree, version, nexusID);
 
-  return boost::apply_visitor([&](auto const& t) {
+  return std::visit([&](auto const& t) {
     using type = std::decay_t<decltype(t)>;
     if constexpr (std::is_same_v<type, IPluginInstaller::EInstallResult>) {
       return t;
@@ -321,16 +322,16 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
       tree = t;
       return IPluginInstaller::RESULT_SUCCESS;
     }
-    else if constexpr (std::is_same_v<type, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>) {
-      tree = boost::get<0>(t);
-      version = boost::get<1>(t);
-      nexusID = boost::get<2>(t);
+    else if constexpr (std::is_same_v<type, std::tuple<std::shared_ptr<IFileTree>, QString, int>>) {
+      tree = std::get<0>(t);
+      version = std::get<1>(t);
+      nexusID = std::get<2>(t);
       return IPluginInstaller::RESULT_SUCCESS;
     }
     else {
       static_assert("Type not handled in boost::apply_visitor.");
     }
-    }, ret);
+  }, ret);
 }
 
 /// end IPluginInstallerSimple Wrapper

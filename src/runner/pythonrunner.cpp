@@ -23,6 +23,9 @@
 // sip and qt slots seems to conflict
 #include <sip.h>
 
+#include <variant>
+#include <tuple>
+
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
 #include <boost/mp11.hpp>
@@ -657,12 +660,12 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_associative_container<IFileTree::OverwritesType>();
 
   // Tuple:
-  bpy::register_tuple<boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
+  bpy::register_tuple<std::tuple<std::shared_ptr<IFileTree>, QString, int>>();
 
   // Variants:
-  bpy::register_variant<boost::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>>();
-  bpy::register_variant<boost::variant<IFileTree::OverwritesType, std::size_t, bool>>();
-  bpy::register_variant<boost::variant<QString, bool>>();
+  bpy::register_variant<std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<std::shared_ptr<IFileTree>, QString, int>>>();
+  bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t, bool>>();
+  bpy::register_variant<std::variant<QString, bool>>();
 
   // Functions:
   Functor_converter<void()>(); // converter for the onRefreshed-callback
@@ -671,7 +674,7 @@ BOOST_PYTHON_MODULE(mobase)
   Functor_converter<void(const QString&)>();
   Functor_converter<bool(const QString&)>();
   Functor_converter<void(const QString&, unsigned int)>();
-  Functor_converter<boost::variant<QString, bool>(QString const&)>();
+  Functor_converter<std::variant<QString, bool>(QString const&)>();
   Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
 
 
@@ -867,7 +870,7 @@ BOOST_PYTHON_MODULE(mobase)
         IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
           return p->insert(entry, insertPolicy) != p->end(); }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
 
-      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> boost::variant<IFileTree::OverwritesType, std::size_t, bool> {
+      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> std::variant<IFileTree::OverwritesType, std::size_t, bool> {
             IFileTree::OverwritesType overwrites;
             auto result = p->merge(other, returnOverwrites ? &overwrites : nullptr);
             if (result == IFileTree::MERGE_FAILED) {
@@ -1008,10 +1011,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { *gv = other; }, bpy::return_self<>())
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
-      .def("setFilter", +[](GuessedValue<QString>* gv, std::function<boost::variant<QString, bool>(QString const&)> fn) {
+      .def("setFilter", +[](GuessedValue<QString>* gv, std::function<std::variant<QString, bool>(QString const&)> fn) {
         gv->setFilter([fn](QString& s) {
           auto ret = fn(s);
-          return boost::apply_visitor([&s](auto v) {
+          return std::visit([&s](auto v) {
             if constexpr (std::is_same_v<decltype(v), QString>) {
               s = v;
               return true;

@@ -2,13 +2,9 @@
 #define VARIANT_HELPER_H
 
 #include <boost/python.hpp>
-#include <boost/variant.hpp>
-#include <boost/python/object.hpp> //len function
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/next.hpp>
 
 /**
- * Creates boost::variant from python object. Greatly inspired by register_tuple<>.
+ * Register variant(s) from and to python object. Greatly inspired by register_tuple<>.
  */
 
 namespace boost {
@@ -18,7 +14,7 @@ namespace boost {
     struct to_py_variant {
 
       static PyObject* convert(const TVariant& c_variant) {
-        object value = boost::apply_visitor([](auto const& value) {
+        object value = std::visit([](auto const& value) {
           return object{ value };
         }, c_variant);
         //create Python object from the list
