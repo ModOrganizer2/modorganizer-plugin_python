@@ -30,12 +30,13 @@ namespace boost {
     struct variant_from_python<VTemplate<Args... >> {
 
       using variant_type = VTemplate<Args... >;
+      using index_sequence = std::make_index_sequence<std::variant_size_v<variant_type>>;
 
       static void* convertible(PyObject* py_obj) {
 
         python::object obj(handle<>(borrowed(py_obj)));
 
-        if (impl<Args... >::convertible(obj)) {
+        if (convertible_impl(obj)) {
           return py_obj;
         }
         else {
@@ -56,28 +57,20 @@ namespace boost {
 
     private:
 
+      static bool convertible_impl(const python::object& obj) {
+        return (... || extract<Args>(obj).check());
+      }
+
       template <class... >
       struct impl;
 
       template <>
       struct impl<> {
-        static bool convertible(const python::object& obj) { return false; }
         static void construct(const python::object& obj, variant_type& c_variant) {}
       };
 
       template <class UArg, class... UArgs>
       struct impl<UArg, UArgs... > {
-
-        static bool convertible(const python::object& obj) {
-
-          extract<UArg> type_checker(obj);
-          if (type_checker.check()) {
-            return true;
-          }
-          else {
-            return impl<UArgs... >::convertible(obj);
-          }
-        }
 
         static void construct(const python::object& obj, variant_type& c_variant) {
 

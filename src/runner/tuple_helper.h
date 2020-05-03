@@ -20,13 +20,10 @@ namespace boost {
 
     private:
 
-      template <std::size_t I0, std::size_t... Is>
-      static void convert_impl(const TTuple& c_tuple, list& values, std::index_sequence<I0, Is... >) {
-        values.append(std::get<I0>(c_tuple));
-        convert_impl(c_tuple, values, std::index_sequence<Is... >{});
+      template <std::size_t... Is>
+      static void convert_impl(const TTuple& c_tuple, list& values, std::index_sequence<Is... >) {
+        (values.append(std::get<Is>(c_tuple)), ...);
       }
-
-      static void convert_impl(const TTuple&, list& values, std::index_sequence<>) {}
 
     };
 
@@ -99,4 +96,4 @@ namespace boost {
   }
 } //boost::python
 
-#endif//TUPLES_HPP_16_JAN_2007
+#endif
