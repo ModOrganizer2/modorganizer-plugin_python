@@ -1053,6 +1053,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
       ;
 
+  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
   bpy::class_<IInstallationManagerWrapper, boost::noncopyable>("IInstallationManager")
     .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
     .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
