@@ -772,10 +772,16 @@ template <class FromType, class ToType>
 struct DowncastReturn {
 
   template <class T>
-  struct apply {
-    static_assert(std::is_convertible_v<T, std::shared_ptr<FromType>>);
+  struct apply_;
+  
+  template <class T>
+  struct apply_<std::shared_ptr<T>> {
+    static_assert(std::is_convertible_v<std::shared_ptr<T>, std::shared_ptr<FromType>>);
     using type = DowncastConverter<FromType, ToType>;
   };
+
+  template <class T>
+  using apply = apply_<std::decay_t<T>>;
 
 };
 
@@ -927,7 +933,7 @@ BOOST_PYTHON_MODULE(mobase)
   Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
 
   // FileTreeEntry Scope:
-  auto fileTreeEntryClass = bpy::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>, boost::noncopyable>("FileTreeEntry", bpy::no_init);
+  auto fileTreeEntryClass = bpy::class_<FileTreeEntry, boost::noncopyable>("FileTreeEntry", bpy::no_init);
   {
     
     bpy::scope scope = fileTreeEntryClass;
