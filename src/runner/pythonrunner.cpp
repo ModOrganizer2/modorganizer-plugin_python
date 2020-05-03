@@ -697,7 +697,12 @@ struct Functor_converter<RET(PARAMS... )>
 
     RET operator()(const PARAMS &...params) {
       GILock lock;
-      return (RET) m_Callable(params...);
+      if constexpr (std::is_same_v<RET, void>) {
+        m_Callable(params...);
+      }
+      else {
+        return bpy::extract<RET>(m_Callable(params...));
+      }
     }
 
     boost::python::object m_Callable;
