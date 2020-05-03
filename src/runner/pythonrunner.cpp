@@ -972,9 +972,16 @@ BOOST_PYTHON_MODULE(mobase)
       .def("detach", &FileTreeEntry::detach)
       .def("moveTo", &FileTreeEntry::moveTo)
 
+      // Special methods:
+      .def("__eq__", +[](const FileTreeEntry* entry, QString other) {
+        return entry->compare(other) == 0;
+      })
+      .def("__eq__", +[](const FileTreeEntry* entry, std::shared_ptr<FileTreeEntry> other) {
+        return entry == other.get();
+      })
+
       // Special methods for debug:
-      .def("__str__", &FileTreeEntry::name)
-      .def("__repr__", +[](const FileTreeEntry* entry) { return "FileTreeEntry(" + entry->name() + ")"; })
+      .def("__repr__", +[](const FileTreeEntry* entry) { return "FileTreeEntry(\"" + entry->name() + "\")"; })
       ;
   }
 
@@ -1042,8 +1049,7 @@ BOOST_PYTHON_MODULE(mobase)
         static_cast<IFileTree::iterator(IFileTree::*)()>(&IFileTree::end)))
       .def("__len__", &IFileTree::size)
       .def("__bool__", +[](const IFileTree* tree) { return !tree->empty(); })
-      .def("__str__", &FileTreeEntry::name)
-      .def("__repr__", +[](const IFileTree* entry) { return "IFileTree(" + entry->name() + ")"; })
+      .def("__repr__", +[](const IFileTree* entry) { return "IFileTree(\"" + entry->name() + "\")"; })
       ;
   }
   
