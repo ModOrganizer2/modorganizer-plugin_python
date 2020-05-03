@@ -897,16 +897,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("__len__", &IFileTree::size)
       .def("__bool__", +[](const IFileTree* tree) { return !tree->empty(); })
       .def("__repr__", +[](const IFileTree* entry) { return "IFileTree(\"" + entry->name() + "\")"; })
-
-      .def("makeTree", +[]() -> std::shared_ptr<IFileTree> {
-          struct MyTree : public IFileTree {
-            MyTree(std::shared_ptr<IFileTree> parent = nullptr, QString name = "") : FileTreeEntry(parent, name), IFileTree() { }
-          protected:
-            std::shared_ptr<IFileTree> makeDirectory(std::shared_ptr<IFileTree> p, QString n) const override { return std::make_shared<MyTree>(p, n); }
-            void doPopulate(std::shared_ptr<IFileTree>, std::vector<std::shared_ptr<FileTreeEntry>> &) const override { }
-          };
-          return std::make_shared<MyTree>();
-      }).staticmethod("makeTree")
       ;
   }
   
