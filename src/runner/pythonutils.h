@@ -146,6 +146,13 @@ namespace utils {
     }
   };
 
+  /**
+   * @brief Register from and to python converters for (at least) map, unordered_map and QMap.
+   *
+   * Any standard compliant associative container with key/value should work here.
+   *
+   * @tparam Map The container type to register.
+   */
   template <class Map>
   void register_associative_container() {
     bpy::to_python_converter<Map, map_to_python<Map>>();
@@ -155,6 +162,13 @@ namespace utils {
       , bpy::type_id<Map>());
   };
 
+  /**
+   * @brief Register from and to python converters for (at least) set, unordered_set and QSet.
+   *
+   * Any standard compliant associative container with key should work here.
+   *
+   * @tparam Map The container type to register.
+   */
   template <class Container>
   void register_set_container() {
     bpy::to_python_converter<Container, set_to_python<Container>>();
@@ -164,6 +178,13 @@ namespace utils {
       , bpy::type_id<Container>());
   };
 
+  /**
+   * @brief Register from and to python converters for sequence container.
+   *
+   * Any standard compliant container should work here.
+   *
+   * @tparam Map The container type to register.
+   */
   template <class Container>
   void register_sequence_container() {
     bpy::to_python_converter<Container, container_to_python_list<Container>>();
@@ -172,8 +193,6 @@ namespace utils {
       , &container_from_python_list<Container>::construct
       , bpy::type_id<Container>());
   };
-
-
 
 }
 
