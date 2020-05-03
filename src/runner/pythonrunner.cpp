@@ -29,6 +29,7 @@
 
 #include "tuple_helper.h"
 #include "variant_helper.h"
+#include "pythonutils.h"
 #endif
 
 MOBase::IOrganizer *s_Organizer = nullptr;
@@ -971,6 +972,9 @@ BOOST_PYTHON_MODULE(mobase)
       ;
   }
 
+  utils::register_map<IFileTree::OverwritesType>();
+  bpy::register_variant<boost::variant<IFileTree::OverwritesType, std::size_t, bool>>();
+
   // IFileTree scope:
   auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);;
   {
@@ -1003,16 +1007,16 @@ BOOST_PYTHON_MODULE(mobase)
         IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
           return p->insert(entry, insertPolicy) != p->end(); }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
 
-      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> bpy::object {
+      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> boost::variant<IFileTree::OverwritesType, std::size_t, bool> {
             IFileTree::OverwritesType overwrites;
             auto result = p->merge(other, returnOverwrites ? &overwrites : nullptr);
             if (result == IFileTree::MERGE_FAILED) {
-              return bpy::object{ false };
+              return { false };
             }
             if (returnOverwrites) {
-              return bpy::object{ overwrites };
+              return { overwrites };
             }
-            return bpy::object{ result };
+            return { result };
         }, bpy::arg("overwrites") = false)
 
       .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
