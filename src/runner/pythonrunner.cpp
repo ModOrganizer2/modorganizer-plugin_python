@@ -938,9 +938,8 @@ BOOST_PYTHON_MODULE(mobase)
   {
     
     bpy::scope scope = fileTreeEntryClass;
-
     
-    bpy::enum_<FileTreeEntry::FileTypes>("FileType")
+    bpy::enum_<FileTreeEntry::FileTypes>("FileTypes")
     .value("FILE_OR_DIRECTORY", FileTreeEntry::FILE_OR_DIRECTORY)
     .value("FILE", FileTreeEntry::FILE)
     .value("DIRECTORY", FileTreeEntry::DIRECTORY)
@@ -951,7 +950,8 @@ BOOST_PYTHON_MODULE(mobase)
 
       .def("isFile", &FileTreeEntry::isFile)
       .def("isDir", &FileTreeEntry::isDir)
-      .def("fileType", &FileTreeEntry::fileType)
+      // Forcing the conversion to FileTypeS to avoid having to expose FileType in python:
+      .def("fileType", +[](FileTreeEntry* p) { return FileTreeEntry::FileTypes{ p->fileType() }; })
       // This should probably not be exposed in python since we provide automatic downcast:
       // .def("getTree", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::astree))
       .def("name", &FileTreeEntry::name)
