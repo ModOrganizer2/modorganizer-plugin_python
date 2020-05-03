@@ -166,55 +166,6 @@ struct HANDLE_converters
 };
 
 
-template<typename key_type, typename value_type>
-struct QMap_converters
-{
-  struct QMap_to_python
-  {
-    static PyObject *convert(const QMap<key_type, value_type> &map) {
-      bpy::dict result;
-      QMapIterator<key_type, value_type> iter(map);
-      while (iter.hasNext()) {
-        iter.next();
-        result[bpy::object(iter.key())] = bpy::object(iter.value());
-      }
-      return bpy::incref(result.ptr());
-    }
-  };
-
-  struct QMap_from_python
-  {
-    QMap_from_python() {
-      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<QMap<key_type, value_type>>());
-    }
-
-    static void *convertible(PyObject *objPtr) {
-      return PyDict_Check(objPtr) ? objPtr : nullptr;
-    }
-
-    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-      void *storage = ((bpy::converter::rvalue_from_python_storage<QMap<key_type, value_type>>*)data)->storage.bytes;
-      QMap<key_type, value_type> *result = new (storage) QMap<key_type, value_type>();
-      bpy::dict source(bpy::handle<>(bpy::borrowed(objPtr)));
-      bpy::list keys = source.keys();
-      int len = bpy::len(keys);
-      for (int i = 0; i < len; ++i) {
-        bpy::object pyKey = keys[i];
-        (*result)[bpy::extract<key_type>(pyKey)] = bpy::extract<value_type>(source[pyKey]);
-      }
-
-      data->convertible = storage;
-    }
-  };
-
-  QMap_converters()
-  {
-    QMap_from_python();
-    bpy::to_python_converter<QMap<key_type, value_type>, QMap_to_python >();
-  }
-};
-
-
 struct QVariant_to_python_obj
 {
   static PyObject *convert(const QVariant &var) {
@@ -294,76 +245,6 @@ struct QVariant_from_python_obj
     }
   }
 };
-
-
-template <typename T>
-struct QList_to_python_list
-{
-  static PyObject *convert(const QList<T> &list)
-  {
-    bpy::list pyList;
-
-    try {
-      for (const T &item : list) {
-        pyList.append(item);
-      }
-    } catch (const bpy::error_already_set&) {
-      reportPythonError();
-    }
-    PyObject *res = bpy::incref(pyList.ptr());
-    return res;
-  }
-};
-
-
-template <typename T>
-struct QList_from_python_obj
-{
-  QList_from_python_obj() {
-    bpy::converter::registry::push_back(
-      &convertible,
-      &construct,
-      bpy::type_id<QList<T> >());
-  }
-
-  static void* convertible(PyObject *objPtr) {
-    if (PyList_Check(objPtr)) return objPtr;
-    return nullptr;
-  }
-
-  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    void *storage = ((bpy::converter::rvalue_from_python_storage<QList<T> >*)data)->storage.bytes;
-    QList<T> *result = new (storage) QList<T>();
-    bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
-    int length = bpy::len(source);
-    for (int i = 0; i < length; ++i) {
-      result->append(bpy::extract<T>(source[i]));
-    }
-
-    data->convertible = storage;
-  }
-};
-
-
-template <typename T>
-struct std_vector_to_python_list
-{
-  static PyObject *convert(const std::vector<T> &vector)
-  {
-    bpy::list pyList;
-
-    try {
-      for (const T &item : vector)
-        pyList.append(item);
-    }
-    catch (const bpy::error_already_set&) {
-      reportPythonError();
-    }
-
-    return bpy::incref(pyList.ptr());
-  }
-};
-
 
 template <typename T>
 struct QFlags_from_python_obj
@@ -751,6 +632,48 @@ BOOST_PYTHON_MODULE(mobase)
   QClass_converters<QUrl>();
   QInterface_converters<IDownloadManager>();
 
+  // Pointers:
+  bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
+  bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
+
+  // Containers:
+  utils::register_sequence_container<QList<ExecutableInfo>>();
+  utils::register_sequence_container<QList<PluginSetting>>();
+  utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
+  utils::register_sequence_container<QList<QString>>();
+  utils::register_sequence_container<QList<QFileInfo>>();
+  utils::register_sequence_container<QList<QVariant>>();
+
+  utils::register_sequence_container<std::vector<unsigned int>>();
+  utils::register_sequence_container<std::vector<Mapping>>();
+
+  utils::register_set_container<std::set<QString>>();
+  
+  utils::register_associative_container<QMap<QString, QVariant>>();
+  utils::register_associative_container<QMap<QString, QStringList>>();
+  
+  utils::register_associative_container<IFileTree::OverwritesType>();
+
+  // Tuple:
+  bpy::register_tuple<boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
+
+  // Variants:
+  bpy::register_variant<boost::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>>();
+  bpy::register_variant<boost::variant<IFileTree::OverwritesType, std::size_t, bool>>();
+  bpy::register_variant<boost::variant<QString, bool>>();
+
+  // Functions:
+  Functor_converter<void()>(); // converter for the onRefreshed-callback
+  Functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
+  Functor_converter<bool(const IOrganizer::FileInfo&)>();
+  Functor_converter<void(const QString&)>();
+  Functor_converter<bool(const QString&)>();
+  Functor_converter<void(const QString&, unsigned int)>();
+  Functor_converter<boost::variant<QString, bool>(QString const&)>();
+  Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
+
 
   bpy::def("toPyQt", &toPyQt<IModRepositoryBridge>);
   bpy::def("toPyQt", &toPyQt<IDownloadManager>);
@@ -819,11 +742,6 @@ BOOST_PYTHON_MODULE(mobase)
 
   // TODO: ISaveGameInfoWidget bindings
 
-  Functor_converter<bool(const IOrganizer::FileInfo&)>();
-  Functor_converter<void(const QString&)>();
-  Functor_converter<bool(const QString&)>();
-  Functor_converter<void(const QString&, unsigned int)>();
-
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
     .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
     .def_readwrite("archive", &IOrganizer::FileInfo::archive)
@@ -871,15 +789,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("modsSortedByProfilePriority", bpy::pure_virtual(&IOrganizer::modsSortedByProfilePriority))
       ;
 
-  // FileTreeEntry and IFileTree are only managed by shared ptr.
-  bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
-  bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
-  bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
-  bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
-
-  // For removeIf:
-  Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
-
   // FileTreeEntry Scope:
   auto fileTreeEntryClass = bpy::class_<FileTreeEntry, boost::noncopyable>("FileTreeEntry", bpy::no_init);
   {
@@ -925,9 +834,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("__repr__", +[](const FileTreeEntry* entry) { return "FileTreeEntry(\"" + entry->name() + "\")"; })
       ;
   }
-
-  utils::register_associative_container<IFileTree::OverwritesType>();
-  bpy::register_variant<boost::variant<IFileTree::OverwritesType, std::size_t, bool>>();
 
   // IFileTree scope:
   auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);;
@@ -991,6 +897,16 @@ BOOST_PYTHON_MODULE(mobase)
       .def("__len__", &IFileTree::size)
       .def("__bool__", +[](const IFileTree* tree) { return !tree->empty(); })
       .def("__repr__", +[](const IFileTree* entry) { return "IFileTree(\"" + entry->name() + "\")"; })
+
+      .def("makeTree", +[]() -> std::shared_ptr<IFileTree> {
+          struct MyTree : public IFileTree {
+            MyTree(std::shared_ptr<IFileTree> parent = nullptr, QString name = "") : FileTreeEntry(parent, name), IFileTree() { }
+          protected:
+            std::shared_ptr<IFileTree> makeDirectory(std::shared_ptr<IFileTree> p, QString n) const override { return std::make_shared<MyTree>(p, n); }
+            void doPopulate(std::shared_ptr<IFileTree>, std::vector<std::shared_ptr<FileTreeEntry>> &) const override { }
+          };
+          return std::make_shared<MyTree>();
+      }).staticmethod("makeTree")
       ;
   }
   
@@ -1086,10 +1002,6 @@ BOOST_PYTHON_MODULE(mobase)
       .value("USER", MOBase::GUESS_USER)
       ;
 
-  // For setFilter:
-  bpy::register_variant<boost::variant<QString, bool>>();
-  Functor_converter<boost::variant<QString, bool>(QString const&)>();
-
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def(bpy::init<>())
       .def(bpy::init<QString const&, EGuessQuality>())
@@ -1124,21 +1036,13 @@ BOOST_PYTHON_MODULE(mobase)
         });
       })
 
-      // Exposing the set does not work, but even if it worked, we would lose the order since it would be
-      // converted to a python set() so we expose a custom iterator. This works because variants() returns
-      // a reference, otherwize this would be more complex to do (also, needs to use references instead of
-      // pointers instead of the lambda due to the range() requirements):
-      .def("variants", bpy::range<
-        bpy::return_value_policy<bpy::copy_const_reference>>(
-        +[](GuessedValue<QString> &gv) { return std::begin(gv.variants()); },
-        +[](GuessedValue<QString> &gv) { return std::end(gv.variants()); }
-        ))
+      // This makes a copy in python but it more practical than exposing an iterator:
+      .def("variants", &GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
       .def("__str__", &MOBase::GuessedValue<QString>::operator const QString&, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
   bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
   QFlags_from_python_obj<IPluginList::PluginState>();
-  Functor_converter<void()>(); // converter for the onRefreshed-callback
 
   bpy::enum_<IPluginList::PluginState>("PluginState")
       .value("missing", IPluginList::STATE_MISSING)
@@ -1162,7 +1066,6 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   QFlags_from_python_obj<IModList::ModState>();
-  Functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
 
   bpy::enum_<IModList::ModState>("ModState")
       .value("exists", IModList::STATE_EXISTS)
@@ -1282,8 +1185,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("featureUnmanagedMods", &MOBase::IPluginGame::feature<UnmanagedMods>, bpy::return_value_policy<bpy::reference_existing_object>())
       ;
 
-  bpy::register_tuple<boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
-  bpy::register_variant<boost::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>>();
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
       .value("SUCCESS", MOBase::IPluginInstaller::RESULT_SUCCESS)
       .value("FAILED", MOBase::IPluginInstaller::RESULT_FAILED)
@@ -1318,26 +1219,6 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   HANDLE_converters();
-
-  //bpy::to_python_converter<ModRepositoryFileInfo, ModRepositoryFileInfo_to_python_dict>();
-
-  QList_from_python_obj<ExecutableInfo>();
-  QList_from_python_obj<PluginSetting>();
-  bpy::to_python_converter<QList<ModRepositoryFileInfo>,
-      QList_to_python_list<ModRepositoryFileInfo> >();
-  QList_from_python_obj<QString>();
-  bpy::to_python_converter<QList<QFileInfo>,
-      QList_to_python_list<QFileInfo>>();
-  QList_from_python_obj<QVariant>();
-  bpy::to_python_converter<QList<QVariant>,
-      QList_to_python_list<QVariant>>();
-
-  QMap_converters<QString, QVariant>();
-  QMap_converters<QString, QStringList>();
-
-  utils::register_sequence_container<std::vector<unsigned int>>();
-  utils::register_sequence_container<std::vector<Mapping>>();
-  utils::register_set_container<std::set<QString>>();
 
   registerGameFeaturesPythonConverters();
 }

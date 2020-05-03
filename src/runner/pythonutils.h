@@ -7,12 +7,33 @@ namespace utils {
 
   namespace bpy = boost::python;
 
+  namespace details {
+
+    template <class It, class = void>
+    struct is_stdmap_iterator : std::false_type {};
+
+    template <class It>
+    struct is_stdmap_iterator<It, std::void_t<decltype(std::declval<It>()->first)>> : std::true_type {};
+
+    // Note: QMap and standard maps do not have the same type of iterators:
+    template <class It, std::enable_if_t<is_stdmap_iterator<It>{}, int> = 0>
+    inline auto set_dict_entry(bpy::dict& result, It const& it) {
+      result[bpy::object{ it->first }] = bpy::object{ it->second };
+    }
+
+    template <class It, std::enable_if_t<!is_stdmap_iterator<It>{}, int > = 0>
+    inline auto set_dict_entry(bpy::dict& result, It const& it) {
+      result[bpy::object{ it.key() }] = bpy::object{ it.value() };
+    }
+
+  }
+
   template <class Map>
   struct map_to_python {
     static PyObject* convert(const Map& map) {
       bpy::dict result;
-      for (auto& entry : map) {
-        result[bpy::object{ entry.first }] = bpy::object{ entry.second };
+      for (auto it = map.begin(); it != map.end(); ++it) {
+        details::set_dict_entry(result, it);
       }
       return bpy::incref(result.ptr());
     }
