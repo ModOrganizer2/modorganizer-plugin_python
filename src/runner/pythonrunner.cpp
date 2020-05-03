@@ -675,9 +675,12 @@ int getArgCount(PyObject *object) {
   return result;
 }
 
+template <typename>
+struct Functor_converter;
+
 
 template <typename RET, typename... PARAMS>
-struct Functor_converter
+struct Functor_converter<RET(PARAMS... )>
 {
 
   struct FunctorWrapper
@@ -875,10 +878,10 @@ BOOST_PYTHON_MODULE(mobase)
 
   // TODO: ISaveGameInfoWidget bindings
 
-  Functor_converter<bool, const IOrganizer::FileInfo&>();
-  Functor_converter<void, const QString&>();
-  Functor_converter<bool, const QString&>();
-  Functor_converter<void, const QString&, unsigned int>();
+  Functor_converter<bool(const IOrganizer::FileInfo&)>();
+  Functor_converter<void(const QString&)>();
+  Functor_converter<bool(const QString&)>();
+  Functor_converter<void(const QString&, unsigned int)>();
 
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
       .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
@@ -926,6 +929,9 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
   bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
+
+  // For removeIf:
+  Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
 
   // FileTreeEntry Scope:
   auto fileTreeEntryClass = bpy::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>, boost::noncopyable>("FileTreeEntry", bpy::no_init);
@@ -1017,9 +1023,7 @@ BOOST_PYTHON_MODULE(mobase)
 
       .def("clear", &IFileTree::clear)
       .def("removeAll", &IFileTree::removeAll)
-      .def("removeIf", +[](IFileTree* p, boost::python::object fn) {
-          return p->removeIf(fn);
-        })
+      .def("removeIf", &IFileTree::removeIf)
 
       // Special methods:
       .def("__getitem__", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(std::size_t)>(&IFileTree::at),
@@ -1125,6 +1129,11 @@ BOOST_PYTHON_MODULE(mobase)
       .value("USER", MOBase::GUESS_USER)
       ;
 
+  // For setFilter, temporarily since the reference does not allow
+  // python plugin to update the name:
+  register_implicit_variant<bool, QString>();
+  Functor_converter<boost::variant<bool, QString>(QString const&)>();
+
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def(bpy::init<>())
       .def(bpy::init<QString const&, EGuessQuality>())
@@ -1141,7 +1150,24 @@ BOOST_PYTHON_MODULE(mobase)
       .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { *gv = other; }, bpy::return_self<>())
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
-      .def("setFilter", +[](GuessedValue<QString>* gv, bpy::object fn) { gv->setFilter(fn); })
+      .def("setFilter", +[](GuessedValue<QString>* gv, std::function<boost::variant<bool, QString>(QString const&)> fn) {
+        gv->setFilter([fn](QString& s) {
+          auto ret = fn(s);
+          return boost::apply_visitor([&s](auto v) {
+            qDebug() << "In visitor:" << typeid(v).name();
+            if constexpr (std::is_same_v<decltype(v), QString>) {
+              s = v;
+              return true;
+            }
+            else if constexpr (std::is_same_v<decltype(v), bool>) {
+              return v;
+            }
+            else {
+              static_assert("Incorrect visitor.");
+            }
+          }, ret);
+        });
+      })
 
       // Exposing the set does not work, but even if it worked, we would lose the order since it would be
       // converted to a python set() so we expose a cusotm iterator. This works because variants() returns
@@ -1157,7 +1183,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
   QFlags_from_python_obj<IPluginList::PluginState>();
-  Functor_converter<void>(); // converter for the onRefreshed-callback
+  Functor_converter<void()>(); // converter for the onRefreshed-callback
 
   bpy::enum_<IPluginList::PluginState>("PluginState")
       .value("missing", IPluginList::STATE_MISSING)
@@ -1181,7 +1207,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
   QFlags_from_python_obj<IModList::ModState>();
-  Functor_converter<void, const QString&, IModList::ModStates>(); // converter for the onModStateChanged-callback
+  Functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
 
   bpy::enum_<IModList::ModState>("ModState")
       .value("exists", IModList::STATE_EXISTS)
