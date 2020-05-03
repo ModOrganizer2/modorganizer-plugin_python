@@ -26,7 +26,9 @@
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
 #include <boost/mp11.hpp>
+
 #include "tuple_helper.h"
+#include "variant_helper.h"
 #endif
 
 MOBase::IOrganizer *s_Organizer = nullptr;
@@ -772,20 +774,6 @@ struct DowncastReturn {
 
 };
 
-/**
- * @brief Register implicit conversion from any of the decayed type from the variant
- *     to the variant type.
- */
-template <class... Args>
-void register_implicit_variant() {
-  mp11::mp_for_each<
-    mp11::mp_list<Args... >> (
-      [](auto t) {
-        // take advantage of built-in conversions
-        bpy::implicitly_convertible<std::decay_t<decltype(t)>, boost::variant<Args... >>();
-      });
-}
-
 
 BOOST_PYTHON_MODULE(mobase)
 {
@@ -1129,10 +1117,9 @@ BOOST_PYTHON_MODULE(mobase)
       .value("USER", MOBase::GUESS_USER)
       ;
 
-  // For setFilter, temporarily since the reference does not allow
-  // python plugin to update the name:
-  register_implicit_variant<bool, QString>();
-  Functor_converter<boost::variant<bool, QString>(QString const&)>();
+  // For setFilter:
+  bpy::register_variant<boost::variant<QString, bool>>();
+  Functor_converter<boost::variant<QString, bool>(QString const&)>();
 
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def(bpy::init<>())
@@ -1150,11 +1137,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { *gv = other; }, bpy::return_self<>())
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
-      .def("setFilter", +[](GuessedValue<QString>* gv, std::function<boost::variant<bool, QString>(QString const&)> fn) {
+      .def("setFilter", +[](GuessedValue<QString>* gv, std::function<boost::variant<QString, bool>(QString const&)> fn) {
         gv->setFilter([fn](QString& s) {
           auto ret = fn(s);
           return boost::apply_visitor([&s](auto v) {
-            qDebug() << "In visitor:" << typeid(v).name();
             if constexpr (std::is_same_v<decltype(v), QString>) {
               s = v;
               return true;
@@ -1170,7 +1156,7 @@ BOOST_PYTHON_MODULE(mobase)
       })
 
       // Exposing the set does not work, but even if it worked, we would lose the order since it would be
-      // converted to a python set() so we expose a cusotm iterator. This works because variants() returns
+      // converted to a python set() so we expose a custom iterator. This works because variants() returns
       // a reference, otherwize this would be more complex to do (also, needs to use references instead of
       // pointers instead of the lambda due to the range() requirements):
       .def("variants", bpy::range<
@@ -1328,7 +1314,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::register_tuple<boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
-  register_implicit_variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>();
+  bpy::register_variant<boost::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, boost::tuple<std::shared_ptr<IFileTree>, QString, int>>>();
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
       .value("SUCCESS", MOBase::IPluginInstaller::RESULT_SUCCESS)
       .value("FAILED", MOBase::IPluginInstaller::RESULT_FAILED)
