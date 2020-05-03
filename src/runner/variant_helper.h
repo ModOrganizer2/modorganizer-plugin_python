@@ -14,15 +14,10 @@
 namespace boost {
   namespace python {
 
-    template <class>
-    struct to_py_variant;
+    template <class TVariant>
+    struct to_py_variant {
 
-    template <class... Args>
-    struct to_py_variant<boost::variant<Args... >> {
-
-      using variant_type = boost::variant<Args... >;
-
-      static PyObject* convert(const variant_type& c_variant) {
+      static PyObject* convert(const TVariant& c_variant) {
         object value = boost::apply_visitor([](auto const& value) {
           return object{ value };
         }, c_variant);
@@ -35,10 +30,10 @@ namespace boost {
     template <class TVariant>
     struct variant_from_python;
    
-    template <class... Args>
-    struct variant_from_python<boost::variant<Args... >> {
+    template <template <class... > class VTemplate, class... Args>
+    struct variant_from_python<VTemplate<Args... >> {
 
-      using variant_type = boost::variant<Args... >;
+      using variant_type = VTemplate<Args... >;
 
       static void* convertible(PyObject* py_obj) {
 
