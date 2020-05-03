@@ -366,35 +366,6 @@ struct std_vector_to_python_list
 
 
 template <typename T>
-struct std_vector_from_python_obj
-{
-  std_vector_from_python_obj() {
-    bpy::converter::registry::push_back(
-      &convertible,
-      &construct,
-      bpy::type_id<std::vector<T> >());
-  }
-
-  static void* convertible(PyObject *objPtr) {
-    if (PyList_Check(objPtr)) return objPtr;
-    return nullptr;
-  }
-
-  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    void *storage = ((bpy::converter::rvalue_from_python_storage<std::vector<T> >*)data)->storage.bytes;
-    std::vector<T> *result = new (storage) std::vector<T>();
-    bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
-    int length = bpy::len(source);
-    for (int i = 0; i < length; ++i) {
-      result->push_back(bpy::extract<T>(source[i]));
-    }
-
-    data->convertible = storage;
-  }
-};
-
-
-template <typename T>
 struct QFlags_from_python_obj
 {
   QFlags_from_python_obj() {
@@ -413,36 +384,6 @@ struct QFlags_from_python_obj
     T tVersion = (T)intVersion;
     void *storage = ((bpy::converter::rvalue_from_python_storage<QFlags<T>> *)data)->storage.bytes;
     new (storage) QFlags<T>(tVersion);
-
-    data->convertible = storage;
-  }
-};
-
-
-template <typename T>
-struct stdset_from_python_list
-{
-  stdset_from_python_list() {
-    bpy::converter::registry::push_back(
-      &convertible,
-      &construct,
-      bpy::type_id<std::set<T> >());
-  }
-
-  static void* convertible(PyObject *objPtr) {
-    if (PyList_Check(objPtr)) return objPtr;
-    return nullptr;
-  }
-
-  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    void *storage = ((bpy::converter::rvalue_from_python_storage<std::set<T> >*)data)->storage.bytes;
-    std::set<T> *result = new (storage) std::set<T>();
-
-    bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
-    int length = bpy::len(source);
-    for (int i = 0; i < length; ++i) {
-      result->insert(bpy::extract<T>(source[i]));
-    }
 
     data->convertible = storage;
   }
@@ -985,7 +926,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
   }
 
-  utils::register_map<IFileTree::OverwritesType>();
+  utils::register_associative_container<IFileTree::OverwritesType>();
   bpy::register_variant<boost::variant<IFileTree::OverwritesType, std::size_t, bool>>();
 
   // IFileTree scope:
@@ -1393,12 +1334,9 @@ BOOST_PYTHON_MODULE(mobase)
   QMap_converters<QString, QVariant>();
   QMap_converters<QString, QStringList>();
 
-  std_vector_from_python_obj<unsigned int>();
-  std_vector_from_python_obj<Mapping>();
-  bpy::to_python_converter<std::vector<Mapping>,
-      std_vector_to_python_list<Mapping>>();
-
-  stdset_from_python_list<QString>();
+  utils::register_sequence_container<std::vector<unsigned int>>();
+  utils::register_sequence_container<std::vector<Mapping>>();
+  utils::register_set_container<std::set<QString>>();
 
   registerGameFeaturesPythonConverters();
 }
