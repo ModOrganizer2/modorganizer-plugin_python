@@ -883,6 +883,12 @@ BOOST_PYTHON_MODULE(mobase)
   Functor_converter<bool(const QString&)>();
   Functor_converter<void(const QString&, unsigned int)>();
 
+  bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
+    .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
+    .def_readwrite("archive", &IOrganizer::FileInfo::archive)
+    .def_readwrite("origins", &IOrganizer::FileInfo::origins)
+    ;
+
   bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
       .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
