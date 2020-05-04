@@ -353,10 +353,13 @@ std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
   return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, std::set<QString>>(this, "supportedExtensions");
 }
 
-IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(GuessedValue<QString> &modName, QString gameName, const QString &archiveName,
-                                                                        const QString &version, int modID)
+IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(
+  GuessedValue<QString> &modName, QString gameName, const QString &archiveName, const QString &version, int modID)
 {
-  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, IPluginInstaller::EInstallResult>(this, "install", modName, gameName, archiveName, version, modID);
+  // Note: This requires far more less trouble than the "Simple" installer version since 1) there is no tree 
+  // and 2) there version and modId cannot be modified:
+  return basicWrapperFunctionImplementation<IPluginInstallerCustomWrapper, IPluginInstaller::EInstallResult>(
+    this, "install", boost::ref(modName), gameName, archiveName, version, modID);
 }
 
 /// end IPluginInstallerCustom Wrapper
