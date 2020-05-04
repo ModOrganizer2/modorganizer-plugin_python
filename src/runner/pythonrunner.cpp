@@ -660,10 +660,13 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_associative_container<IFileTree::OverwritesType>();
 
   // Tuple:
-  bpy::register_tuple<std::tuple<std::shared_ptr<IFileTree>, QString, int>>();
+  bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>();
 
   // Variants:
-  bpy::register_variant<std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<std::shared_ptr<IFileTree>, QString, int>>>();
+  bpy::register_variant<std::variant<
+    IPluginInstaller::EInstallResult, 
+    std::shared_ptr<IFileTree>, 
+    std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>>();
   bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t, bool>>();
   bpy::register_variant<std::variant<QString, bool>>();
 
@@ -1187,7 +1190,13 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginInstallerSimpleWrapper, boost::noncopyable>("IPluginInstallerSimple")
-    .def("install", &IPluginInstallerSimple::install)
+    // Note: Keeping the variant here if we always return a tuple to be consistent with the wrapper and
+    // have proper stubs generation.
+    .def("install", +[](IPluginInstallerSimple* p, GuessedValue<QString>& modName, std::shared_ptr<IFileTree>& tree, QString& version, int& nexusID)
+      -> std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>> {
+        auto result = p->install(modName, tree, version, nexusID);
+        return std::make_tuple(result, tree, version, nexusID);
+      })
     .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     .def("manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
