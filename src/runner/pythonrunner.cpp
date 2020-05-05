@@ -39,6 +39,12 @@ MOBase::IOrganizer *s_Organizer = nullptr;
 
 
 
+using namespace MOBase;
+
+namespace bpy = boost::python;
+namespace mp11 = boost::mp11;
+
+
 class PythonRunner : public IPythonRunner
 {
 
@@ -52,6 +58,25 @@ public:
 private:
 
   void initPath();
+
+  /**
+   * @brief Append the underlying object of the given python object to the
+   *     interface list for each type it matches.
+   *
+   * @param obj The object to check.
+   * @param interfaces The list to append the object to.
+   *
+   */
+  template <class... >
+  void appendIfInstance(bpy::object const& obj, QList<QObject*> &interfaces);
+
+  /**
+   * @brief Ensure that the given folder is in sys.path. Can be used
+   * after Py_Initialize().
+   *
+   * @param folder Folder to add to the path if missing.
+   */
+  void ensureFolderInPath(QString folder);
 
 private:
   std::map<QString, boost::python::object> m_PythonObjects;
@@ -71,12 +96,6 @@ IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pyt
     return nullptr;
   }
 }
-
-
-using namespace MOBase;
-
-namespace bpy = boost::python;
-namespace mp11 = boost::mp11;
 
 struct QString_to_python_str
 {
@@ -1331,15 +1350,6 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
 }
 
 
-#define TRY_PLUGIN_TYPE(type, var) do { \
-    bpy::extract<type *> extr(var); \
-    if (extr.check()) { \
-      QObject *res = extr; \
-      interfaceList.append(res); \
-    }\
-  } while (false)
-
-
 void PythonRunner::initPath()
 {
   static QStringList paths = {
@@ -1351,6 +1361,29 @@ void PythonRunner::initPath()
   Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
+template <class... >
+struct appendIfInstance_Impl;
+
+template <class Arg, class... Args>
+struct appendIfInstance_Impl<Arg, Args... > {
+  static void apply(bpy::object const& obj, QList<QObject*> &interfaces) { 
+    bpy::extract<Arg*> extr{ obj };
+    if (extr.check()) {
+      interfaces.append(extr);
+    }
+    appendIfInstance_Impl<Args...>::apply(obj, interfaces);
+  }
+};
+
+template <>
+struct appendIfInstance_Impl<> {
+  static void apply(bpy::object const& obj, QList<QObject*> &interfaces) { }
+};
+
+template <class... Args>
+void PythonRunner::appendIfInstance(bpy::object const& obj, QList<QObject*> &interfaces) {
+  return appendIfInstance_Impl<Args...>::apply(obj, interfaces);
+}
 
 QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 {
@@ -1372,18 +1405,23 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 
     bpy::object pluginObj = m_PythonObjects[pluginName];
     QList<QObject *> interfaceList;
-    TRY_PLUGIN_TYPE(IPluginGame, pluginObj);
-    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-    TRY_PLUGIN_TYPE(IPluginDiagnoseWrapper, pluginObj);
-    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-    TRY_PLUGIN_TYPE(IPluginFileMapperWrapper, pluginObj);
-    TRY_PLUGIN_TYPE(IPluginInstallerCustom, pluginObj);
-    TRY_PLUGIN_TYPE(IPluginInstallerSimple, pluginObj);
-    TRY_PLUGIN_TYPE(IPluginModPage, pluginObj);
-    TRY_PLUGIN_TYPE(IPluginPreview, pluginObj);
-    TRY_PLUGIN_TYPE(IPluginTool, pluginObj);
+
+    appendIfInstance<
+      IPluginGame, 
+      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+      IPluginDiagnoseWrapper,
+      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+      IPluginFileMapperWrapper, 
+      IPluginInstallerCustom,
+      IPluginInstallerSimple,
+      IPluginModPage,
+      IPluginPreview,
+      IPluginTool
+    > (pluginObj, interfaceList);
+
+
     if (interfaceList.isEmpty())
-      TRY_PLUGIN_TYPE(IPluginWrapper, pluginObj);
+      appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
 
     return interfaceList;
   } catch (const bpy::error_already_set&) {
