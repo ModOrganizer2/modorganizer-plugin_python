@@ -1036,9 +1036,6 @@ BOOST_PYTHON_MODULE(mobase)
             else if constexpr (std::is_same_v<decltype(v), bool>) {
               return v;
             }
-            else {
-              static_assert("Incorrect visitor.");
-            }
           }, ret);
         });
       })

@@ -331,9 +331,6 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
       nexusID = std::get<3>(t);
       return std::get<0>(t);
     }
-    else {
-      static_assert("Type not handled in boost::apply_visitor.");
-    }
   }, ret);
 }
 
