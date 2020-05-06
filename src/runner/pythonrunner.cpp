@@ -61,13 +61,13 @@ private:
 
   /**
    * @brief Append the underlying object of the given python object to the
-   *     interface list for each type it matches.
+   *     interface list if it is an instance (pointer) of the given type.
    *
    * @param obj The object to check.
    * @param interfaces The list to append the object to.
    *
    */
-  template <class... >
+  template <class T>
   void appendIfInstance(bpy::object const& obj, QList<QObject*> &interfaces);
 
   /**
@@ -1361,28 +1361,15 @@ void PythonRunner::initPath()
   Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
-template <class... >
-struct appendIfInstance_Impl;
 
-template <class Arg, class... Args>
-struct appendIfInstance_Impl<Arg, Args... > {
-  static void apply(bpy::object const& obj, QList<QObject*> &interfaces) { 
-    bpy::extract<Arg*> extr{ obj };
-    if (extr.check()) {
-      interfaces.append(extr);
-    }
-    appendIfInstance_Impl<Args...>::apply(obj, interfaces);
-  }
-};
 
-template <>
-struct appendIfInstance_Impl<> {
-  static void apply(bpy::object const& obj, QList<QObject*> &interfaces) { }
-};
 
-template <class... Args>
+template <class T>
 void PythonRunner::appendIfInstance(bpy::object const& obj, QList<QObject*> &interfaces) {
-  return appendIfInstance_Impl<Args...>::apply(obj, interfaces);
+  bpy::extract<T*> extr{ obj };
+  if (extr.check()) {
+    interfaces.append(extr);
+  }
 }
 
 QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
@@ -1406,19 +1393,16 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     bpy::object pluginObj = m_PythonObjects[pluginName];
     QList<QObject *> interfaceList;
 
-    appendIfInstance<
-      IPluginGame, 
-      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-      IPluginDiagnoseWrapper,
-      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-      IPluginFileMapperWrapper, 
-      IPluginInstallerCustom,
-      IPluginInstallerSimple,
-      IPluginModPage,
-      IPluginPreview,
-      IPluginTool
-    > (pluginObj, interfaceList);
-
+    appendIfInstance<IPluginGame>(pluginObj, interfaceList);
+    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+    appendIfInstance<IPluginDiagnoseWrapper>(pluginObj, interfaceList);
+    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+    appendIfInstance<IPluginFileMapperWrapper>(pluginObj, interfaceList); 
+    appendIfInstance<IPluginInstallerCustom>(pluginObj, interfaceList);
+    appendIfInstance<IPluginInstallerSimple>(pluginObj, interfaceList);
+    appendIfInstance<IPluginModPage>(pluginObj, interfaceList);
+    appendIfInstance<IPluginPreview>(pluginObj, interfaceList);
+    appendIfInstance<IPluginTool>(pluginObj, interfaceList);
 
     if (interfaceList.isEmpty())
       appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
