@@ -70,14 +70,6 @@ private:
   template <class T>
   void appendIfInstance(bpy::object const& obj, QList<QObject*> &interfaces);
 
-  /**
-   * @brief Ensure that the given folder is in sys.path. Can be used
-   * after Py_Initialize().
-   *
-   * @param folder Folder to add to the path if missing.
-   */
-  void ensureFolderInPath(QString folder);
-
 private:
   std::map<QString, boost::python::object> m_PythonObjects;
   const MOBase::IOrganizer *m_MOInfo;
