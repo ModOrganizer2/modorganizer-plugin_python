@@ -142,44 +142,6 @@ struct QString_from_python_str
 };
 
 
-struct HANDLE_converters
-{
-  struct HANDLE_to_python
-  {
-    static PyObject *convert(HANDLE handle) {
-      size_t size_t_version = (size_t)handle;
-      return bpy::incref(bpy::object(size_t_version).ptr());
-    }
-  };
-
-  // bpy isn't keen on actually using this.
-  // maybe it's detecting that the function receives a pointer, and assumes that it needs to convert to the pointer's target.
-  // the issue can be worked around by wrapping the function to take a size_t and converting it there
-  struct HANDLE_from_python
-  {
-    HANDLE_from_python() {
-      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<HANDLE>());
-    }
-
-    static void *convertible(PyObject *objPtr) {
-      return PyLong_Check(objPtr) ? objPtr : nullptr;
-    }
-
-    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-      void *storage = ((bpy::converter::rvalue_from_python_storage<HANDLE>*)data)->storage.bytes;
-      HANDLE *result = new (storage) HANDLE;
-      *result = (HANDLE)bpy::extract<size_t>(objPtr)();
-    }
-  };
-
-  HANDLE_converters()
-  {
-    HANDLE_from_python();
-    bpy::to_python_converter<HANDLE, HANDLE_to_python>();
-  }
-};
-
-
 struct QVariant_to_python_obj
 {
   static PyObject *convert(const QVariant &var) {
@@ -1272,8 +1234,6 @@ BOOST_PYTHON_MODULE(mobase)
     .def("setParentWidget", &IPluginTool::setParentWidget, &IPluginToolWrapper::setParentWidget_Default)
     .def("_parentWidget", &IPluginToolWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     ;
-
-  HANDLE_converters();
 
   registerGameFeaturesPythonConverters();
 }
