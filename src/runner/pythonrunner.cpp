@@ -748,20 +748,21 @@ BOOST_PYTHON_MODULE(mobase)
       .def("pluginList", &IOrganizer::pluginList, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", &IOrganizer::modList, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("profile", &IOrganizer::profile, bpy::return_value_policy<bpy::reference_existing_object>())
+
+      // Custom implementation for startApplication and waitForApplication because 1) HANDLE (= void*) is not properly
+      // converted from/to python, and 2) we need to convert the by-ptr argument to a return-tuple for waitForApplication:
       .def("startApplication", 
         +[](IOrganizer* o, const QString& executable, const QStringList& args, const QString& cwd, const QString& profile, 
           const QString& forcedCustomOverwrite, bool ignoreCustomOverwrite) {
             return (std::uintptr_t) o->startApplication(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite);
-        }, 
-      ((bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
-      //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
-      // Use wrapped version
+        }, ((bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), 
+            (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
       .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle) {
           DWORD returnCode;
           bool result = o->waitForApplication((HANDLE)handle, &returnCode);
           return std::make_tuple(result, returnCode);
-        }
-        )
+        })
+
       .def("onModInstalled", &IOrganizer::onModInstalled)
       .def("onAboutToRun", &IOrganizer::onAboutToRun)
       .def("onFinishedRun", &IOrganizer::onFinishedRun)
