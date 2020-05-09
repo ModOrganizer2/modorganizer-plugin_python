@@ -186,12 +186,19 @@ public:
   static constexpr const char* className = "IPluginModPageWrapper";
   using boost::python::wrapper<MOBase::IPluginModPage>::get_override;
 
+  // Bring in public scope:
+  using IPluginModPage::parentWidget;
+
   virtual QString displayName() const override;
   virtual QIcon icon() const override;
   virtual QUrl pageURL() const override;
   virtual bool useIntegratedBrowser() const override;
   virtual bool handlesDownload(const QUrl &pageURL, const QUrl &downloadURL, MOBase::ModRepositoryFileInfo &fileInfo) const override;
   virtual void setParentWidget(QWidget *widget) override;
+
+  void setParentWidget_Default(QWidget* parent) {
+    IPluginModPage::setParentWidget(parent);
+  }
 };
 
 
@@ -220,10 +227,17 @@ public:
   static constexpr const char* className = "IPluginToolWrapper";
   using boost::python::wrapper<MOBase::IPluginTool>::get_override;
 
+  // Bring in public scope:
+  using IPluginTool::parentWidget;
+
   virtual QString displayName() const;
   virtual QString tooltip() const;
   virtual QIcon icon() const;
   virtual void setParentWidget(QWidget *parent);
+
+  void setParentWidget_Default(QWidget* parent) {
+    IPluginTool::setParentWidget(parent);
+  }
 
 public Q_SLOTS:
   virtual void display() const;

@@ -393,7 +393,7 @@ bool IPluginModPageWrapper::handlesDownload(const QUrl & pageURL, const QUrl & d
 
 void IPluginModPageWrapper::setParentWidget(QWidget * widget)
 {
-  basicWrapperFunctionImplementation<IPluginModPageWrapper, void>(this, "setParentWidget", widget);
+  basicWrapperFunctionImplementationWithDefault<IPluginModPageWrapper, void>(this, &IPluginModPageWrapper::setParentWidget_Default, "setParentWidget", widget);
 }
 /// end IPluginModPage Wrapper
 /////////////////////////////
@@ -414,12 +414,21 @@ QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QS
     GILock lock;
     boost::python::override implementation = this->get_override("genFilePreview");
     if (!implementation)
-      throw MissingImplementation(this->className, "genFilePreview");
+      throw pyexcept::MissingImplementation(this->className, "genFilePreview");
     boost::python::object pyVersion = implementation(fileName, maxSize);
     // We need responsibility for deleting the QWidget to be transferred to C++
     sipAPIAccess::sipAPI()->api_transfer_to(pyVersion.ptr(), Py_None);
     return boost::python::extract<QWidget *>(pyVersion)();
-  } PYCATCH;
+  }
+  catch (const boost::python::error_already_set&) {
+    throw pyexcept::PythonError();
+  }
+  catch (pyexcept::MissingImplementation const& missingImplementation) {
+    throw missingImplementation;
+  }
+  catch (...) {
+    throw pyexcept::UnknownException();
+  }
 }
 /// end IPluginPreview Wrapper
 /////////////////////////////
@@ -445,7 +454,7 @@ QIcon IPluginToolWrapper::icon() const
 
 void IPluginToolWrapper::setParentWidget(QWidget *parent)
 {
-  basicWrapperFunctionImplementation<IPluginToolWrapper, void>(this, "setParentWidget", parent);
+  basicWrapperFunctionImplementationWithDefault<IPluginToolWrapper, void>(this, &IPluginToolWrapper::setParentWidget_Default, "setParentWidget", parent);
 }
 
 void IPluginToolWrapper::display() const

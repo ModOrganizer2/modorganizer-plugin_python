@@ -70,11 +70,12 @@ namespace utils {
       bpy::list pyList;
 
       try {
-        for (auto& item : container)
+        for (auto& item : container) {
           pyList.append(item);
+        }
       }
       catch (const bpy::error_already_set&) {
-        reportPythonError();
+        throw pyexcept::PythonError();
       }
 
       return bpy::incref(pyList.ptr());
@@ -115,7 +116,7 @@ namespace utils {
           pyList.append(item);
       }
       catch (const bpy::error_already_set&) {
-        reportPythonError();
+        throw pyexcept::PythonError();
       }
 
       return bpy::incref(pyList.ptr());

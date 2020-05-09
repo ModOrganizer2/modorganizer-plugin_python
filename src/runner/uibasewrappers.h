@@ -126,7 +126,7 @@ private Q_SLOTS:
       GILock lock;
       m_FilesAvailableHandler(modID, userData, resultData);
     } catch (const boost::python::error_already_set&) {
-      reportPythonError();
+      throw pyexcept::PythonError();
     }
   }
 
@@ -141,7 +141,7 @@ private Q_SLOTS:
         GILock lock;
         m_DescriptionAvailableHandler(modID, userData, resultData);
       } catch (const boost::python::error_already_set&) {
-        reportPythonError();
+        throw pyexcept::PythonError();
       }
     } catch (const std::exception &e) {
       qCritical("failed to report event: %s", e.what());
@@ -160,7 +160,7 @@ private Q_SLOTS:
         GILock lock;
         m_FileInfoHandler(modID, fileID, userData, resultData);
       } catch (const boost::python::error_already_set&) {
-        reportPythonError();
+        throw pyexcept::PythonError();
       }
     } catch (const std::exception &e) {
       qCritical("failed to report event: %s", e.what());
@@ -180,7 +180,7 @@ private Q_SLOTS:
         GILock lock;
         m_EndorsementToggledHandler(modID, userData, resultData);
       } catch (const boost::python::error_already_set&) {
-        reportPythonError();
+        throw pyexcept::PythonError();
       }
     } catch (const std::exception &e) {
       qCritical("failed to report event: %s", e.what());
@@ -200,7 +200,7 @@ private Q_SLOTS:
         GILock lock;
         m_TrackingToggledHandler(modID, userData, tracked);
       } catch (const boost::python::error_already_set&) {
-        reportPythonError();
+        throw pyexcept::PythonError();
       }
     } catch (const std::exception &e) {
       qCritical("failed to report event: %s", e.what());
@@ -215,7 +215,7 @@ private Q_SLOTS:
       GILock lock;
       m_FailedHandler(modID, fileID, userData, errorMessage);
     } catch (const boost::python::error_already_set&) {
-      reportPythonError();
+      throw pyexcept::PythonError();
     }
   }
 
@@ -229,176 +229,6 @@ private:
   boost::python::object m_TrackingToggledHandler;
   boost::python::object m_FailedHandler;
 
-};
-
-// NOTE: Completely unnecessary - we're never going to override IOrganizer from within Python
-struct IOrganizerWrapper : MOBase::IOrganizer,
-                           boost::python::wrapper<MOBase::IOrganizer> {
-  virtual MOBase::IModRepositoryBridge *createNexusBridge() const override
-  {
-    return this->get_override("createNexusBridge")();
-  }
-  virtual QString profileName() const override
-  {
-    return this->get_override("profileName")();
-  }
-  virtual QString profilePath() const override
-  {
-    return this->get_override("profilePath")();
-  }
-  virtual QString downloadsPath() const override
-  {
-    return this->get_override("downloadsPath")();
-  }
-  virtual QString overwritePath() const override
-  {
-    return this->get_override("overwritePath")();
-  }
-  virtual QString basePath() const // override
-  {
-	return this->get_override("basePath")();
-  }
-  virtual QString modsPath() const override
-  {
-  return this->get_override("modsPath")();
-  }
-  virtual MOBase::VersionInfo appVersion() const override
-  {
-    return this->get_override("appVersion")();
-  }
-  virtual MOBase::IModInterface *getMod(const QString &name) const override
-  {
-    return this->get_override("getMod")(name);
-  }
-  virtual MOBase::IModInterface *
-  createMod(MOBase::GuessedValue<QString> &name) override
-  {
-    return this->get_override("createMod")(name);
-  }
-  virtual MOBase::IPluginGame *getGame(const QString &gameName) const override
-  {
-    return this->get_override("getGame")(gameName);
-  }
-  virtual bool removeMod(MOBase::IModInterface *mod) override
-  {
-    return this->get_override("removeMod")(mod);
-  }
-  virtual void modDataChanged(MOBase::IModInterface *mod) override
-  {
-    this->get_override("modDataChanged")(mod);
-  }
-  virtual QVariant pluginSetting(const QString &pluginName,
-                                 const QString &key) const override
-  {
-    return this->get_override("pluginSetting")(pluginName, key).as<QVariant>();
-  }
-  virtual void setPluginSetting(const QString &pluginName, const QString &key,
-                                const QVariant &value) override
-  {
-    this->get_override("setPluginSetting")(pluginName, key, value);
-  }
-  virtual QVariant persistent(const QString &pluginName, const QString &key,
-                              const QVariant &def = QVariant()) const override
-  {
-    return this->get_override("persistent")(pluginName, key, def).as<QVariant>();
-  }
-  virtual void setPersistent(const QString &pluginName, const QString &key,
-                             const QVariant &value, bool sync = true) override
-  {
-    this->get_override("setPersistent")(pluginName, key, value, sync);
-  }
-  virtual QString pluginDataPath() const override
-  {
-    return this->get_override("pluginDataPath")();
-  }
-  virtual MOBase::IModInterface *installMod(const QString &fileName,
-                                            const QString &nameSuggestion
-                                            = QString()) override
-  {
-    return this->get_override("installMod")(fileName, nameSuggestion);
-  }
-  virtual MOBase::IDownloadManager *downloadManager() const override
-  {
-    return this->get_override("downloadManager")();
-  }
-  virtual MOBase::IPluginList *pluginList() const override
-  {
-    return this->get_override("pluginList")();
-  }
-  virtual MOBase::IModList *modList() const override
-  {
-    return this->get_override("modList")();
-  }
-  virtual QString resolvePath(const QString &fileName) const override
-  {
-    return this->get_override("resolvePath")(fileName);
-  }
-  virtual QStringList
-  listDirectories(const QString &directoryName) const override
-  {
-    return this->get_override("listDirectories")(directoryName);
-  }
-  virtual QStringList
-  findFiles(const QString &path,
-            const std::function<bool(const QString &)> &filter) const override
-  {
-    return this->get_override("findFiles")(path, filter);
-  }
-  virtual QStringList getFileOrigins(const QString &fileName) const override
-  {
-    return this->get_override("getFileOrigins")(fileName);
-  }
-  virtual QList<FileInfo> findFileInfos(
-      const QString &path,
-      const std::function<bool(const FileInfo &)> &filter) const override
-  {
-    return this->get_override("findFileInfos")(path, filter);
-  }
-  virtual HANDLE startApplication(const QString &executable,
-                                  const QStringList &args = QStringList(),
-                                  const QString &cwd      = "",
-                                  const QString &profile = "",
-                                  const QString &forcedCustomOverwrite = "",
-                                  bool ignoreCustomOverwrite = false) override
-  {
-    return reinterpret_cast<HANDLE>(this->get_override("startApplication")(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite).as<size_t>());
-  }
-  virtual bool waitForApplication(HANDLE handle,
-                                  LPDWORD exitCode = nullptr) const override
-  {
-    return this->get_override("waitForApplication")(reinterpret_cast<size_t>(handle), exitCode);
-  }
-  virtual void refreshModList(bool saveChanges = true) override
-  {
-    this->get_override("refreshModList")(saveChanges);
-  }
-  virtual bool
-  onAboutToRun(const std::function<bool(const QString &)> &func) override
-  {
-    return this->get_override("onAboutToRun")(func);
-  }
-  virtual bool onFinishedRun(
-      const std::function<void(const QString &, unsigned int)> &func) override
-  {
-    return this->get_override("onFinishedRun")(func);
-  }
-  virtual bool
-  onModInstalled(const std::function<void(const QString &)> &func) override
-  {
-    return this->get_override("onModInstalled")(func);
-  }
-  virtual MOBase::IProfile *profile() const override
-  {
-    return this->get_override("profile")();
-  }
-  virtual MOBase::IPluginGame const *managedGame() const override
-  {
-    return this->get_override("managedGame")();
-  }
-  virtual QStringList modsSortedByProfilePriority() const override
-  {
-    return this->get_override("modsSortedByProfilePriority")();
-  }
 };
 
 struct IProfileWrapper: MOBase::IProfile, boost::python::wrapper<MOBase::IProfile>
@@ -424,15 +254,6 @@ struct IModRepositoryBridgeWrapper: MOBase::IModRepositoryBridge, boost::python:
   virtual void requestFileInfo(QString gameName, int modID, int fileID, QVariant userData) { this->get_override("requestFileInfo")(gameName, modID, fileID, userData); }
   virtual void requestDownloadURL(QString gameName, int modID, int fileID, QVariant userData) { this->get_override("requestDownloadURL")(gameName, modID, fileID, userData); }
   virtual void requestToggleEndorsement(QString gameName, int modID, QString modVersion, bool endorse, QVariant userData) { this->get_override("requestToggleEndorsement")(gameName, modID, endorse, userData); }
-};
-
-struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python::wrapper<MOBase::IInstallationManager>
-{
-  virtual QString extractFile(std::shared_ptr<const MOBase::FileTreeEntry> entry) override { return this->get_override("extractFile")(entry); }
-  virtual QStringList extractFiles(std::vector<std::shared_ptr<const MOBase::FileTreeEntry>> const& entries) override { return this->get_override("extractFiles")(entries); }
-  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, int modId = 0) override {
-    return this->get_override("installArchive")(modName, archiveFile, modId); }
-  virtual void setURL(QString const &url) override { this->get_override("setURL")(url); }
 };
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>

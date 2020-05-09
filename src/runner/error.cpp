@@ -8,23 +8,6 @@
 using namespace MOBase;
 namespace bpy = boost::python;
 
-void reportPythonError()
-{
-  if (PyErr_Occurred()) {
-    ErrWrapper &errWrapper = ErrWrapper::instance();
-
-    errWrapper.startRecordingExceptionMessage();
-    PyErr_Print();
-    errWrapper.stopRecordingExceptionMessage();
-
-    QString errMsg = errWrapper.getLastExceptionMessage();
-
-    throw MyException(errMsg);
-  } else {
-    throw MyException("An unexpected C++ exception was thrown in python code");
-  }
-}
-
 ErrWrapper & ErrWrapper::instance()
 {
   static ErrWrapper err;
