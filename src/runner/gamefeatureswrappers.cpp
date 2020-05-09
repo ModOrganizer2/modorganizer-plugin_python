@@ -277,7 +277,7 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
       .def("getSaveGameInfo", bpy::pure_virtual(&SaveGameInfo::getSaveGameInfo), bpy::return_value_policy<bpy::manage_new_object>())
       .def("getMissingAssets", bpy::pure_virtual(&SaveGameInfo::getMissingAssets))
-      .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>())
+      .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>(), "[optional]")
       .def("hasScriptExtenderSave", bpy::pure_virtual(&SaveGameInfo::hasScriptExtenderSave))
       ;
 

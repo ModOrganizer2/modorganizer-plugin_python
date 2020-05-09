@@ -725,6 +725,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("displayString", &VersionInfo::displayString)
       .def("isValid", &VersionInfo::isValid)
       .def("scheme", &VersionInfo::scheme)
+      .def("__str__", &VersionInfo::canonicalString)
       .def(bpy::self < bpy::self)
       .def(bpy::self > bpy::self)
       .def(bpy::self <= bpy::self)
@@ -830,7 +831,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("name", &FileTreeEntry::name)
       .def("suffix", &FileTreeEntry::suffix)
       .def("time", &FileTreeEntry::time)
-      .def("parent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent))
+      .def("parent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent), "[optional]")
       .def("path", &FileTreeEntry::path, bpy::arg("sep") = "\\")
       .def("pathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
 
@@ -853,7 +854,7 @@ BOOST_PYTHON_MODULE(mobase)
   }
 
   // IFileTree scope:
-  auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);;
+  auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);
   {
     
     bpy::scope scope = iFileTreeClass;
@@ -871,15 +872,15 @@ BOOST_PYTHON_MODULE(mobase)
       // special python methods):
       .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists), (bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
       .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find), 
-        bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>())
+        bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>(), "[optional]")
       .def("pathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
 
       // Kind-of-static operations:
       .def("createOrphanTree", &IFileTree::createOrphanTree, bpy::arg("name") = "")
 
       // Mutable operations:
-      .def("addFile", &IFileTree::addFile, bpy::arg("time") = QDateTime())
-      .def("addDirectory", &IFileTree::addDirectory)
+      .def("addFile", &IFileTree::addFile, bpy::arg("time") = QDateTime(), "[optional]")
+      .def("addDirectory", &IFileTree::addDirectory, "[optional]")
       .def("insert", +[](
         IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
           return p->insert(entry, insertPolicy) != p->end(); }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
@@ -950,7 +951,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<ModRepositoryFileInfo>("ModRepositoryFileInfo")
       .def(bpy::init<const ModRepositoryFileInfo &>())
       .def(bpy::init<bpy::optional<QString, int, int>>())
-      .def("toString", &ModRepositoryFileInfo::toString)
+      .def("__str__", &ModRepositoryFileInfo::toString)
       .def("createFromJson", &ModRepositoryFileInfo::createFromJson).staticmethod("createFromJson")
       .def_readwrite("name", &ModRepositoryFileInfo::name)
       .def_readwrite("uri", &ModRepositoryFileInfo::uri)
@@ -1092,9 +1093,17 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModMoved", bpy::pure_virtual(&MOBase::IModList::onModMoved))
       ;
 
-  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
+  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
+    .def("init", bpy::pure_virtual(&MOBase::IPlugin::init))
+    .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
+    .def("author", bpy::pure_virtual(&MOBase::IPlugin::author))
+    .def("description", bpy::pure_virtual(&MOBase::IPlugin::description))
+    .def("version", bpy::pure_virtual(&MOBase::IPlugin::version))
+    .def("isActive", bpy::pure_virtual(&MOBase::IPlugin::isActive))
+    .def("settings", bpy::pure_virtual(&MOBase::IPlugin::settings))
+    ;
 
-  bpy::class_<IPluginDiagnoseWrapper, boost::noncopyable>("IPluginDiagnose")
+  bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
       .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
       .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription))
       .def("fullDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::fullDescription))
@@ -1110,7 +1119,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def_readwrite("createTarget", &Mapping::createTarget)
       ;
 
-  bpy::class_<IPluginFileMapperWrapper, boost::noncopyable>("IPluginFileMapper")
+  bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
       ;
 
@@ -1137,7 +1146,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::to_python_converter<IPluginGame::ProfileSettings, QFlags_to_int<IPluginGame::ProfileSetting>>();
   QFlags_from_python_obj<IPluginGame::ProfileSetting>();
 
-  bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
+  bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
       .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
@@ -1170,23 +1179,36 @@ BOOST_PYTHON_MODULE(mobase)
       .def("gameVersion", bpy::pure_virtual(&MOBase::IPluginGame::gameVersion))
       .def("getLauncherName", bpy::pure_virtual(&MOBase::IPluginGame::getLauncherName))
 
-      //Plugin interface.
-      .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
-      .def("name", bpy::pure_virtual(&MOBase::IPluginGame::name))
-      .def("author", bpy::pure_virtual(&MOBase::IPluginGame::author))
-      .def("description", bpy::pure_virtual(&MOBase::IPluginGame::description))
-      .def("version", bpy::pure_virtual(&MOBase::IPluginGame::version))
-      .def("isActive", bpy::pure_virtual(&MOBase::IPluginGame::isActive))
-      .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
+      .def("featureList", +[](MOBase::IPluginGame* p) {
+        // Constructing a dict from class name to actual object:
+        bpy::dict dict;
+        mp11::mp_for_each<
+          mp11::mp_transform<
+            // Must user pointers because mp_for_each construct object:
+            std::add_pointer_t,
+            mp11::mp_list<
+              BSAInvalidation,
+              DataArchives, 
+              GamePlugins, 
+              LocalSavegames, 
+              SaveGameInfo, 
+              ScriptExtender, 
+              UnmanagedMods
+            >
+          >
+        >([&](auto* pt) {
+          using T = std::remove_pointer_t<decltype(pt)>;
+          typename bpy::reference_existing_object::apply<T*>::type converter;
 
-      // The syntax has to differ slightly from C++ because these are templated
-      .def("featureBSAInvalidation", &MOBase::IPluginGame::feature<BSAInvalidation>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureDataArchives", &MOBase::IPluginGame::feature<DataArchives>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureGamePlugins", &MOBase::IPluginGame::feature<GamePlugins>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureLocalSavegames", &MOBase::IPluginGame::feature<LocalSavegames>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureSaveGameInfo", &MOBase::IPluginGame::feature<SaveGameInfo>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureScriptExtender", &MOBase::IPluginGame::feature<ScriptExtender>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureUnmanagedMods", &MOBase::IPluginGame::feature<UnmanagedMods>, bpy::return_value_policy<bpy::reference_existing_object>())
+          // Retrieve the python class object:
+          const bpy::converter::registration* registration = bpy::converter::registry::query(bpy::type_id<T>());
+          bpy::object key = bpy::object(bpy::handle<>(bpy::borrowed(registration->get_class_object())));
+
+          // Set the object:
+          dict[key] = bpy::handle<>(converter(p->feature<T>()));
+        });
+        return dict;
+      })
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
@@ -1197,8 +1219,16 @@ BOOST_PYTHON_MODULE(mobase)
       .value("NOT_ATTEMPTED", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
 
-  bpy::class_<IPluginInstallerSimpleWrapper, boost::noncopyable>("IPluginInstallerSimple")
-    // Note: Keeping the variant here if we always return a tuple to be consistent with the wrapper and
+  bpy::class_<IPluginInstaller, bpy::bases<IPlugin>, boost::noncopyable>("IPluginInstaller", bpy::no_init)
+    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
+    .def("priority", &IPluginInstaller::priority)
+    .def("isManualInstaller", &IPluginInstaller::isManualInstaller)
+    .def("setParentWidget", &IPluginInstaller::setParentWidget)
+    .def("setInstallationManager", &IPluginInstaller::setInstallationManager)
+    ;
+
+  bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
+    // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
     // have proper stubs generation.
     .def("install", +[](IPluginInstallerSimple* p, GuessedValue<QString>& modName, std::shared_ptr<IFileTree>& tree, QString& version, int& nexusID)
       -> std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>> {
@@ -1209,19 +1239,21 @@ BOOST_PYTHON_MODULE(mobase)
     .def("manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
-  bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
-      .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
-      .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
-      .def("install", &IPluginInstallerCustom::install)
-      .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
-      .def("manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
-      ;
+  bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
+    // Needs to add both otherwize boost does not understanda:    
+    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
+    .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
+    .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
+    .def("install", &IPluginInstallerCustom::install)
+    .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    .def("manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
+    ;
 
-  bpy::class_<IPluginModPageWrapper, boost::noncopyable>("IPluginModPage")
+  bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
       .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginModPage::setParentWidget))
       ;
 
-  bpy::class_<IPluginPreviewWrapper, boost::noncopyable>("IPluginPreview")
+  bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
       ;
 
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
