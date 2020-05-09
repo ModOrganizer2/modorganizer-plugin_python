@@ -711,12 +711,12 @@ BOOST_PYTHON_MODULE(mobase)
       .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
       ;
 
-  // TODO: ISaveGameInfoWidget bindings
+  // TODO: ISaveGameInfoWidget.
 
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
-    .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
-    .def_readwrite("archive", &IOrganizer::FileInfo::archive)
-    .def_readwrite("origins", &IOrganizer::FileInfo::origins)
+      .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
+      .def_readwrite("archive", &IOrganizer::FileInfo::archive)
+      .def_readwrite("origins", &IOrganizer::FileInfo::origins)
     ;
 
   bpy::class_<IOrganizer, boost::noncopyable>("IOrganizer", bpy::no_init)

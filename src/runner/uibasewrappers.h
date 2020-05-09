@@ -303,8 +303,7 @@ struct IModListWrapper: MOBase::IModList, boost::python::wrapper<MOBase::IModLis
 };
 
 
-// This needs to be extendable in Python, so actually needs a wrapper
-// Everything else probably doesn't
+// This needs to be extendable in Python, so actually needs a wrapper (everything else probably doesn't):
 class ISaveGameWrapper : public MOBase::ISaveGame, public boost::python::wrapper<MOBase::ISaveGame>
 {
 public:
@@ -318,5 +317,17 @@ public:
   virtual bool hasScriptExtenderFile() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, bool>(this, "hasScriptExtenderFile"); };
 };
 
+// This needs a wrapper but currently I have no idea how to expose this properly to python:
+class ISaveGameInfoWidgetWrapper : public MOBase::ISaveGameInfoWidget, public boost::python::wrapper<MOBase::ISaveGameInfoWidget>
+{
+public:
+  static constexpr const char* className = "ISaveGameInfoWidgetWrapper";
+  using boost::python::wrapper<MOBase::ISaveGameInfoWidget>::get_override;
+
+  // Bring the constructor:
+  using ISaveGameInfoWidget::ISaveGameInfoWidget;
+
+  virtual void setSave(QString const& save) override { basicWrapperFunctionImplementation<ISaveGameInfoWidgetWrapper, void>(this, "setSave", save); };
+};
 
 #endif // UIBASEWRAPPERS_H
