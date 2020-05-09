@@ -569,16 +569,6 @@ struct Functor_converter<RET(PARAMS... )>
 };
 
 
-// We must wrap IOrganizer::waitForApplication to convert the out parameter to a return value and also because bpy doesn't like coverting to void* (HANDLE) even if a converter exists.
-static PyObject *waitForApplication(const bpy::object &self, size_t handle)
-{
-  IOrganizer& organizer = bpy::extract<IOrganizer&>(self)();
-  DWORD returnCode;
-  bool result = organizer.waitForApplication((HANDLE)handle, &returnCode);
-  return bpy::incref(bpy::make_tuple(result, returnCode).ptr());
-}
-
-
 /**
  * @brief Call policy that automatically downcast shared pointer of type FromType
  * to shared pointer of type ToType.
@@ -671,6 +661,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_associative_container<IFileTree::OverwritesType>();
 
   // Tuple:
+  bpy::register_tuple<std::tuple<bool, DWORD>>(); // IOrganizer::waitForApplication
   bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>();
 
   // Variants:
@@ -683,13 +674,13 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Functions:
   Functor_converter<void()>(); // converter for the onRefreshed-callback
+  Functor_converter<void(const QString&)>();
+  Functor_converter<void(const QString&, unsigned int)>();
   Functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
   Functor_converter<bool(const IOrganizer::FileInfo&)>();
-  Functor_converter<void(const QString&)>();
   Functor_converter<bool(const QString&)>();
-  Functor_converter<void(const QString&, unsigned int)>();
-  Functor_converter<std::variant<QString, bool>(QString const&)>();
   Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
+  Functor_converter<std::variant<QString, bool>(QString const&)>();
 
 
   bpy::def("toPyQt", &toPyQt<IModRepositoryBridge>);
@@ -766,45 +757,55 @@ BOOST_PYTHON_MODULE(mobase)
     .def_readwrite("origins", &IOrganizer::FileInfo::origins)
     ;
 
-  bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
-      .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
-      .def("profilePath", bpy::pure_virtual(&IOrganizer::profilePath))
-      .def("downloadsPath", bpy::pure_virtual(&IOrganizer::downloadsPath))
-      .def("overwritePath", bpy::pure_virtual(&IOrganizer::overwritePath))
-      .def("basePath", bpy::pure_virtual(&IOrganizer::basePath))
-      .def("modsPath", bpy::pure_virtual(&IOrganizer::modsPath))
-      .def("appVersion", bpy::pure_virtual(&IOrganizer::appVersion))
-      .def("getMod", bpy::pure_virtual(&IOrganizer::getMod), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("createMod", bpy::pure_virtual(&IOrganizer::createMod), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("getGame", bpy::pure_virtual(&IOrganizer::getGame), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("removeMod", bpy::pure_virtual(&IOrganizer::removeMod))
-      .def("modDataChanged", bpy::pure_virtual(&IOrganizer::modDataChanged))
-      .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
-      .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::setPluginSetting))
-      .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
-      .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
-      .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
-      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod),(bpy::arg("nameSuggestion")=""), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("resolvePath", bpy::pure_virtual(&IOrganizer::resolvePath))
-      .def("listDirectories", bpy::pure_virtual(&IOrganizer::listDirectories))
-      .def("findFiles", bpy::pure_virtual(&IOrganizer::findFiles))
-      .def("getFileOrigins", bpy::pure_virtual(&IOrganizer::getFileOrigins))
-      .def("findFileInfos", bpy::pure_virtual(&IOrganizer::findFileInfos))
-      .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")=""), (bpy::arg("forcedCustomOverwrite")=""), (bpy::arg("ignoreCustomOverwrite")=false)), bpy::return_value_policy<bpy::return_by_value>())
+  bpy::class_<IOrganizer, boost::noncopyable>("IOrganizer", bpy::no_init)
+      .def("createNexusBridge", &IOrganizer::createNexusBridge, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("profileName", &IOrganizer::profileName)
+      .def("profilePath", &IOrganizer::profilePath)
+      .def("downloadsPath", &IOrganizer::downloadsPath)
+      .def("overwritePath", &IOrganizer::overwritePath)
+      .def("basePath", &IOrganizer::basePath)
+      .def("modsPath", &IOrganizer::modsPath)
+      .def("appVersion", &IOrganizer::appVersion)
+      .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("removeMod", &IOrganizer::removeMod)
+      .def("modDataChanged", &IOrganizer::modDataChanged)
+      .def("pluginSetting", &IOrganizer::pluginSetting)
+      .def("setPluginSetting", &IOrganizer::setPluginSetting)
+      .def("persistent", &IOrganizer::persistent, bpy::arg("persistent") = QVariant())
+      .def("setPersistent", &IOrganizer::setPersistent, bpy::arg("sync") = true)
+      .def("pluginDataPath", &IOrganizer::pluginDataPath)
+      .def("installMod", &IOrganizer::installMod, (bpy::arg("name_suggestion") = ""), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("resolvePath", &IOrganizer::resolvePath)
+      .def("listDirectories", &IOrganizer::listDirectories)
+      .def("findFiles", &IOrganizer::findFiles)
+      .def("getFileOrigins", &IOrganizer::getFileOrigins)
+      .def("findFileInfos", &IOrganizer::findFileInfos)
+      .def("downloadManager", &IOrganizer::downloadManager, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("pluginList", &IOrganizer::pluginList, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modList", &IOrganizer::modList, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("profile", &IOrganizer::profile, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("startApplication", 
+        +[](IOrganizer* o, const QString& executable, const QStringList& args, const QString& cwd, const QString& profile, 
+          const QString& forcedCustomOverwrite, bool ignoreCustomOverwrite) {
+            return (std::uintptr_t) o->startApplication(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite);
+        }, 
+      ((bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
       //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
       // Use wrapped version
-      .def("waitForApplication", waitForApplication)
-      .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
-      .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
-      .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
-      .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList), (bpy::arg("saveChanges")=true))
-      .def("managedGame", bpy::pure_virtual(&IOrganizer::managedGame), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modsSortedByProfilePriority", bpy::pure_virtual(&IOrganizer::modsSortedByProfilePriority))
+      .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle) {
+          DWORD returnCode;
+          bool result = o->waitForApplication((HANDLE)handle, &returnCode);
+          return std::make_tuple(result, returnCode);
+        }
+        )
+      .def("onModInstalled", &IOrganizer::onModInstalled)
+      .def("onAboutToRun", &IOrganizer::onAboutToRun)
+      .def("onFinishedRun", &IOrganizer::onFinishedRun)
+      .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes")=true))
+      .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
       ;
 
   // FileTreeEntry Scope:
@@ -978,11 +979,11 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
-  bpy::class_<IInstallationManagerWrapper, boost::noncopyable>("IInstallationManager")
-    .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
-    .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
-    .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
-    .def("setURL", bpy::pure_virtual(&IInstallationManager::setURL))
+  bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
+    .def("extractFile", &IInstallationManager::extractFile)
+    .def("extractFiles", &IInstallationManager::extractFiles)
+    .def("installArchive", &IInstallationManager::installArchive)
+    .def("setURL", &IInstallationManager::setURL)
     ;
 
   bpy::class_<IModInterfaceWrapper, boost::noncopyable>("IModInterface")
@@ -1235,30 +1236,42 @@ BOOST_PYTHON_MODULE(mobase)
         auto result = p->install(modName, tree, version, nexusID);
         return std::make_tuple(result, tree, version, nexusID);
       })
-    .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
-    .def("manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("_parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    .def("_manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
-  bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
+  bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
     // Needs to add both otherwize boost does not understanda:    
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
     .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
     .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
     .def("install", &IPluginInstallerCustom::install)
-    .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
-    .def("manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("_parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    .def("_manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
-  bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginModPage::setParentWidget))
-      ;
+  bpy::class_<IPluginModPageWrapper, boost::noncopyable>("IPluginModPage")
+    .def("displayName", bpy::pure_virtual(&IPluginModPage::displayName))
+    .def("icon", bpy::pure_virtual(&IPluginModPage::icon))
+    .def("pageURL", bpy::pure_virtual(&IPluginModPage::pageURL))
+    .def("useIntegratedBrowser", bpy::pure_virtual(&IPluginModPage::useIntegratedBrowser))
+    .def("handlesDownload", bpy::pure_virtual(&IPluginModPage::handlesDownload))
+    .def("setParentWidget", &IPluginModPage::setParentWidget, &IPluginModPageWrapper::setParentWidget_Default)
+    .def("_parentWidget", &IPluginModPageWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    ;
 
   bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
-      ;
+    .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
+    .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>())
+    ;
 
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
-      ;
+    .def("displayName", bpy::pure_virtual(&IPluginTool::displayName))
+    .def("tooltip", bpy::pure_virtual(&IPluginTool::tooltip))
+    .def("icon", bpy::pure_virtual(&IPluginTool::icon))
+    .def("setParentWidget", &IPluginTool::setParentWidget, &IPluginToolWrapper::setParentWidget_Default)
+    .def("_parentWidget", &IPluginToolWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    ;
 
   HANDLE_converters();
 
@@ -1406,8 +1419,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 
     std::string temp = ToString(pluginName);
     if (handled_exec_file(temp.c_str(), moduleNamespace)) {
-      reportPythonError();
-      return QList<QObject*>();
+      throw pyexcept::PythonError();
     }
     m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
 
@@ -1431,7 +1443,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     return interfaceList;
   } catch (const bpy::error_already_set&) {
     qWarning("failed to run python script \"%s\"", qUtf8Printable(pluginName));
-    reportPythonError();
+    throw pyexcept::PythonError();
   }
   return QList<QObject*>();
 }
