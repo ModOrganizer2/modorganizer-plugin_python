@@ -1,6 +1,8 @@
 #ifndef GAMEFEATURESWRAPPERS_H
 #define GAMEFEATURESWRAPPERS_H
 
+#include <map>
+
 #include <bsainvalidation.h>
 #include <dataarchives.h>
 #include <gameplugins.h>
@@ -71,6 +73,11 @@ public:
   virtual MissingAssets getMissingAssets(QString const &file) const override;
   virtual MOBase::ISaveGameInfoWidget *getSaveGameWidget(QWidget *parent = 0) const override;
   virtual bool hasScriptExtenderSave(QString const &file) const override;
+
+private:
+  // We need to keep the python objects alive:
+  mutable std::map<QString, boost::python::object> m_SaveGames;
+  mutable boost::python::object m_SaveGameWidget;
 };
 
 class ScriptExtenderWrapper : public ScriptExtender, public boost::python::wrapper<ScriptExtender>

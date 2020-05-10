@@ -9,7 +9,6 @@
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
 
-#include "gilock.h"
 #include "pythonwrapperutilities.h"
 
 /////////////////////////////
@@ -106,7 +105,7 @@ bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 
 MOBase::ISaveGame const * SaveGameInfoWrapper::getSaveGameInfo(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGame const *>(this, "getSaveGameInfo", file);
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGame*>(this, m_SaveGames[file], "getSaveGameInfo", file);
 }
 
 SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(QString const & file) const
@@ -116,11 +115,7 @@ SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(QString
 
 MOBase::ISaveGameInfoWidget* SaveGameInfoWrapper::getSaveGameWidget(QWidget* parent) const
 {
-  // This will require a lot of works as ISaveGameInfoWidget inherits QWidget and I currently found no
-  // way of exposing a class that inherits QWidget without having to expose manually the whole QWidget, 
-  // and even with this, I am not sure how this would fit with PyQt/sip.
-  qCritical("Calling method with unimplemented from_python converter.");
-  return nullptr;
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGameInfoWidget*>(this, m_SaveGameWidget, "getSaveGameWidget", parent);
 }
 
 bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const

@@ -703,7 +703,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isCustom", &ExecutableInfo::isCustom)
       ;
 
-  bpy::class_<ISaveGameWrapper, boost::noncopyable>("ISaveGame")
+  bpy::class_<ISaveGameWrapper, bpy::bases<>, ISaveGameWrapper*, boost::noncopyable>("ISaveGame")
       .def("getFilename", bpy::pure_virtual(&ISaveGame::getFilename))
       .def("getCreationTime", bpy::pure_virtual(&ISaveGame::getCreationTime))
       .def("getSaveGroupIdentifier", bpy::pure_virtual(&ISaveGame::getSaveGroupIdentifier))
@@ -711,7 +711,20 @@ BOOST_PYTHON_MODULE(mobase)
       .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
       ;
 
-  // TODO: ISaveGameInfoWidget.
+  // This is tricky because there is no way to tell boost::python that ISaveGameInfoWidget inherits
+  // QWidget (bpy::bases<QWidget> crashes when loading the module... ). Without it, the python class
+  // does not expose the QWidget methods, which makes it useless.
+  // There is two way to do this: 1) expose the widget via a `_widget()` method that basically returns
+  // the object, but as a QWidget, or 2) override __getattr__ to forward everything to the QWidget (note
+  // that __getattr__ is only called if the attribute is not found in the class by standard mean).
+  bpy::class_<ISaveGameInfoWidgetWrapper, bpy::bases<>, ISaveGameInfoWidgetWrapper*, boost::noncopyable>("ISaveGameInfoWidget", bpy::init<bpy::optional<QWidget*>>())
+    .def("setSave", bpy::pure_virtual(&ISaveGameInfoWidget::setSave))
+    .def("__getattr__", +[](ISaveGameInfoWidget *w, bpy::str str) -> bpy::object {
+      // Create an object corresponding to the widget:
+      bpy::object obj{ (QWidget*)w };
+      return obj.attr(str);
+    })
+    ;
 
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
       .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
