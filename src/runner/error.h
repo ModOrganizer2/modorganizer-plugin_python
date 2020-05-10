@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 
 #include <sstream>
+#include <utility.h>
 
 struct ErrWrapper
 {
