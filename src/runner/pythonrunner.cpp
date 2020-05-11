@@ -32,10 +32,6 @@
 #include "variant_helper.h"
 #include "converters.h"
 
-MOBase::IOrganizer *s_Organizer = nullptr;
-
-
-
 using namespace MOBase;
 
 namespace bpy = boost::python;
@@ -744,7 +740,6 @@ private:
 
 IPythonRunner* CreatePythonRunner(MOBase::IOrganizer* moInfo, const QString& pythonDir)
 {
-  s_Organizer = moInfo;
   PythonRunner* result = new PythonRunner(moInfo);
   if (result->initPython(pythonDir)) {
     return result;

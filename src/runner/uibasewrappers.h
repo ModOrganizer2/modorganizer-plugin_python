@@ -29,8 +29,6 @@
 #include "gilock.h"
 #include "pythonwrapperutilities.h"
 
-extern MOBase::IOrganizer *s_Organizer;
-
 // This needs to be extendable in Python, so actually needs a wrapper (everything else probably doesn't):
 class ISaveGameWrapper : public MOBase::ISaveGame, public boost::python::wrapper<MOBase::ISaveGame>
 {
