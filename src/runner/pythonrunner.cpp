@@ -194,12 +194,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
       ;
 
-  // This is tricky because there is no way to tell boost::python that ISaveGameInfoWidget inherits
-  // QWidget (bpy::bases<QWidget> crashes when loading the module... ). Without it, the python class
-  // does not expose the QWidget methods, which makes it useless.
-  // There is two way to do this: 1) expose the widget via a `_widget()` method that basically returns
-  // the object, but as a QWidget, or 2) override __getattr__ to forward everything to the QWidget (note
-  // that __getattr__ is only called if the attribute is not found in the class by standard mean).
+  // See Q_DELEGATE for more details.
   bpy::class_<ISaveGameInfoWidgetWrapper, bpy::bases<>, ISaveGameInfoWidgetWrapper*, boost::noncopyable>("ISaveGameInfoWidget", bpy::init<bpy::optional<QWidget*>>())
     .def("setSave", bpy::pure_virtual(&ISaveGameInfoWidget::setSave))
 
