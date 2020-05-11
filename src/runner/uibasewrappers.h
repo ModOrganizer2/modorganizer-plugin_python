@@ -13,17 +13,9 @@
 #include <QUrl>
 #include <QDir>
 
-#include "iplugingame.h"
-#include <imoinfo.h>
-#include <imodrepositorybridge.h>
-#include <imodinterface.h>
-#include <iinstallationmanager.h>
-#include <idownloadmanager.h>
 #include <ipluginlist.h>
-#include <imodlist.h>
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
-#include "ifiletree.h"
 
 #include "error.h"
 #include "gilock.h"

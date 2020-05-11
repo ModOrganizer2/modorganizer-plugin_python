@@ -3,11 +3,18 @@
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4996 )
 
+#include <idownloadmanager.h>
 #include <ifiletree.h>
+#include <iinstallationmanager.h>
+#include <imodinterface.h>
+#include <imodlist.h>
+#include <imodrepositorybridge.h>
 #include <iplugin.h>
 #include <iplugingame.h>
 #include <iplugininstaller.h>
 #include <iplugintool.h>
+#include <iprofile.h>
+
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
 #include "gamefeatureswrappers.h"
