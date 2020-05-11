@@ -93,6 +93,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
 
   utils::register_sequence_container<std::vector<unsigned int>>();
   utils::register_sequence_container<std::vector<Mapping>>();
@@ -437,7 +438,6 @@ BOOST_PYTHON_MODULE(mobase)
       Q_DELEGATE(IDownloadManager, QObject, "_object")
       ;
 
-  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
   bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
     .def("extractFile", &IInstallationManager::extractFile)
     .def("extractFiles", &IInstallationManager::extractFiles)
