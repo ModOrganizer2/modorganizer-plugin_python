@@ -41,6 +41,14 @@ using namespace MOBase;
 namespace bpy = boost::python;
 namespace mp11 = boost::mp11;
 
+/**
+ * This macro should be used within a bpy::class_ declaration and will define two
+ * methods: __getattr__ and Name, where Name will simply return the object as a QClass*
+ * object, while __getattr__ will delegate to the underlying QClass object when required.
+ *
+ * This allow access to Qt interface for object exposed using boost::python (e.g., signals,
+ * methods from QObject or QWidget, etc.).
+ */
 #define Q_DELEGATE(Class, QClass, Name) \
   .def(Name, +[](Class* w) -> QClass* { return w; }, bpy::return_value_policy<bpy::reference_existing_object>())          \
   .def("__getattr__", +[](Class* w, bpy::str str) -> bpy::object {  \
