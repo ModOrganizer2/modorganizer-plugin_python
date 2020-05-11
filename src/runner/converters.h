@@ -11,9 +11,6 @@
 // sip and qt slots seems to conflict
 #include <sip.h>
 
-#include "idownloadmanager.h"
-#include "imodrepositorybridge.h"
-
 // Include the container converters from utils:
 #include "pythonutils.h"
 
