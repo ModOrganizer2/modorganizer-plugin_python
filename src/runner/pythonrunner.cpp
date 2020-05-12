@@ -382,7 +382,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("invalidationActive", &IProfile::invalidationActive)
       ;
 
-  bpy::class_<IModRepositoryBridge, boost::noncopyable>("ModRepositoryBridge", bpy::no_init)
+  bpy::class_<IModRepositoryBridge, boost::noncopyable>("IModRepositoryBridge", bpy::no_init)
       .def("requestDescription", &IModRepositoryBridge::requestDescription)
       .def("requestFiles", &IModRepositoryBridge::requestFiles)
       .def("requestFileInfo", &IModRepositoryBridge::requestFileInfo)
