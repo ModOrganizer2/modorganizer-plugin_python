@@ -678,6 +678,36 @@ BOOST_PYTHON_MODULE(mobase)
         });
         return dict;
       })
+
+      .def("feature", +[](MOBase::IPluginGame* p, bpy::object clsObj) {
+        bpy::object feature;
+        mp11::mp_for_each<
+          mp11::mp_transform<
+          // Must user pointers because mp_for_each construct object:
+          std::add_pointer_t,
+            mp11::mp_list<
+              BSAInvalidation,
+              DataArchives,
+              GamePlugins,
+              LocalSavegames,
+              SaveGameInfo,
+              ScriptExtender,
+              UnmanagedMods
+            >
+          >
+        >([&](auto* pt) {
+          using T = std::remove_pointer_t<decltype(pt)>;
+          typename bpy::reference_existing_object::apply<T*>::type converter;
+
+          // Retrieve the python class object:
+          const bpy::converter::registration* registration = bpy::converter::registry::query(bpy::type_id<T>());
+
+          if (clsObj.ptr() == (PyObject*) registration->get_class_object()) {
+            feature = bpy::object(bpy::handle<>(converter(p->feature<T>())));
+          }
+          });
+        return feature;
+      })
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
