@@ -102,10 +102,6 @@ void IPluginDiagnoseWrapper::startGuidedFix(unsigned int key) const
   basicWrapperFunctionImplementation<IPluginDiagnoseWrapper, void>(this, "startGuidedFix", key);
 }
 
-void IPluginDiagnoseWrapper::invalidate()
-{
-  IPluginDiagnose::invalidate();
-}
 /// end IPluginDiagnose Wrapper
 /////////////////////////////////////
 /// IPluginFileMapper Wrapper
