@@ -95,7 +95,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
-  utils::register_sequence_container<QList<QVariant>>();
+  utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
   utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
 
   utils::register_sequence_container<std::vector<unsigned int>>();
@@ -103,7 +103,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   utils::register_set_container<std::set<QString>>();
   
-  utils::register_associative_container<QMap<QString, QVariant>>();
+  utils::register_associative_container<QMap<QString, QVariant>>(); // Required for QVariant since this is QVariantMap.
   utils::register_associative_container<QMap<QString, QStringList>>();
   
   utils::register_associative_container<IFileTree::OverwritesType>();
