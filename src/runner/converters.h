@@ -110,6 +110,9 @@ namespace utils {
         case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
         case QVariant::Bool: return PyBool_FromLong(var.toBool());
         case QVariant::String: return bpy::incref(bpy::object(var.toString()).ptr());
+        // We need to check for StringList here because these are not considered List
+        // since List is QList<QVariant> will StringList is QList<QString>:
+        case QVariant::StringList: return bpy::incref(bpy::object(var.toStringList()).ptr());
         case QVariant::List: {
           return bpy::incref(bpy::object(var.toList()).ptr());
         } break;
@@ -154,9 +157,9 @@ namespace utils {
       }
 
       static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
-        // PyBools will also return true for SIPLong_Check but not the other way around, so the order
-        // here is relevant
         if (PyList_Check(objPtr)) {
+          // We could check if all the elements can be converted to QString and store a QStringList
+          // in the QVariant but I am not sure that is really useful.
           constructVariant(bpy::extract<QVariantList>(objPtr)(), data);
         }
         else if (objPtr == Py_None) {
@@ -168,12 +171,14 @@ namespace utils {
         else if (SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr)) {
           constructVariant(bpy::extract<QString>(objPtr)(), data);
         }
+        // PyBools will also return true for SIPLong_Check but not the other way around, so the order
+        // here is relevant.
         else if (PyBool_Check(objPtr)) {
           constructVariant(bpy::extract<bool>(objPtr)(), data);
         }
         else if (SIPLong_Check(objPtr)) {
-          //QVariant doesn't have long. It has int or long long. Given that on m/s,
-          //long is 32 bits for 32- and 64- bit code...
+          // QVariant doesn't have long. It has int or long long. Given that on m/s,
+          // long is 32 bits for 32- and 64- bit code...
           constructVariant(bpy::extract<int>(objPtr)(), data);
         }
         else {
