@@ -140,6 +140,12 @@ BOOST_PYTHON_MODULE(mobase)
       .value("beta", MOBase::VersionInfo::RELEASE_BETA)
       .value("alpha", MOBase::VersionInfo::RELEASE_ALPHA)
       .value("prealpha", MOBase::VersionInfo::RELEASE_PREALPHA)
+
+      .value("FINAL", MOBase::VersionInfo::RELEASE_FINAL)
+      .value("CANDIDATE", MOBase::VersionInfo::RELEASE_CANDIDATE)
+      .value("BETA", MOBase::VersionInfo::RELEASE_BETA)
+      .value("ALPHA", MOBase::VersionInfo::RELEASE_ALPHA)
+      .value("PRE_ALPHA", MOBase::VersionInfo::RELEASE_PREALPHA)
       ;
 
   bpy::enum_<MOBase::VersionInfo::VersionScheme>("VersionScheme")
@@ -149,6 +155,13 @@ BOOST_PYTHON_MODULE(mobase)
       .value("numbersandletters", MOBase::VersionInfo::SCHEME_NUMBERSANDLETTERS)
       .value("date", MOBase::VersionInfo::SCHEME_DATE)
       .value("literal", MOBase::VersionInfo::SCHEME_LITERAL)
+
+      .value("DISCOVER", MOBase::VersionInfo::SCHEME_DISCOVER)
+      .value("REGULAR", MOBase::VersionInfo::SCHEME_REGULAR)
+      .value("DECIMAL_MARK", MOBase::VersionInfo::SCHEME_DECIMALMARK)
+      .value("NUMBERS_AND_LETTERS", MOBase::VersionInfo::SCHEME_NUMBERSANDLETTERS)
+      .value("DATE", MOBase::VersionInfo::SCHEME_DATE)
+      .value("LITERAL", MOBase::VersionInfo::SCHEME_LITERAL)
       ;
 
   bpy::class_<VersionInfo>("VersionInfo")
@@ -495,6 +508,10 @@ BOOST_PYTHON_MODULE(mobase)
       .value("missing", IPluginList::STATE_MISSING)
       .value("inactive", IPluginList::STATE_INACTIVE)
       .value("active", IPluginList::STATE_ACTIVE)
+
+      .value("MISSING", IPluginList::STATE_MISSING)
+      .value("INACTIVE", IPluginList::STATE_INACTIVE)
+      .value("ACTIVE", IPluginList::STATE_ACTIVE)
       ;
 
   bpy::class_<IPluginList, boost::noncopyable>("IPluginList", bpy::no_init)
@@ -519,6 +536,14 @@ BOOST_PYTHON_MODULE(mobase)
       .value("endorsed", IModList::STATE_ENDORSED)
       .value("valid", IModList::STATE_VALID)
       .value("alternate", IModList::STATE_ALTERNATE)
+
+      .value("EXISTS", IModList::STATE_EXISTS)
+      .value("ACTIVE", IModList::STATE_ACTIVE)
+      .value("ESSENTIAL", IModList::STATE_ESSENTIAL)
+      .value("EMPTY", IModList::STATE_EMPTY)
+      .value("ENDORSED", IModList::STATE_ENDORSED)
+      .value("VALID", IModList::STATE_VALID)
+      .value("ALTERNATE", IModList::STATE_ALTERNATE)
       ;
 
   bpy::class_<IModList, boost::noncopyable>("IModList", bpy::no_init)
@@ -565,6 +590,9 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
       .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
+
+      .value("FILE_TIME", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
+      .value("PLUGINS_TXT", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
       ;
 
   bpy::enum_<MOBase::IPluginGame::SortMechanism>("SortMechanism")
@@ -580,6 +608,11 @@ BOOST_PYTHON_MODULE(mobase)
       .value("configuration", MOBase::IPluginGame::CONFIGURATION)
       .value("savegames", MOBase::IPluginGame::SAVEGAMES)
       .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
+
+      .value("MODS", MOBase::IPluginGame::MODS)
+      .value("CONFIGURATION", MOBase::IPluginGame::CONFIGURATION)
+      .value("SAVEGAMES", MOBase::IPluginGame::SAVEGAMES)
+      .value("PREFER_DEFAULTS", MOBase::IPluginGame::PREFER_DEFAULTS)
       ;
 
   bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
