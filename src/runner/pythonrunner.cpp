@@ -117,7 +117,7 @@ BOOST_PYTHON_MODULE(mobase)
     IPluginInstaller::EInstallResult, 
     std::shared_ptr<IFileTree>, 
     std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>>();
-  bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t, bool>>();
+  bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t>>();
   bpy::register_variant<std::variant<QString, bool>>();
 
   // Functions:
@@ -128,6 +128,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(const QString&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
+  utils::register_functor_converter<bool(QString const&, std::shared_ptr<const FileTreeEntry>)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
 
   //
@@ -336,28 +337,43 @@ BOOST_PYTHON_MODULE(mobase)
 
     iFileTreeClass
 
-      // Non-mutable operations (note: iterator and some methods are at the end with 
-      // special python methods):
+      // Non-mutable operations:
       .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists), (bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
       .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find), 
         bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<utils::downcast_return<FileTreeEntry, IFileTree>>(), "[optional]")
       .def("pathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
 
+      // Note: walk() would probably be better as a generator in python, but it is likely impossible to construct
+      // from the C++ walk() method.
+      .def("walk", &IFileTree::walk, bpy::arg("sep") = "\\")
+
       // Kind-of-static operations:
       .def("createOrphanTree", &IFileTree::createOrphanTree, bpy::arg("name") = "")
 
-      // Mutable operations:
-      .def("addFile", &IFileTree::addFile, bpy::arg("time") = QDateTime(), "[optional]")
-      .def("addDirectory", &IFileTree::addDirectory, "[optional]")
-      .def("insert", +[](
-        IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
-          return p->insert(entry, insertPolicy) != p->end(); }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+      // addFile() and addDirectory throws exception instead of returning null pointer in order
+      // to have better traces.
+      .def("addFile", +[](IFileTree* w, QString name, QDateTime time) {
+          auto result = w->addFile(name, time);
+          if (result == nullptr) {
+            throw std::logic_error("addFile failed");
+          }
+          return result;
+        }, bpy::arg("time") = QDateTime())
+      .def("addDirectory", +[](IFileTree* w, QString name) {
+          auto result = w->addDirectory(name);
+          if (result == nullptr) {
+            throw std::logic_error("addDirectory failed");
+          }
+          return result;
+        })
 
-      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> std::variant<IFileTree::OverwritesType, std::size_t, bool> {
+      // Merge needs custom return types depending if the user wants overrides or not. A failure is translated 
+      // into an exception for easier tracing and handling.
+      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> std::variant<IFileTree::OverwritesType, std::size_t> {
             IFileTree::OverwritesType overwrites;
             auto result = p->merge(other, returnOverwrites ? &overwrites : nullptr);
             if (result == IFileTree::MERGE_FAILED) {
-              return { false };
+              throw std::logic_error("merge failed");
             }
             if (returnOverwrites) {
               return { overwrites };
@@ -365,10 +381,16 @@ BOOST_PYTHON_MODULE(mobase)
             return { result };
         }, bpy::arg("overwrites") = false)
 
-      .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+      // Insert and erase returns an iterator, which makes no sense in python, so we convert it to bool. Erase is also
+      // renamed "remove" since "erase" is very C++.
+      .def("insert", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
+          return p->insert(entry, insertPolicy) == p->end();
+        }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
 
       .def("remove", +[](IFileTree* p, QString name) { return p->erase(name).first != p->end(); })
       .def("remove", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry) { return p->erase(entry) != p->end(); })
+
+      .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
 
       .def("clear", &IFileTree::clear)
       .def("removeAll", &IFileTree::removeAll)
