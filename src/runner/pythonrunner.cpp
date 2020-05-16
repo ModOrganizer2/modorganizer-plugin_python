@@ -879,6 +879,46 @@ BOOST_PYTHON_MODULE(moprivate)
     .def("startRecordingExceptionMessage", &ErrWrapper::startRecordingExceptionMessage)
     .def("stopRecordingExceptionMessage", &ErrWrapper::stopRecordingExceptionMessage)
     .def("getLastExceptionMessage", &ErrWrapper::getLastExceptionMessage);
+
+  utils::register_functor_converter<bool(QString, bool)>();
+
+  // Expose a function to create a particular tree, only for debugging purpose, not in mobase.
+  bpy::def("makeTree", +[](std::function<bool(QString, bool)> callback) -> std::shared_ptr<IFileTree> {
+    struct FileTree : IFileTree {
+
+      using callback_t = std::function<bool(QString, bool)>;
+
+      FileTree(std::shared_ptr<const IFileTree> parent, QString name, callback_t callback) : 
+        FileTreeEntry(parent, name), IFileTree(), m_Callback(callback){ }
+
+      std::shared_ptr<FileTreeEntry> addFile(QString name, QDateTime time) override {
+        if (m_Callback && !m_Callback(name, false)) {
+          throw UnsupportedOperationException("File rejected by callback.");
+        }
+        return IFileTree::addFile(name, time);
+      }
+
+      std::shared_ptr<IFileTree> addDirectory(QString name) override {
+        if (m_Callback && !m_Callback(name, true)) {
+          throw UnsupportedOperationException("Directory rejected by callback.");
+        }
+        return IFileTree::addDirectory(name);
+      }
+
+    protected:
+
+      std::shared_ptr<IFileTree> makeDirectory(std::shared_ptr<const IFileTree> parent, QString name) const override {
+        return std::make_shared<FileTree>(parent, name, m_Callback);
+      }
+
+      void doPopulate(std::shared_ptr<const IFileTree> parent, std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override { }
+      std::shared_ptr<IFileTree> doClone() const override { return std::make_shared<FileTree>(nullptr, name(), m_Callback); }
+
+    private:
+      callback_t m_Callback;
+    };
+    return std::make_shared<FileTree>(nullptr, "", callback);
+  }, bpy::arg("callback") = bpy::object{});
 }
 
 bool PythonRunner::initPython(const QString &pythonPath)
