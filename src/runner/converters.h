@@ -368,6 +368,12 @@ namespace utils {
 
     static void* convertible(PyObject* object)
     {
+      // We allow None here, we will just default-construct a std::function:
+      if (object == Py_None) {
+        return object;
+      }
+
+      // Otherwize we check that we have a callable object:
       if (!PyCallable_Check(object) || !has_arity(object, sizeof...(PARAMS))) {
         return nullptr;
       }
@@ -377,11 +383,18 @@ namespace utils {
     static void construct(PyObject* object, bpy::converter::rvalue_from_python_stage1_data* data)
     {
       bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
-      void* storage = ((bpy::converter::rvalue_from_python_storage<std::function<RET(PARAMS...)>>*)data)->storage.bytes;
-      new (storage) std::function<RET(PARAMS...)>(FunctorWrapper(callable));
+      void* storage =((bpy::converter::rvalue_from_python_storage<std::function<RET(PARAMS...)>>*)data)->storage.bytes;
+      if (callable.is_none()) {
+        new (storage) std::function<RET(PARAMS...)>{};
+      }
+      else {
+        new (storage) std::function<RET(PARAMS...)>(FunctorWrapper(callable));
+      }
       data->convertible = storage;
     }
   };
+
+
 
   /**
    * @brief Call policy that automatically downcast shared pointer of type FromType
