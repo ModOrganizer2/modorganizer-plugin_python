@@ -308,21 +308,34 @@ namespace utils {
   }
 
   namespace {
-    int getArgCount(PyObject* object) {
-      int result = 0;
-      PyObject* funcCode = PyObject_GetAttrString(object, "__code__");
-      if (funcCode) {
-        PyObject* argCount = PyObject_GetAttrString(funcCode, "co_argcount");
-        if (argCount) {
-          result = SIPLong_AsLong(argCount);
-          Py_DECREF(argCount);
-        }
-        Py_DECREF(funcCode);
+    bool has_arity(PyObject* object, std::size_t arity) {
+      // Mostly from https://stackoverflow.com/a/36143796/2666289
+      bpy::object fn(bpy::handle<>(bpy::borrowed(object)));
+
+      auto inspect = bpy::import("inspect");
+      auto arg_spec = inspect.attr("getfullargspec")(fn);
+      bpy::object args = arg_spec.attr("args"),
+        varargs = arg_spec.attr("varargs"),
+        defaults = arg_spec.attr("defaults");
+
+      auto args_count = args ? bpy::len(args) : 0;
+      auto defaults_count = defaults ? bpy::len(defaults) : 0;
+
+      if (static_cast<bool>(inspect.attr("ismethod")(fn)) && fn.attr("__self__")) {
+        --args_count;
       }
-      return result;
+
+      auto required_count = args_count - defaults_count;
+
+      return required_count <= arity          // Cannot require more parameters than given,
+        && (args_count >= arity || varargs);  // Must accept enough parameters.
     }
   }
 
+  /**
+   * @brief Convert a python callable to a valid C++ Callable object. Also works
+   *     for None.
+   */
   template <typename>
   struct Functor_converter;
 
@@ -355,8 +368,7 @@ namespace utils {
 
     static void* convertible(PyObject* object)
     {
-      if (!PyCallable_Check(object)
-        || (getArgCount(object) != sizeof...(PARAMS))) {
+      if (!PyCallable_Check(object) || !has_arity(object, sizeof...(PARAMS))) {
         return nullptr;
       }
       return object;
