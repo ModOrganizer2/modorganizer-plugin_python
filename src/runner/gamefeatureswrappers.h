@@ -7,12 +7,26 @@
 #include <dataarchives.h>
 #include <gameplugins.h>
 #include <localsavegames.h>
+#include <moddatachecker.h>
 #include <savegameinfo.h>
 #include <scriptextender.h>
 #include <unmanagedmods.h>
 
 // this might need turning off if Q_MOC_RUN is defined
 #include <boost/python.hpp>
+#include <boost/mp11.hpp>
+
+// This is a simple MPL list that contains all the game features in one place:
+using MpGameFeaturesList = boost::mp11::mp_list<
+  BSAInvalidation,
+  DataArchives,
+  GamePlugins,
+  LocalSavegames,
+  ModDataChecker,
+  SaveGameInfo,
+  ScriptExtender,
+  UnmanagedMods
+>;
 
 /////////////////////////////
 /// Wrapper declarations
@@ -61,6 +75,16 @@ public:
 
   virtual MappingType mappings(const QDir &profileSaveDir) const override;
   virtual bool prepareProfile(MOBase::IProfile *profile) override;
+};
+
+class ModDataCheckerWrapper : public ModDataChecker, public boost::python::wrapper<ModDataChecker>
+{
+public:
+  static constexpr const char* className = "ModDataCheckerWrapper";
+  using boost::python::wrapper<ModDataChecker>::get_override;
+
+  virtual QString getDataFolderName() const override;
+  virtual bool dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const;
 };
 
 class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<SaveGameInfo>

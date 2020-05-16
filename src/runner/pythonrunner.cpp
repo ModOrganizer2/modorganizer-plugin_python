@@ -674,19 +674,8 @@ BOOST_PYTHON_MODULE(mobase)
         // Constructing a dict from class name to actual object:
         bpy::dict dict;
         mp11::mp_for_each<
-          mp11::mp_transform<
-            // Must user pointers because mp_for_each construct object:
-            std::add_pointer_t,
-            mp11::mp_list<
-              BSAInvalidation,
-              DataArchives, 
-              GamePlugins, 
-              LocalSavegames, 
-              SaveGameInfo, 
-              ScriptExtender, 
-              UnmanagedMods
-            >
-          >
+          // Must user pointers because mp_for_each construct object:
+          mp11::mp_transform<std::add_pointer_t, MpGameFeaturesList>
         >([&](auto* pt) {
           using T = std::remove_pointer_t<decltype(pt)>;
           typename bpy::reference_existing_object::apply<T*>::type converter;
@@ -704,19 +693,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("feature", +[](MOBase::IPluginGame* p, bpy::object clsObj) {
         bpy::object feature;
         mp11::mp_for_each<
-          mp11::mp_transform<
           // Must user pointers because mp_for_each construct object:
-          std::add_pointer_t,
-            mp11::mp_list<
-              BSAInvalidation,
-              DataArchives,
-              GamePlugins,
-              LocalSavegames,
-              SaveGameInfo,
-              ScriptExtender,
-              UnmanagedMods
-            >
-          >
+          mp11::mp_transform<std::add_pointer_t, MpGameFeaturesList>
         >([&](auto* pt) {
           using T = std::remove_pointer_t<decltype(pt)>;
           typename bpy::reference_existing_object::apply<T*>::type converter;

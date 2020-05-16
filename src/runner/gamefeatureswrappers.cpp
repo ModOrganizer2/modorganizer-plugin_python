@@ -100,6 +100,18 @@ bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 
 /// end LocalSavegames Wrapper
 /////////////////////////////
+/// ModDataChecker Wrapper
+
+QString ModDataCheckerWrapper::getDataFolderName() const {
+  return basicWrapperFunctionImplementation<ModDataCheckerWrapper, QString>(this, "getDataFolderName");
+}
+
+bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
+  return basicWrapperFunctionImplementation<ModDataCheckerWrapper, bool>(this, "dataLooksValid", fileTree);
+}
+
+/// end ModDataChecker Wrapper
+/////////////////////////////
 /// SaveGameInfo Wrapper
 
 
@@ -193,11 +205,6 @@ QStringList UnmanagedModsWrapper::secondaryFiles(const QString & modName) const
 /// end UnmanagedMods Wrapper
 /////////////////////////////
 
-template<typename T>
-void insertGameFeature(std::map<std::type_index, boost::any> &map, const boost::python::object &pyObject)
-{
-  map[std::type_index(typeid(T))] = boost::python::extract<T*>(pyObject)();
-}
 
 game_features_map_from_python::game_features_map_from_python()
 {
@@ -207,6 +214,12 @@ game_features_map_from_python::game_features_map_from_python()
 void * game_features_map_from_python::convertible(PyObject * objPtr)
 {
   return PyDict_Check(objPtr) ? objPtr : nullptr;
+}
+
+template<typename T>
+void insertGameFeature(std::map<std::type_index, boost::any>& map, const boost::python::object& pyObject)
+{
+  map[std::type_index(typeid(T))] = boost::python::extract<T*>(pyObject)();
 }
 
 void game_features_map_from_python::construct(PyObject * objPtr, boost::python::converter::rvalue_from_python_stage1_data * data)
@@ -219,22 +232,18 @@ void game_features_map_from_python::construct(PyObject * objPtr, boost::python::
   for (int i = 0; i < len; ++i)
   {
     boost::python::object pyKey = keys[i];
-    // pyKey should be a Boost.Python.class corresponding to a game feature.
-    std::string className = boost::python::extract<std::string>(pyKey.attr("__name__"))();
-    if (className == "BSAInvalidation")
-      insertGameFeature<BSAInvalidation>(*result, source[pyKey]);
-    else if (className == "DataArchives")
-      insertGameFeature<DataArchives>(*result, source[pyKey]);
-    else if (className == "GamePlugins")
-      insertGameFeature<GamePlugins>(*result, source[pyKey]);
-    else if (className == "LocalSavegames")
-      insertGameFeature<LocalSavegames>(*result, source[pyKey]);
-    else if (className == "SaveGameInfo")
-      insertGameFeature<SaveGameInfo>(*result, source[pyKey]);
-    else if (className == "ScriptExtender")
-      insertGameFeature<ScriptExtender>(*result, source[pyKey]);
-    else if (className == "UnmanagedMods")
-      insertGameFeature<UnmanagedMods>(*result, source[pyKey]);
+    boost::python::object pyValue = source[pyKey];
+
+    boost::mp11::mp_for_each<
+      // Must user pointers because mp_for_each construct object:
+      boost::mp11::mp_transform<std::add_pointer_t, MpGameFeaturesList>
+    >([&](auto* pt) {
+      using T = std::remove_pointer_t<decltype(pt)>;
+      boost::python::extract<T*> extract(pyValue);
+      if (extract.check()) {
+        (*result)[std::type_index(typeid(T))] = extract();
+      }
+    });
   }
 
   data->convertible = storage;
@@ -270,6 +279,11 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<LocalSavegamesWrapper, boost::noncopyable>("LocalSavegames")
       .def("mappings", bpy::pure_virtual(&LocalSavegames::mappings))
       .def("prepareProfile", bpy::pure_virtual(&LocalSavegames::prepareProfile))
+      ;
+
+  bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker")
+      .def("getDataFolderName", bpy::pure_virtual(&ModDataChecker::getDataFolderName))
+      .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
       ;
 
   bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
