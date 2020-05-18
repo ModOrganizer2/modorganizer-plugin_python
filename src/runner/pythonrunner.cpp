@@ -335,6 +335,13 @@ BOOST_PYTHON_MODULE(mobase)
       .export_values()
       ;
 
+    bpy::enum_<IFileTree::WalkReturn>("WalkReturn")
+      .value("CONTINUE", IFileTree::WalkReturn::CONTINUE)
+      .value("STOP", IFileTree::WalkReturn::STOP)
+      .value("SKIP", IFileTree::WalkReturn::SKIP)
+      .export_values()
+      ;
+
     iFileTreeClass
 
       // Non-mutable operations:
