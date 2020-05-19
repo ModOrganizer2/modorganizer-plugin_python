@@ -445,7 +445,7 @@ struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBas
   virtual void setNexusID(int nexusID) override { this->get_override("setNexusID")(nexusID); }
   virtual void setInstallationFile(const QString &fileName) override { this->get_override("setInstallationFile")(fileName); }
   virtual void addNexusCategory(int categoryID) override { this->get_override("addNexusCategory")(categoryID); }
-  virtual void setGamePlugin(const MOBase::IPluginGame *gamePlugin) override { this->get_override("setGamePlugin")(gamePlugin); }
+  virtual void setGameName(const QString& gameName) override { this->get_override("setGameName")(gameName); }
   virtual bool setName(const QString &name) override { return this->get_override("setName")(name); }
   virtual bool remove() override { return this->get_override("remove")(); }
   virtual void addCategory(const QString &categoryName) override { this->get_override("addCategory")(categoryName); }
