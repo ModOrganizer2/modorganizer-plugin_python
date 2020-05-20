@@ -14,6 +14,7 @@
 #include <iplugininstaller.h>
 #include <iplugintool.h>
 #include <iprofile.h>
+#include <log.h>
 
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
@@ -815,7 +816,10 @@ private:
   void appendIfInstance(bpy::object const& obj, QList<QObject*>& interfaces);
 
 private:
-  std::map<QString, boost::python::object> m_PythonObjects;
+
+  // List of python objects representing plugins to keep all the bpy::object "alive"
+  // during the execution.
+  std::vector<bpy::object> m_PythonObjects;
   const MOBase::IOrganizer* m_MOInfo;
   wchar_t* m_PythonHome;
 };
@@ -948,6 +952,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
     mainNamespace["moprivate"] = bpy::import("moprivate");
+    mainNamespace["mobase"] = bpy::import("mobase");
     bpy::import("site");
     bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
@@ -1012,54 +1017,115 @@ void PythonRunner::appendIfInstance(bpy::object const& obj, QList<QObject*> &int
 
 QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 {
+  // `pluginName` can either be a python file (single-file plugin or a folder (whole module).
+  //
+  // For whole module, we simply add the parent folder to path, then we load the module with a simple 
+  // bpy::import, and we retrieve the associated __dict__ from which we extract either createPlugin or 
+  // createPlugins.
+  //
+  // For single file, we need to use bpy::exec_file, and we will use the context (global variables)
+  // from __main__ (already contains mobase, and other required module). Since the context is shared
+  // between called of `instantiate`, we need to make sure to remove createPlugin(s) from previous call.
   try {
     GILock lock;
-    bpy::object mainModule = bpy::import("__main__");
-    bpy::object moduleNamespace = mainModule.attr("__dict__");
 
-    bpy::object sys = bpy::import("sys");
-    moduleNamespace["sys"] = sys;
-    moduleNamespace["mobase"] = bpy::import("mobase");
+    // Dictionary that will contain createPlugin() or createPlugins().
+    bpy::dict moduleDict;
 
     if (pluginName.endsWith(".py")) {
+      bpy::object mainModule = bpy::import("__main__");
+      bpy::dict moduleNamespace = bpy::extract<bpy::dict>(mainModule.attr("__dict__"))();
+
       std::string temp = ToString(pluginName);
-      if (handled_exec_file(temp.c_str(), moduleNamespace)) {
-        throw pyexcept::PythonError();
+      if (!handled_exec_file(temp.c_str(), moduleNamespace)) {
+        moduleDict = moduleNamespace;
       }
-      m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
     }
     else {
       // Retrieve the module name:
       QStringList parts = pluginName.split("/");
       std::string moduleName = ToString(parts.takeLast());
       ensureFolderInPath(parts.join("/"));
-      bpy::object createPlugin = bpy::import(moduleName.c_str()).attr("createPlugin");
-      m_PythonObjects[pluginName] = createPlugin();
+      moduleDict = bpy::dict(bpy::import(moduleName.c_str()).attr("__dict__"));
     }
 
-    bpy::object pluginObj = m_PythonObjects[pluginName];
-    QList<QObject *> interfaceList;
+    if (bpy::len(moduleDict) == 0) {
+      MOBase::log::error("Failed to import plugin from {}.", pluginName);
+      throw pyexcept::PythonError();
+    }
 
-    appendIfInstance<IPluginGame>(pluginObj, interfaceList);
-    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-    appendIfInstance<IPluginDiagnoseWrapper>(pluginObj, interfaceList);
-    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-    appendIfInstance<IPluginFileMapperWrapper>(pluginObj, interfaceList); 
-    appendIfInstance<IPluginInstallerCustom>(pluginObj, interfaceList);
-    appendIfInstance<IPluginInstallerSimple>(pluginObj, interfaceList);
-    appendIfInstance<IPluginModPage>(pluginObj, interfaceList);
-    appendIfInstance<IPluginPreview>(pluginObj, interfaceList);
-    appendIfInstance<IPluginTool>(pluginObj, interfaceList);
+    // Create the plugins:
+    std::vector<bpy::object> plugins;
 
-    if (interfaceList.isEmpty())
-      appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
+    if (moduleDict.has_key("createPlugin")) {
+      plugins.push_back(moduleDict["createPlugin"]());
 
-    return interfaceList;
-  } catch (const bpy::error_already_set&) {
-    qWarning("failed to run python script \"%s\"", qUtf8Printable(pluginName));
+      // Clear for future call
+      bpy::delitem(moduleDict, bpy::str("createPlugin"));
+    }
+    else if (moduleDict.has_key("createPlugins")) {
+      bpy::object pyPlugins = moduleDict["createPlugins"]();
+      if (!PySequence_Check(pyPlugins.ptr())) {
+        MOBase::log::error("Plugin {}: createPlugins must return a list.", pluginName);
+      }
+      else {
+        bpy::list pyList(pyPlugins);
+        int nPlugins = bpy::len(pyList);
+        for (int i = 0; i < nPlugins; ++i) {
+          plugins.push_back(pyList[i]);
+        }
+      }
+
+      // Clear for future call
+      bpy::delitem(moduleDict, bpy::str("createPlugins"));
+    }
+    else {
+      MOBase::log::error("Plugin {}: missing a createPlugin(s) function.", pluginName);
+    }
+
+    // If we have no plugins, there was an issue, and we already logged the problem:
+    if (plugins.empty()) {
+      return QList<QObject*>();
+    }
+
+    QList<QObject*> allInterfaceList;
+
+    for (bpy::object pluginObj : plugins) {
+
+      // Add the plugin to keep it alive:
+      m_PythonObjects.push_back(pluginObj);
+
+      QList<QObject*> interfaceList;
+
+      appendIfInstance<IPluginGame>(pluginObj, interfaceList);
+      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+      appendIfInstance<IPluginDiagnoseWrapper>(pluginObj, interfaceList);
+      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+      appendIfInstance<IPluginFileMapperWrapper>(pluginObj, interfaceList);
+      appendIfInstance<IPluginInstallerCustom>(pluginObj, interfaceList);
+      appendIfInstance<IPluginInstallerSimple>(pluginObj, interfaceList);
+      appendIfInstance<IPluginModPage>(pluginObj, interfaceList);
+      appendIfInstance<IPluginPreview>(pluginObj, interfaceList);
+      appendIfInstance<IPluginTool>(pluginObj, interfaceList);
+
+      if (interfaceList.isEmpty()) {
+        appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
+      }
+
+      if (interfaceList.isEmpty()) {
+        MOBase::log::error("Plugin {}: no plugin interface implemented.", pluginName);
+      }
+
+      // Append the plugins to the main list:
+      allInterfaceList.append(interfaceList);
+    }
+
+    return allInterfaceList;
+  } 
+  catch (const bpy::error_already_set&) {
+    MOBase::log::error("Failed to import plugin from {}.", pluginName);
     throw pyexcept::PythonError();
   }
-  return QList<QObject*>();
 }
 
 bool PythonRunner::isPythonInstalled() const
