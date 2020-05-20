@@ -23,6 +23,7 @@
 #include <imodlist.h>
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
+#include "ifiletree.h"
 
 #include "error.h"
 #include "gilock.h"
@@ -427,10 +428,11 @@ struct IModRepositoryBridgeWrapper: MOBase::IModRepositoryBridge, boost::python:
 
 struct IInstallationManagerWrapper: MOBase::IInstallationManager, boost::python::wrapper<MOBase::IInstallationManager>
 {
-  virtual QString extractFile(const QString &fileName) { return this->get_override("extractFile")(fileName); }
-  virtual QStringList extractFiles(const QStringList &files, bool flatten) { return this->get_override("extractFiles")(files, flatten); }
-  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, const int &modId = 0) { return this->get_override("installArchive")(modName, archiveFile, modId); }
-  virtual void setURL(QString const &url) { this->get_override("setURL")(url); }
+  virtual QString extractFile(std::shared_ptr<const MOBase::FileTreeEntry> entry) override { return this->get_override("extractFile")(entry); }
+  virtual QStringList extractFiles(std::vector<std::shared_ptr<const MOBase::FileTreeEntry>> const& entries) override { return this->get_override("extractFiles")(entries); }
+  virtual MOBase::IPluginInstaller::EInstallResult installArchive(MOBase::GuessedValue<QString> &modName, const QString &archiveFile, int modId = 0) override {
+    return this->get_override("installArchive")(modName, archiveFile, modId); }
+  virtual void setURL(QString const &url) override { this->get_override("setURL")(url); }
 };
 
 struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBase::IModInterface>
@@ -443,12 +445,12 @@ struct IModInterfaceWrapper: MOBase::IModInterface, boost::python::wrapper<MOBas
   virtual void setNexusID(int nexusID) override { this->get_override("setNexusID")(nexusID); }
   virtual void setInstallationFile(const QString &fileName) override { this->get_override("setInstallationFile")(fileName); }
   virtual void addNexusCategory(int categoryID) override { this->get_override("addNexusCategory")(categoryID); }
-  virtual void setGameName(const QString &gameName) override { this->get_override("setGameName")(gameName); }
+  virtual void setGameName(const QString& gameName) override { this->get_override("setGameName")(gameName); }
   virtual bool setName(const QString &name) override { return this->get_override("setName")(name); }
   virtual bool remove() override { return this->get_override("remove")(); }
   virtual void addCategory(const QString &categoryName) override { this->get_override("addCategory")(categoryName); }
   virtual bool removeCategory(const QString &categoryName) override { return this->get_override("removeCategory")(categoryName); }
-  virtual QStringList categories() override { return this->get_override("categories")(); }
+  virtual QStringList categories() const override { return this->get_override("categories")(); }
 };
 
 
