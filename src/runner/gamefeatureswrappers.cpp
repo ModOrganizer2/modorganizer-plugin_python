@@ -102,10 +102,6 @@ bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 /////////////////////////////
 /// ModDataChecker Wrapper
 
-QString ModDataCheckerWrapper::getDataFolderName() const {
-  return basicWrapperFunctionImplementation<ModDataCheckerWrapper, QString>(this, "getDataFolderName");
-}
-
 bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
   return basicWrapperFunctionImplementation<ModDataCheckerWrapper, bool>(this, "dataLooksValid", fileTree);
 }
@@ -282,7 +278,6 @@ void registerGameFeaturesPythonConverters()
       ;
 
   bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker")
-      .def("getDataFolderName", bpy::pure_virtual(&ModDataChecker::getDataFolderName))
       .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
       ;
 

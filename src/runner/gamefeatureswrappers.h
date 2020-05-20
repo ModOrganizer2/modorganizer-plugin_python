@@ -83,7 +83,6 @@ public:
   static constexpr const char* className = "ModDataCheckerWrapper";
   using boost::python::wrapper<ModDataChecker>::get_override;
 
-  virtual QString getDataFolderName() const override;
   virtual bool dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const;
 };
 
