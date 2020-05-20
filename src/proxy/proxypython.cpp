@@ -28,7 +28,6 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <QCoreApplication>
 #include "resource.h"
 
-
 using namespace MOBase;
 
 
@@ -214,11 +213,24 @@ QList<PluginSetting> ProxyPython::settings() const
 
 QStringList ProxyPython::pluginList(const QString &pluginPath) const
 {
-  QDirIterator iter(pluginPath, QStringList("*.py"));
+  QDir dir(pluginPath);
+  dir.setFilter(dir.filter() | QDir::NoDotAndDotDot);
+  QDirIterator iter(dir);
 
+  // Note: We put python script (.py) and directory names, not the __init__.py
+  // files in those since it is easier for the runner to import them.
   QStringList result;
   while (iter.hasNext()) {
-    result.append(iter.next());
+    QString name = iter.next();
+    QFileInfo info = iter.fileInfo();
+
+    if (info.isFile() && name.endsWith(".py")) {
+      result.append(name);
+    }
+    else if (info.isDir() && QDir(info.absoluteFilePath()).exists("__init__.py")) {
+      result.append(name);
+      // result.append(info.baseName());
+    }
   }
 
   return result;
