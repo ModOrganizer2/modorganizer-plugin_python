@@ -58,6 +58,11 @@ public:
 private:
 
   void initPath();
+  
+  /**
+   * @brief Ensure that the given folder is in sys.path.
+   */
+  void ensureFolderInPath(QString folder);
 
   /**
    * @brief Append the underlying object of the given python object to the
@@ -1350,6 +1355,17 @@ void PythonRunner::initPath()
   Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
+void PythonRunner::ensureFolderInPath(QString folder) {
+  bpy::object sys = bpy::import("sys");
+  bpy::list sysPath = bpy::extract<bpy::list>(sys.attr("path"));
+
+  // Converting to QStringList for Qt::CaseInsensitive and because .index()
+  // raise an exception:
+  QStringList currentPath = bpy::extract<QStringList>(sysPath);
+  if (!currentPath.contains(folder, Qt::CaseInsensitive)) {
+    sysPath.insert(0, folder);
+  }
+}
 
 
 
@@ -1372,12 +1388,22 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     moduleNamespace["sys"] = sys;
     moduleNamespace["mobase"] = bpy::import("mobase");
 
-    std::string temp = ToString(pluginName);
-    if (handled_exec_file(temp.c_str(), moduleNamespace)) {
-      reportPythonError();
-      return QList<QObject*>();
+    if (pluginName.endsWith(".py")) {
+      std::string temp = ToString(pluginName);
+      if (handled_exec_file(temp.c_str(), moduleNamespace)) {
+        reportPythonError();
+        return QList<QObject*>();
+      }
+      m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
     }
-    m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
+    else {
+      // Retrieve the module name:
+      QStringList parts = pluginName.split("/");
+      std::string moduleName = ToString(parts.takeLast());
+      ensureFolderInPath(parts.join("/"));
+      bpy::object createPlugin = bpy::import(moduleName.c_str()).attr("createPlugin");
+      m_PythonObjects[pluginName] = createPlugin();
+    }
 
     bpy::object pluginObj = m_PythonObjects[pluginName];
     QList<QObject *> interfaceList;
