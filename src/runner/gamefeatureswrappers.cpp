@@ -17,22 +17,22 @@
 
 bool BSAInvalidationWrapper::isInvalidationBSA(const QString &bsaName)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "isInvalidationBSA", bsaName);
+  return basicWrapperFunctionImplementation<bool>(this, "isInvalidationBSA", bsaName);
 }
 
 void BSAInvalidationWrapper::deactivate(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<void>(this, "deactivate", boost::python::ptr(profile));
 }
 
 void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "activate", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<void>(this, "activate", boost::python::ptr(profile));
 }
 
 bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////
@@ -41,22 +41,22 @@ bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
 
 QStringList DataArchivesWrapper::vanillaArchives() const
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, QStringList>(this, "vanillaArchives");
+  return basicWrapperFunctionImplementation<QStringList>(this, "vanillaArchives");
 }
 
 QStringList DataArchivesWrapper::archives(const MOBase::IProfile *profile) const
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, QStringList>(this, "archives", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<QStringList>(this, "archives", boost::python::ptr(profile));
 }
 
 void DataArchivesWrapper::addArchive(MOBase::IProfile *profile, int index, const QString &archiveName)
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
+  return basicWrapperFunctionImplementation<void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
 }
 
 void DataArchivesWrapper::removeArchive(MOBase::IProfile *profile, const QString &archiveName)
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
+  return basicWrapperFunctionImplementation<void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
 }
 /// end DataArchives Wrapper
 /////////////////////////////
@@ -65,22 +65,22 @@ void DataArchivesWrapper::removeArchive(MOBase::IProfile *profile, const QString
 
 void GamePluginsWrapper::writePluginLists(const MOBase::IPluginList * pluginList)
 {
-  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "writePluginLists", boost::python::ptr(pluginList));
+  return basicWrapperFunctionImplementation<void>(this, "writePluginLists", boost::python::ptr(pluginList));
 }
 
 void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 {
-  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "readPluginLists", boost::python::ptr(pluginList));
+  return basicWrapperFunctionImplementation<void>(this, "readPluginLists", boost::python::ptr(pluginList));
 }
 
 void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
 {
-  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "getLoadOrder", loadOrder);
+  return basicWrapperFunctionImplementation<void>(this, "getLoadOrder", loadOrder);
 }
 
 bool GamePluginsWrapper::lightPluginsAreSupported()
 {
-    return basicWrapperFunctionImplementation<GamePluginsWrapper, bool>(this, "lightPluginsAreSupported");
+    return basicWrapperFunctionImplementation<bool>(this, "lightPluginsAreSupported");
 }
 
 /// end GamePlugins Wrapper
@@ -90,12 +90,12 @@ bool GamePluginsWrapper::lightPluginsAreSupported()
 
 MappingType LocalSavegamesWrapper::mappings(const QDir & profileSaveDir) const
 {
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, MappingType>(this, "mappings", profileSaveDir);
+  return basicWrapperFunctionImplementation<MappingType>(this, "mappings", profileSaveDir);
 }
 
 bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 {
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 
 /// end LocalSavegames Wrapper
@@ -103,7 +103,7 @@ bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 /// ModDataChecker Wrapper
 
 bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
-  return basicWrapperFunctionImplementation<ModDataCheckerWrapper, bool>(this, "dataLooksValid", fileTree);
+  return basicWrapperFunctionImplementation<bool>(this, "dataLooksValid", fileTree);
 }
 
 /// end ModDataChecker Wrapper
@@ -113,22 +113,22 @@ bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTr
 
 MOBase::ISaveGame const * SaveGameInfoWrapper::getSaveGameInfo(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGame*>(this, m_SaveGames[file], "getSaveGameInfo", file);
+  return basicWrapperFunctionImplementation<MOBase::ISaveGame*>(this, m_SaveGames[file], "getSaveGameInfo", file);
 }
 
 SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", file);
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", file);
 }
 
 MOBase::ISaveGameInfoWidget* SaveGameInfoWrapper::getSaveGameWidget(QWidget* parent) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGameInfoWidget*>(this, m_SaveGameWidget, "getSaveGameWidget", parent);
+  return basicWrapperFunctionImplementation<MOBase::ISaveGameInfoWidget*>(this, m_SaveGameWidget, "getSaveGameWidget", parent);
 }
 
 bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, bool>(this, "hasScriptExtenderSave", file);
+  return basicWrapperFunctionImplementation<bool>(this, "hasScriptExtenderSave", file);
 }
 /// end SaveGameInfo Wrapper
 /////////////////////////////
@@ -136,42 +136,42 @@ bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
 
 QString ScriptExtenderWrapper::BinaryName() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "BinaryName");
+  return basicWrapperFunctionImplementation<QString>(this, "BinaryName");
 }
 
 QString ScriptExtenderWrapper::PluginPath() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "PluginPath");
+  return basicWrapperFunctionImplementation<QString>(this, "PluginPath");
 }
 
 QString ScriptExtenderWrapper::loaderName() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "loaderName");
+  return basicWrapperFunctionImplementation<QString>(this, "loaderName");
 }
 
 QString ScriptExtenderWrapper::loaderPath() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "loaderPath");
+  return basicWrapperFunctionImplementation<QString>(this, "loaderPath");
 }
 
 QStringList ScriptExtenderWrapper::saveGameAttachmentExtensions() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QStringList>(this, "saveGameAttachmentExtensions");
+  return basicWrapperFunctionImplementation<QStringList>(this, "saveGameAttachmentExtensions");
 }
 
 bool ScriptExtenderWrapper::isInstalled() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, bool>(this, "isInstalled");
+  return basicWrapperFunctionImplementation<bool>(this, "isInstalled");
 }
 
 QString ScriptExtenderWrapper::getExtenderVersion() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "getExtenderVersion");
+  return basicWrapperFunctionImplementation<QString>(this, "getExtenderVersion");
 }
 
 WORD ScriptExtenderWrapper::getArch() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, WORD>(this, "getArch");
+  return basicWrapperFunctionImplementation<WORD>(this, "getArch");
 }
 
 /// end ScriptExtender Wrapper
@@ -181,22 +181,22 @@ WORD ScriptExtenderWrapper::getArch() const
 
 QStringList UnmanagedModsWrapper::mods(bool onlyOfficial) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QStringList>(this, "mods", onlyOfficial);
+  return basicWrapperFunctionImplementation<QStringList>(this, "mods", onlyOfficial);
 }
 
 QString UnmanagedModsWrapper::displayName(const QString & modName) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QString>(this, "displayName", modName);
+  return basicWrapperFunctionImplementation<QString>(this, "displayName", modName);
 }
 
 QFileInfo UnmanagedModsWrapper::referenceFile(const QString & modName) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QFileInfo>(this, "referenceFile", modName);
+  return basicWrapperFunctionImplementation<QFileInfo>(this, "referenceFile", modName);
 }
 
 QStringList UnmanagedModsWrapper::secondaryFiles(const QString & modName) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QStringList>(this, "secondaryFiles", modName);
+  return basicWrapperFunctionImplementation<QStringList>(this, "secondaryFiles", modName);
 }
 /// end UnmanagedMods Wrapper
 /////////////////////////////

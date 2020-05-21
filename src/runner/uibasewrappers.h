@@ -28,11 +28,11 @@ public:
   static constexpr const char* className = "ISaveGameWrapper";
   using boost::python::wrapper<MOBase::ISaveGame>::get_override;
 
-  virtual QString getFilename() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QString>(this, "getFilename"); };
-  virtual QDateTime getCreationTime() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QDateTime>(this, "getCreationTime"); };
-  virtual QString getSaveGroupIdentifier() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QString>(this, "getSaveGroupIdentifier"); };
-  virtual QStringList allFiles() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, QStringList>(this, "allFiles"); };
-  virtual bool hasScriptExtenderFile() const override { return basicWrapperFunctionImplementation<ISaveGameWrapper, bool>(this, "hasScriptExtenderFile"); };
+  virtual QString getFilename() const override { return basicWrapperFunctionImplementation<QString>(this, "getFilename"); };
+  virtual QDateTime getCreationTime() const override { return basicWrapperFunctionImplementation<QDateTime>(this, "getCreationTime"); };
+  virtual QString getSaveGroupIdentifier() const override { return basicWrapperFunctionImplementation<QString>(this, "getSaveGroupIdentifier"); };
+  virtual QStringList allFiles() const override { return basicWrapperFunctionImplementation<QStringList>(this, "allFiles"); };
+  virtual bool hasScriptExtenderFile() const override { return basicWrapperFunctionImplementation<bool>(this, "hasScriptExtenderFile"); };
 };
 
 // This needs a wrapper but currently I have no idea how to expose this properly to python:
@@ -45,7 +45,7 @@ public:
   // Bring the constructor:
   using ISaveGameInfoWidget::ISaveGameInfoWidget;
 
-  virtual void setSave(QString const& save) override { basicWrapperFunctionImplementation<ISaveGameInfoWidgetWrapper, void>(this, "setSave", save); };
+  virtual void setSave(QString const& save) override { basicWrapperFunctionImplementation<void>(this, "setSave", save); };
 };
 
 #endif // UIBASEWRAPPERS_H

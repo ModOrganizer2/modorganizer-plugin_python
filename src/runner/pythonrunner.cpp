@@ -776,6 +776,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("displayName", bpy::pure_virtual(&IPluginTool::displayName))
     .def("tooltip", bpy::pure_virtual(&IPluginTool::tooltip))
     .def("icon", bpy::pure_virtual(&IPluginTool::icon))
+    .def("display", bpy::pure_virtual(&IPluginTool::display))
     .def("setParentWidget", &IPluginTool::setParentWidget, &IPluginToolWrapper::setParentWidget_Default)
     .def("_parentWidget", &IPluginToolWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     ;
