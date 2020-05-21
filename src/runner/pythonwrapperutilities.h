@@ -50,6 +50,17 @@ namespace details {
 /**
  * @brief Call the given method on the wrapper with the given arguments, with proper
  *     exception handling.
+ *
+ * @param wrapper The wrapper object to use to retrieve the python method. Must have a publicly
+ *     available `className` attribute.
+ * @param methodName The name of the method.
+ * @param args... Arguments for the method.
+ *
+ * @return the result of calling the given Python method on the wrapper.
+ *
+ * @throw pyexcept::MissingImplementation if the method does not exist.
+ * @throw pyexcept::PythonError if an error occurs while executing the python method.
+ * @throw pyexecpt::UnknownException if an unknown error occurs.
  */
 template <class ReturnType, class WrapperType, class... Args>
 ReturnType basicWrapperFunctionImplementation(const WrapperType *wrapper, const char *methodName, Args... args)
@@ -58,7 +69,20 @@ ReturnType basicWrapperFunctionImplementation(const WrapperType *wrapper, const 
 }
 
 /**
- * @brief Similar to the first-overload but also stores the python object in the given reference.
+ * @brief Call the given method on the wrapper with the given arguments, with proper
+ *     exception handling, and store the intermediate result in the given python object.
+ *
+ * @param wrapper The wrapper object to use to retrieve the python method. Must have a publicly
+ *     available `className` attribute.
+ * @param ref Python object to which the result of `get_override()` should be stored.
+ * @param methodName The name of the method.
+ * @param args... Arguments for the method.
+ *
+ * @return the result of calling the given Python method on the wrapper.
+ *
+ * @throw pyexcept::MissingImplementation if the method does not exist.
+ * @throw pyexcept::PythonError if an error occurs while executing the python method.
+ * @throw pyexecpt::UnknownException if an unknown error occurs.
  */
 template <class ReturnType, class WrapperType, class... Args>
 ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper, boost::python::object &ref, const char* methodName, Args... args)
@@ -66,6 +90,23 @@ ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper, boost:
   return details::wrapperFunctionImplementation<ReturnType>(wrapper, nullptr, &ref, methodName, args...);
 }
 
+/**
+ * @brief Call the given method on the wrapper with the given arguments, with proper
+ *     exception handling, falling back to the given function if the method does not exist.
+ *
+ * @param wrapper The wrapper object to use to retrieve the python method. Must have a publicly
+ *     available `className` attribute.
+ * @param fn The function to call if the method does not exists.
+ * @param methodName The name of the method.
+ * @param args... Arguments for the method.
+ *
+ * Note: `fn` does not have to be a member-function of `wrapper` but `std::invoke(fn, wrapper, args...)` must be valid.
+ *
+ * @return the result of calling the given Python method on the wrapper.
+ *
+ * @throw pyexcept::PythonError if an error occurs while executing the python method.
+ * @throw pyexecpt::UnknownException if an unknown error occurs.
+ */
 template <class ReturnType, class WrapperTypePtr, class Fn, class... Args>
 ReturnType basicWrapperFunctionImplementationWithDefault(WrapperTypePtr wrapper, Fn fn, const char* methodName, Args... args)
 {
