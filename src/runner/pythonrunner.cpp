@@ -83,6 +83,7 @@ BOOST_PYTHON_MODULE(mobase)
   // QFlags:
   utils::register_qflags_converter<IPluginList::PluginStates>();
   utils::register_qflags_converter<IPluginGame::ProfileSettings>();
+  utils::register_qflags_converter<IModList::ModStates>();
 
   // Pointers:
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
