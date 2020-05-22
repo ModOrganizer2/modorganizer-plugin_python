@@ -51,14 +51,14 @@ public:
   static constexpr const char* className = "IPluginDiagnoseWrapper";
   using boost::python::wrapper<MOBase::IPluginDiagnose>::get_override;
 
+  // Bring in public scope:
+  using IPluginDiagnose::invalidate;
+
   virtual std::vector<unsigned int> activeProblems() const override;
   virtual QString shortDescription(unsigned int key) const override;
   virtual QString fullDescription(unsigned int key) const override;
   virtual bool hasGuidedFix(unsigned int key) const override;
   virtual void startGuidedFix(unsigned int key) const override;
-  // Other functions exist, but shouldn't need wrapping as a default implementation exists
-  // This was protected, but Python doesn't have that, so it needs making public
-  virtual void invalidate();
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
 };
@@ -186,12 +186,19 @@ public:
   static constexpr const char* className = "IPluginModPageWrapper";
   using boost::python::wrapper<MOBase::IPluginModPage>::get_override;
 
+  // Bring in public scope:
+  using IPluginModPage::parentWidget;
+
   virtual QString displayName() const override;
   virtual QIcon icon() const override;
   virtual QUrl pageURL() const override;
   virtual bool useIntegratedBrowser() const override;
   virtual bool handlesDownload(const QUrl &pageURL, const QUrl &downloadURL, MOBase::ModRepositoryFileInfo &fileInfo) const override;
   virtual void setParentWidget(QWidget *widget) override;
+
+  void setParentWidget_Default(QWidget* parent) {
+    IPluginModPage::setParentWidget(parent);
+  }
 };
 
 
@@ -220,13 +227,20 @@ public:
   static constexpr const char* className = "IPluginToolWrapper";
   using boost::python::wrapper<MOBase::IPluginTool>::get_override;
 
-  virtual QString displayName() const;
-  virtual QString tooltip() const;
-  virtual QIcon icon() const;
-  virtual void setParentWidget(QWidget *parent);
+  // Bring in public scope:
+  using IPluginTool::parentWidget;
+
+  virtual QString displayName() const override;
+  virtual QString tooltip() const override;
+  virtual QIcon icon() const override;
+  virtual void setParentWidget(QWidget *parent) override;
+
+  void setParentWidget_Default(QWidget* parent) {
+    IPluginTool::setParentWidget(parent);
+  }
 
 public Q_SLOTS:
-  virtual void display() const;
+  virtual void display() const override;
 };
 
 

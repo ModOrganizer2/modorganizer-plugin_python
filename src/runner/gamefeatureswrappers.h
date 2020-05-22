@@ -1,16 +1,32 @@
 #ifndef GAMEFEATURESWRAPPERS_H
 #define GAMEFEATURESWRAPPERS_H
 
+#include <map>
+
 #include <bsainvalidation.h>
 #include <dataarchives.h>
 #include <gameplugins.h>
 #include <localsavegames.h>
+#include <moddatachecker.h>
 #include <savegameinfo.h>
 #include <scriptextender.h>
 #include <unmanagedmods.h>
 
 // this might need turning off if Q_MOC_RUN is defined
 #include <boost/python.hpp>
+#include <boost/mp11.hpp>
+
+// This is a simple MPL list that contains all the game features in one place:
+using MpGameFeaturesList = boost::mp11::mp_list<
+  BSAInvalidation,
+  DataArchives,
+  GamePlugins,
+  LocalSavegames,
+  ModDataChecker,
+  SaveGameInfo,
+  ScriptExtender,
+  UnmanagedMods
+>;
 
 /////////////////////////////
 /// Wrapper declarations
@@ -61,6 +77,15 @@ public:
   virtual bool prepareProfile(MOBase::IProfile *profile) override;
 };
 
+class ModDataCheckerWrapper : public ModDataChecker, public boost::python::wrapper<ModDataChecker>
+{
+public:
+  static constexpr const char* className = "ModDataCheckerWrapper";
+  using boost::python::wrapper<ModDataChecker>::get_override;
+
+  virtual bool dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const;
+};
+
 class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<SaveGameInfo>
 {
 public:
@@ -71,6 +96,11 @@ public:
   virtual MissingAssets getMissingAssets(QString const &file) const override;
   virtual MOBase::ISaveGameInfoWidget *getSaveGameWidget(QWidget *parent = 0) const override;
   virtual bool hasScriptExtenderSave(QString const &file) const override;
+
+private:
+  // We need to keep the python objects alive:
+  mutable std::map<QString, boost::python::object> m_SaveGames;
+  mutable boost::python::object m_SaveGameWidget;
 };
 
 class ScriptExtenderWrapper : public ScriptExtender, public boost::python::wrapper<ScriptExtender>

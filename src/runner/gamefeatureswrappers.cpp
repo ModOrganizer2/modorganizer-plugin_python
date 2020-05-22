@@ -9,7 +9,6 @@
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
 
-#include "gilock.h"
 #include "pythonwrapperutilities.h"
 
 /////////////////////////////
@@ -18,22 +17,22 @@
 
 bool BSAInvalidationWrapper::isInvalidationBSA(const QString &bsaName)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "isInvalidationBSA", bsaName);
+  return basicWrapperFunctionImplementation<bool>(this, "isInvalidationBSA", bsaName);
 }
 
 void BSAInvalidationWrapper::deactivate(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "deactivate", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<void>(this, "deactivate", boost::python::ptr(profile));
 }
 
 void BSAInvalidationWrapper::activate(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, void>(this, "activate", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<void>(this, "activate", boost::python::ptr(profile));
 }
 
 bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
 {
-  return basicWrapperFunctionImplementation<BSAInvalidationWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////
@@ -42,22 +41,22 @@ bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile *profile)
 
 QStringList DataArchivesWrapper::vanillaArchives() const
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, QStringList>(this, "vanillaArchives");
+  return basicWrapperFunctionImplementation<QStringList>(this, "vanillaArchives");
 }
 
 QStringList DataArchivesWrapper::archives(const MOBase::IProfile *profile) const
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, QStringList>(this, "archives", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<QStringList>(this, "archives", boost::python::ptr(profile));
 }
 
 void DataArchivesWrapper::addArchive(MOBase::IProfile *profile, int index, const QString &archiveName)
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
+  return basicWrapperFunctionImplementation<void>(this, "addArchive", boost::python::ptr(profile), index, archiveName);
 }
 
 void DataArchivesWrapper::removeArchive(MOBase::IProfile *profile, const QString &archiveName)
 {
-  return basicWrapperFunctionImplementation<DataArchivesWrapper, void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
+  return basicWrapperFunctionImplementation<void>(this, "removeArchive", boost::python::ptr(profile), archiveName);
 }
 /// end DataArchives Wrapper
 /////////////////////////////
@@ -66,22 +65,22 @@ void DataArchivesWrapper::removeArchive(MOBase::IProfile *profile, const QString
 
 void GamePluginsWrapper::writePluginLists(const MOBase::IPluginList * pluginList)
 {
-  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "writePluginLists", boost::python::ptr(pluginList));
+  return basicWrapperFunctionImplementation<void>(this, "writePluginLists", boost::python::ptr(pluginList));
 }
 
 void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 {
-  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "readPluginLists", boost::python::ptr(pluginList));
+  return basicWrapperFunctionImplementation<void>(this, "readPluginLists", boost::python::ptr(pluginList));
 }
 
 void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
 {
-  return basicWrapperFunctionImplementation<GamePluginsWrapper, void>(this, "getLoadOrder", loadOrder);
+  return basicWrapperFunctionImplementation<void>(this, "getLoadOrder", loadOrder);
 }
 
 bool GamePluginsWrapper::lightPluginsAreSupported()
 {
-    return basicWrapperFunctionImplementation<GamePluginsWrapper, bool>(this, "lightPluginsAreSupported");
+    return basicWrapperFunctionImplementation<bool>(this, "lightPluginsAreSupported");
 }
 
 /// end GamePlugins Wrapper
@@ -91,38 +90,45 @@ bool GamePluginsWrapper::lightPluginsAreSupported()
 
 MappingType LocalSavegamesWrapper::mappings(const QDir & profileSaveDir) const
 {
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, MappingType>(this, "mappings", profileSaveDir);
+  return basicWrapperFunctionImplementation<MappingType>(this, "mappings", profileSaveDir);
 }
 
 bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 {
-  return basicWrapperFunctionImplementation<LocalSavegamesWrapper, bool>(this, "prepareProfile", boost::python::ptr(profile));
+  return basicWrapperFunctionImplementation<bool>(this, "prepareProfile", boost::python::ptr(profile));
 }
 
 /// end LocalSavegames Wrapper
+/////////////////////////////
+/// ModDataChecker Wrapper
+
+bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
+  return basicWrapperFunctionImplementation<bool>(this, "dataLooksValid", fileTree);
+}
+
+/// end ModDataChecker Wrapper
 /////////////////////////////
 /// SaveGameInfo Wrapper
 
 
 MOBase::ISaveGame const * SaveGameInfoWrapper::getSaveGameInfo(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGame const *>(this, "getSaveGameInfo", file);
+  return basicWrapperFunctionImplementation<MOBase::ISaveGame*>(this, m_SaveGames[file], "getSaveGameInfo", file);
 }
 
 SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", file);
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", file);
 }
 
-MOBase::ISaveGameInfoWidget * SaveGameInfoWrapper::getSaveGameWidget(QWidget * parent) const
+MOBase::ISaveGameInfoWidget* SaveGameInfoWrapper::getSaveGameWidget(QWidget* parent) const
 {
-  qCritical("Calling method with unimplemented from_python converter.");
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, MOBase::ISaveGameInfoWidget *>(this, "getSaveGameWidget", boost::python::ptr(parent));
+  return basicWrapperFunctionImplementation<MOBase::ISaveGameInfoWidget*>(this, m_SaveGameWidget, "getSaveGameWidget", parent);
 }
 
 bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
 {
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper, bool>(this, "hasScriptExtenderSave", file);
+  return basicWrapperFunctionImplementation<bool>(this, "hasScriptExtenderSave", file);
 }
 /// end SaveGameInfo Wrapper
 /////////////////////////////
@@ -130,42 +136,42 @@ bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
 
 QString ScriptExtenderWrapper::BinaryName() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "BinaryName");
+  return basicWrapperFunctionImplementation<QString>(this, "BinaryName");
 }
 
 QString ScriptExtenderWrapper::PluginPath() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "PluginPath");
+  return basicWrapperFunctionImplementation<QString>(this, "PluginPath");
 }
 
 QString ScriptExtenderWrapper::loaderName() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "loaderName");
+  return basicWrapperFunctionImplementation<QString>(this, "loaderName");
 }
 
 QString ScriptExtenderWrapper::loaderPath() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "loaderPath");
+  return basicWrapperFunctionImplementation<QString>(this, "loaderPath");
 }
 
 QStringList ScriptExtenderWrapper::saveGameAttachmentExtensions() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QStringList>(this, "saveGameAttachmentExtensions");
+  return basicWrapperFunctionImplementation<QStringList>(this, "saveGameAttachmentExtensions");
 }
 
 bool ScriptExtenderWrapper::isInstalled() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, bool>(this, "isInstalled");
+  return basicWrapperFunctionImplementation<bool>(this, "isInstalled");
 }
 
 QString ScriptExtenderWrapper::getExtenderVersion() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, QString>(this, "getExtenderVersion");
+  return basicWrapperFunctionImplementation<QString>(this, "getExtenderVersion");
 }
 
 WORD ScriptExtenderWrapper::getArch() const
 {
-  return basicWrapperFunctionImplementation<ScriptExtenderWrapper, WORD>(this, "getArch");
+  return basicWrapperFunctionImplementation<WORD>(this, "getArch");
 }
 
 /// end ScriptExtender Wrapper
@@ -175,31 +181,26 @@ WORD ScriptExtenderWrapper::getArch() const
 
 QStringList UnmanagedModsWrapper::mods(bool onlyOfficial) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QStringList>(this, "mods", onlyOfficial);
+  return basicWrapperFunctionImplementation<QStringList>(this, "mods", onlyOfficial);
 }
 
 QString UnmanagedModsWrapper::displayName(const QString & modName) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QString>(this, "displayName", modName);
+  return basicWrapperFunctionImplementation<QString>(this, "displayName", modName);
 }
 
 QFileInfo UnmanagedModsWrapper::referenceFile(const QString & modName) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QFileInfo>(this, "referenceFile", modName);
+  return basicWrapperFunctionImplementation<QFileInfo>(this, "referenceFile", modName);
 }
 
 QStringList UnmanagedModsWrapper::secondaryFiles(const QString & modName) const
 {
-  return basicWrapperFunctionImplementation<UnmanagedModsWrapper, QStringList>(this, "secondaryFiles", modName);
+  return basicWrapperFunctionImplementation<QStringList>(this, "secondaryFiles", modName);
 }
 /// end UnmanagedMods Wrapper
 /////////////////////////////
 
-template<typename T>
-void insertGameFeature(std::map<std::type_index, boost::any> &map, const boost::python::object &pyObject)
-{
-  map[std::type_index(typeid(T))] = boost::python::extract<T*>(pyObject)();
-}
 
 game_features_map_from_python::game_features_map_from_python()
 {
@@ -209,6 +210,12 @@ game_features_map_from_python::game_features_map_from_python()
 void * game_features_map_from_python::convertible(PyObject * objPtr)
 {
   return PyDict_Check(objPtr) ? objPtr : nullptr;
+}
+
+template<typename T>
+void insertGameFeature(std::map<std::type_index, boost::any>& map, const boost::python::object& pyObject)
+{
+  map[std::type_index(typeid(T))] = boost::python::extract<T*>(pyObject)();
 }
 
 void game_features_map_from_python::construct(PyObject * objPtr, boost::python::converter::rvalue_from_python_stage1_data * data)
@@ -221,22 +228,18 @@ void game_features_map_from_python::construct(PyObject * objPtr, boost::python::
   for (int i = 0; i < len; ++i)
   {
     boost::python::object pyKey = keys[i];
-    // pyKey should be a Boost.Python.class corresponding to a game feature.
-    std::string className = boost::python::extract<std::string>(pyKey.attr("__name__"))();
-    if (className == "BSAInvalidation")
-      insertGameFeature<BSAInvalidation>(*result, source[pyKey]);
-    else if (className == "DataArchives")
-      insertGameFeature<DataArchives>(*result, source[pyKey]);
-    else if (className == "GamePlugins")
-      insertGameFeature<GamePlugins>(*result, source[pyKey]);
-    else if (className == "LocalSavegames")
-      insertGameFeature<LocalSavegames>(*result, source[pyKey]);
-    else if (className == "SaveGameInfo")
-      insertGameFeature<SaveGameInfo>(*result, source[pyKey]);
-    else if (className == "ScriptExtender")
-      insertGameFeature<ScriptExtender>(*result, source[pyKey]);
-    else if (className == "UnmanagedMods")
-      insertGameFeature<UnmanagedMods>(*result, source[pyKey]);
+    boost::python::object pyValue = source[pyKey];
+
+    boost::mp11::mp_for_each<
+      // Must user pointers because mp_for_each construct object:
+      boost::mp11::mp_transform<std::add_pointer_t, MpGameFeaturesList>
+    >([&](auto* pt) {
+      using T = std::remove_pointer_t<decltype(pt)>;
+      boost::python::extract<T*> extract(pyValue);
+      if (extract.check()) {
+        (*result)[std::type_index(typeid(T))] = extract();
+      }
+    });
   }
 
   data->convertible = storage;
@@ -274,10 +277,14 @@ void registerGameFeaturesPythonConverters()
       .def("prepareProfile", bpy::pure_virtual(&LocalSavegames::prepareProfile))
       ;
 
+  bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker")
+      .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
+      ;
+
   bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
       .def("getSaveGameInfo", bpy::pure_virtual(&SaveGameInfo::getSaveGameInfo), bpy::return_value_policy<bpy::manage_new_object>())
       .def("getMissingAssets", bpy::pure_virtual(&SaveGameInfo::getMissingAssets))
-      .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>())
+      .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>(), "[optional]")
       .def("hasScriptExtenderSave", bpy::pure_virtual(&SaveGameInfo::hasScriptExtenderSave))
       ;
 

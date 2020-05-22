@@ -3,11 +3,19 @@
 #pragma warning( disable : 4100 )
 #pragma warning( disable : 4996 )
 
+#include <idownloadmanager.h>
 #include <ifiletree.h>
+#include <iinstallationmanager.h>
+#include <imodinterface.h>
+#include <imodlist.h>
+#include <imodrepositorybridge.h>
 #include <iplugin.h>
 #include <iplugingame.h>
 #include <iplugininstaller.h>
 #include <iplugintool.h>
+#include <iprofile.h>
+#include <log.h>
+
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
 #include "gamefeatureswrappers.h"
@@ -20,612 +28,36 @@
 #include <QCoreApplication>
 #include <QWidget>
 
-// sip and qt slots seems to conflict
-#include <sip.h>
-
 #include <variant>
 #include <tuple>
 
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
 #include <boost/mp11.hpp>
+#endif
 
 #include "tuple_helper.h"
 #include "variant_helper.h"
-#include "pythonutils.h"
-#endif
-
-MOBase::IOrganizer *s_Organizer = nullptr;
-
-
+#include "converters.h"
 
 using namespace MOBase;
 
 namespace bpy = boost::python;
 namespace mp11 = boost::mp11;
 
-
-class PythonRunner : public IPythonRunner
-{
-
-public:
-  PythonRunner(const MOBase::IOrganizer *moInfo);
-  bool initPython(const QString &pythonDir);
-  QList<QObject*> instantiate(const QString &pluginName);
-  bool isPythonInstalled() const;
-  bool isPythonVersionSupported() const;
-
-private:
-
-  void initPath();
-  
-  /**
-   * @brief Ensure that the given folder is in sys.path.
-   */
-  void ensureFolderInPath(QString folder);
-
-  /**
-   * @brief Append the underlying object of the given python object to the
-   *     interface list if it is an instance (pointer) of the given type.
-   *
-   * @param obj The object to check.
-   * @param interfaces The list to append the object to.
-   *
-   */
-  template <class T>
-  void appendIfInstance(bpy::object const& obj, QList<QObject*> &interfaces);
-
-private:
-  std::map<QString, boost::python::object> m_PythonObjects;
-  const MOBase::IOrganizer *m_MOInfo;
-  wchar_t *m_PythonHome;
-};
-
-
-IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pythonDir)
-{
-  s_Organizer = moInfo;
-  PythonRunner *result = new PythonRunner(moInfo);
-  if (result->initPython(pythonDir)) {
-    return result;
-  } else {
-    delete result;
-    return nullptr;
-  }
-}
-
-struct QString_to_python_str
-{
-  static PyObject *convert(const QString &str) {
-    // It's safer to explicitly convert to unicode as if we don't, this can return either str or unicode without it being easy to know which to expect
-    bpy::object pyStr = bpy::object(qUtf8Printable(str));
-    if (SIPBytes_Check(pyStr.ptr()))
-      pyStr = pyStr.attr("decode")("utf-8");
-    return bpy::incref(pyStr.ptr());
-  }
-};
-
-template <typename T>
-struct QFlags_to_int
-{
-  static PyObject *convert(const QFlags<T> &flags) {
-    return bpy::incref(bpy::object(static_cast<int>(flags)).ptr());
-  }
-};
-
-
-struct QString_from_python_str
-{
-  QString_from_python_str() {
-    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<QString>());
-  }
-
-  static void *convertible(PyObject *objPtr) {
-    return SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
-  }
-
-  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    // Ensure the string uses 8-bit characters
-    PyObject *strPtr = PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
-
-    // Extract the character data from the python string
-    const char* value = SIPBytes_AsString(strPtr);
-    assert(value != nullptr);
-
-    // allocate storage
-    void *storage = ((bpy::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
-
-    // construct QString in the allocated memory
-    new (storage) QString(value);
-
-    data->convertible = storage;
-
-    // Deallocate local copy if one was made
-    if (strPtr != objPtr)
-      Py_DecRef(strPtr);
-  }
-};
-
-
-struct HANDLE_converters
-{
-  struct HANDLE_to_python
-  {
-    static PyObject *convert(HANDLE handle) {
-      size_t size_t_version = (size_t)handle;
-      return bpy::incref(bpy::object(size_t_version).ptr());
-    }
-  };
-
-  // bpy isn't keen on actually using this.
-  // maybe it's detecting that the function receives a pointer, and assumes that it needs to convert to the pointer's target.
-  // the issue can be worked around by wrapping the function to take a size_t and converting it there
-  struct HANDLE_from_python
-  {
-    HANDLE_from_python() {
-      bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<HANDLE>());
-    }
-
-    static void *convertible(PyObject *objPtr) {
-      return PyLong_Check(objPtr) ? objPtr : nullptr;
-    }
-
-    static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-      void *storage = ((bpy::converter::rvalue_from_python_storage<HANDLE>*)data)->storage.bytes;
-      HANDLE *result = new (storage) HANDLE;
-      *result = (HANDLE)bpy::extract<size_t>(objPtr)();
-    }
-  };
-
-  HANDLE_converters()
-  {
-    HANDLE_from_python();
-    bpy::to_python_converter<HANDLE, HANDLE_to_python>();
-  }
-};
-
-
-struct QVariant_to_python_obj
-{
-  static PyObject *convert(const QVariant &var) {
-    switch (var.type()) {
-      case QVariant::Invalid: return bpy::incref(Py_None);
-      case QVariant::Int: return SIPLong_FromLong(var.toInt());
-      case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
-      case QVariant::Bool: return PyBool_FromLong(var.toBool());
-      case QVariant::String: return bpy::incref(bpy::object(var.toString()).ptr());
-      case QVariant::List: {
-        return bpy::incref(bpy::object(var.toList()).ptr());
-      } break;
-      case QVariant::Map: {
-        return bpy::incref(bpy::object(var.toMap()).ptr());
-      } break;
-      default: {
-        PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.type());
-        throw bpy::error_already_set();
-      } break;
-    }
-  }
-};
-
-
-struct QVariant_from_python_obj
-{
-  QVariant_from_python_obj() {
-    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<QVariant>());
-  }
-
-  static void *convertible(PyObject *objPtr) {
-    if (!SIPBytes_Check(objPtr) && !PyUnicode_Check(objPtr) && !PyLong_Check(objPtr) &&
-        !PyBool_Check(objPtr) && !PyList_Check(objPtr) && !PyDict_Check(objPtr) &&
-        objPtr != Py_None) {
-      return nullptr;
-    }
-    return objPtr;
-  }
-
-  template <typename T>
-  static void constructVariant(const T &value, bpy::converter::rvalue_from_python_stage1_data *data) {
-    void* storage = ((bpy::converter::rvalue_from_python_storage<QVariant>*)data)->storage.bytes;
-
-    new (storage) QVariant(value);
-
-    data->convertible = storage;
-  }
-
-  static void constructVariant(bpy::converter::rvalue_from_python_stage1_data *data) {
-    void* storage = ((bpy::converter::rvalue_from_python_storage<QVariant>*)data)->storage.bytes;
-
-    new (storage) QVariant();
-
-    data->convertible = storage;
-  }
-
-  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    // PyBools will also return true for SIPLong_Check but not the other way around, so the order
-    // here is relevant
-    if (PyList_Check(objPtr)) {
-      constructVariant(bpy::extract<QVariantList>(objPtr)(), data);
-    } else if (objPtr == Py_None) {
-      constructVariant(data);
-    } else if (PyDict_Check(objPtr)) {
-      constructVariant(bpy::extract<QVariantMap>(objPtr)(), data);
-    } else if (SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr)) {
-      constructVariant(bpy::extract<QString>(objPtr)(), data);
-    } else if (PyBool_Check(objPtr)) {
-      constructVariant(bpy::extract<bool>(objPtr)(), data);
-    } else if (SIPLong_Check(objPtr)) {
-      //QVariant doesn't have long. It has int or long long. Given that on m/s,
-      //long is 32 bits for 32- and 64- bit code...
-      constructVariant(bpy::extract<int>(objPtr)(), data);
-    } else {
-      PyErr_SetString(PyExc_TypeError, "type unsupported");
-      throw bpy::error_already_set();
-    }
-  }
-};
-
-template <typename T>
-struct QFlags_from_python_obj
-{
-  QFlags_from_python_obj() {
-    bpy::converter::registry::push_back(
-      &convertible,
-      &construct,
-      bpy::type_id<QFlags<T>>());
-  }
-
-  static void* convertible(PyObject *objPtr) {
-    return SIPLong_Check(objPtr) ? objPtr : nullptr;
-  }
-
-  static void construct(PyObject *objPtr, bpy::converter::rvalue_from_python_stage1_data *data) {
-    int intVersion = (int)SIPLong_AsLong(objPtr);
-    T tVersion = (T)intVersion;
-    void *storage = ((bpy::converter::rvalue_from_python_storage<QFlags<T>> *)data)->storage.bytes;
-    new (storage) QFlags<T>(tVersion);
-
-    data->convertible = storage;
-  }
-};
-
-
-struct IModRepositoryBridge_to_python
-{
-  static PyObject *convert(IModRepositoryBridge *bridge)
-  {
-    ModRepositoryBridgeWrapper wrapper(bridge);
-
-    return bpy::incref(bpy::object(wrapper).ptr());
-  }
-};
-
-
-
-template <typename T> struct MetaData;
-
-template <> struct MetaData<IModRepositoryBridge> { static const char *className() { return "QObject"; } };
-template <> struct MetaData<IDownloadManager> { static const char *className() { return "QObject"; } };
-template <> struct MetaData<QObject> { static const char *className() { return "QObject"; } };
-template <> struct MetaData<QWidget> { static const char *className() { return "QWidget"; } };
-template <> struct MetaData<QDateTime> { static const char *className() { return "QDateTime"; } };
-template <> struct MetaData<QDir> { static const char *className() { return "QDir"; } };
-template <> struct MetaData<QFileInfo> { static const char *className() { return "QFileInfo"; } };
-template <> struct MetaData<QIcon> { static const char *className() { return "QIcon"; } };
-template <> struct MetaData<QSize> { static const char *className() { return "QSize"; } };
-template <> struct MetaData<QStringList> { static const char *className() { return "QStringList"; } };
-template <> struct MetaData<QUrl> { static const char *className() { return "QUrl"; } };
-template <> struct MetaData<QVariant> { static const char *className() { return "QVariant"; } };
-
-
-template <typename T>
-PyObject *toPyQt(T *objPtr)
-{
-  if (objPtr == nullptr) {
-    qDebug("no input object");
-    return bpy::incref(Py_None);
-  }
-  const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
-
-  if (type == nullptr) {
-    qDebug("failed to determine type: %s", MetaData<T>::className());
-    return bpy::incref(Py_None);
-  }
-
-  PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(objPtr, type, 0);
-  if (sipObj == nullptr) {
-    qDebug("failed to convert");
-    return bpy::incref(Py_None);
-  }
-  return bpy::incref(sipObj);
-}
-
-
-template <typename T>
-struct QClass_converters
-{
-  struct QClass_to_PyQt
-  {
-    template <typename Q>
-    static typename std::enable_if_t<std::is_copy_constructible_v<Q>, T*> getSafeCopy(T *qClass)
-    {
-      return new T(*qClass);
-    }
-
-    template <typename Q>
-    static typename std::enable_if_t<!std::is_copy_constructible_v<Q>, T*> getSafeCopy(T *qClass)
-    {
-      return qClass;
-    }
-
-    static PyObject *convert(const T &object) {
-      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type((void*)getSafeCopy<T>((T*)&object), type, 0);
-      if (sipObj == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      if (std::is_copy_constructible_v<T>)
-        // Ensure Python deletes the C++ component
-        sipAPIAccess::sipAPI()->api_transfer_back(sipObj);
-
-      return bpy::incref(sipObj);
-    }
-
-    static PyObject *convert(T *object) {
-      if (object == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(getSafeCopy<T>(object), type, 0);
-      if (sipObj == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      if (std::is_copy_constructible_v<T>)
-        // Ensure Python deletes the C++ component
-        sipAPIAccess::sipAPI()->api_transfer_back(sipObj);
-
-      return bpy::incref(sipObj);
-    }
-
-    static PyObject *convert(const T *object) {
-      return convert((T*)object);
-    }
-  };
-
-  static void *QClass_from_PyQt(PyObject *objPtr)
-  {
-    // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
-    // Instead, this should be called within the wrappers for functions which return deletable pointers.
-    //sipAPI()->api_transfer_to(objPtr, Py_None);
-    if (PyObject_TypeCheck(objPtr, sipAPIAccess::sipAPI()->api_simplewrapper_type)) {
-      sipSimpleWrapper *wrapper;
-      wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
-      return wrapper->data;
-    } else if (PyObject_TypeCheck(objPtr, sipAPIAccess::sipAPI()->api_wrapper_type)) {
-      sipWrapper *wrapper;
-      wrapper = reinterpret_cast<sipWrapper*>(objPtr);
-      return wrapper->super.data;
-    } else {
-      if constexpr (std::is_same_v<T, QStringList>)
-      {
-        // QStringLists aren't wrapped by PyQt - regular Python string/unicode lists are used instead
-        bpy::extract<QList<QString>> extractor(objPtr);
-        if (extractor.check())
-          return new QStringList(extractor());
-      }
-      PyErr_SetString(PyExc_TypeError, "type not wrapped");
-      bpy::throw_error_already_set();
-    }
-    return new void*;
-  }
-
-  QClass_converters()
-  {
-    bpy::converter::registry::insert(&QClass_from_PyQt, bpy::type_id<T>());
-    bpy::to_python_converter<const T*, QClass_to_PyQt>();
-    bpy::to_python_converter<T*, QClass_to_PyQt>();
-    bpy::to_python_converter<T, QClass_to_PyQt>();
-  }
-};
-
-
-template <typename T>
-struct QInterface_converters
-{
-  struct QInterface_to_PyQt
-  {
-    static PyObject *convert(const T &object) {
-      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type((void*)(&object), type, 0);
-      if (sipObj == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      return bpy::incref(sipObj);
-    }
-
-    static PyObject *convert(T *object) {
-      if (object == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      const sipTypeDef *type = sipAPIAccess::sipAPI()->api_find_type(MetaData<T>::className());
-      if (type == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      PyObject *sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(object, type, 0);
-      if (sipObj == nullptr) {
-        return bpy::incref(Py_None);
-      }
-
-      return bpy::incref(sipObj);
-    }
-
-    static PyObject *convert(const T *object) {
-      return convert((T*)object);
-    }
-  };
-
-  static void *QInterface_from_PyQt(PyObject *objPtr)
-  {
-    if (!PyObject_TypeCheck(objPtr, sipAPIAccess::sipAPI()->api_wrapper_type)) {
-      bpy::throw_error_already_set();
-    }
-
-    // This would transfer responsibility for deconstructing the object to C++, but Boost assumes l-value converters (such as this) don't do that
-    // Instead, this should be called within the wrappers for functions which return deletable pointers.
-    //sipAPI()->api_transfer_to(objPtr, Py_None);
-
-    sipSimpleWrapper *wrapper = reinterpret_cast<sipSimpleWrapper*>(objPtr);
-    return wrapper->data;
-  }
-
-  QInterface_converters()
-  {
-    bpy::converter::registry::insert(&QInterface_from_PyQt, bpy::type_id<T>());
-    bpy::to_python_converter<const T*, QInterface_to_PyQt>();
-    bpy::to_python_converter<T*, QInterface_to_PyQt>();
-  }
-};
-
-
-int getArgCount(PyObject *object) {
-  int result = 0;
-  PyObject *funcCode = PyObject_GetAttrString(object, "__code__");
-  if (funcCode) {
-    PyObject *argCount = PyObject_GetAttrString(funcCode, "co_argcount");
-    if(argCount) {
-      result = SIPLong_AsLong(argCount);
-      Py_DECREF(argCount);
-    }
-    Py_DECREF(funcCode);
-  }
-  return result;
-}
-
-template <typename>
-struct Functor_converter;
-
-
-template <typename RET, typename... PARAMS>
-struct Functor_converter<RET(PARAMS... )>
-{
-
-  struct FunctorWrapper
-  {
-    FunctorWrapper(boost::python::object callable) : m_Callable(callable) {
-    }
-
-    ~FunctorWrapper() {
-      GILock lock;
-      m_Callable = bpy::object();
-    }
-
-    RET operator()(const PARAMS &...params) {
-      GILock lock;
-      if constexpr (std::is_same_v<RET, void>) {
-        m_Callable(params...);
-      }
-      else {
-        return bpy::extract<RET>(m_Callable(params...));
-      }
-    }
-
-    boost::python::object m_Callable;
-  };
-
-  Functor_converter()
-  {
-    bpy::converter::registry::push_back(&convertible, &construct, bpy::type_id<std::function<RET(PARAMS...)>>());
-  }
-
-  static void *convertible(PyObject *object)
-  {
-    if (!PyCallable_Check(object)
-        || (getArgCount(object) != sizeof...(PARAMS))) {
-      return nullptr;
-    }
-    return object;
-  }
-
-  static void construct(PyObject *object, bpy::converter::rvalue_from_python_stage1_data *data)
-  {
-    bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
-    void *storage = ((bpy::converter::rvalue_from_python_storage<std::function<RET(PARAMS...)>>*)data)->storage.bytes;
-    new (storage) std::function<RET(PARAMS...)>(FunctorWrapper(callable));
-    data->convertible = storage;
-  }
-};
-
-
-// We must wrap IOrganizer::waitForApplication to convert the out parameter to a return value and also because bpy doesn't like coverting to void* (HANDLE) even if a converter exists.
-static PyObject *waitForApplication(const bpy::object &self, size_t handle)
-{
-  IOrganizer& organizer = bpy::extract<IOrganizer&>(self)();
-  DWORD returnCode;
-  bool result = organizer.waitForApplication((HANDLE)handle, &returnCode);
-  return bpy::incref(bpy::make_tuple(result, returnCode).ptr());
-}
-
-
 /**
- * @brief Call policy that automatically downcast shared pointer of type FromType
- * to shared pointer of type ToType.
+ * This macro should be used within a bpy::class_ declaration and will define two
+ * methods: __getattr__ and Name, where Name will simply return the object as a QClass*
+ * object, while __getattr__ will delegate to the underlying QClass object when required.
+ *
+ * This allow access to Qt interface for object exposed using boost::python (e.g., signals,
+ * methods from QObject or QWidget, etc.).
  */
-template <class FromType, class ToType>
-struct DowncastConverter {
-
-  bool convertible() const { return true; }
-
-  inline PyObject* operator()(std::shared_ptr<FromType> p) const {
-    if (p == nullptr) {
-      return bpy::detail::none();
-    }
-    else {
-      auto downcast_p = std::dynamic_pointer_cast<ToType>(p);
-      bpy::object p_value = downcast_p == nullptr ? bpy::object{ p } : bpy::object{ downcast_p };
-      return bpy::incref(p_value.ptr());
-    }
-  }
-
-  inline PyTypeObject const* get_pytype() const {
-    return bpy::converter::registered_pytype<FromType>::get_pytype();
-  }
-
-};
-
-template <class FromType, class ToType>
-struct DowncastReturn {
-
-  template <class T>
-  struct apply_;
-  
-  template <class T>
-  struct apply_<std::shared_ptr<T>> {
-    static_assert(std::is_convertible_v<std::shared_ptr<T>, std::shared_ptr<FromType>>);
-    using type = DowncastConverter<FromType, ToType>;
-  };
-
-  template <class T>
-  using apply = apply_<std::decay_t<T>>;
-
-};
+#define Q_DELEGATE(Class, QClass, Name) \
+  .def(Name, +[](Class* w) -> QClass* { return w; }, bpy::return_value_policy<bpy::reference_existing_object>())          \
+  .def("__getattr__", +[](Class* w, bpy::str str) -> bpy::object {  \
+    return bpy::object{ (QClass*)w }.attr(str);                               \
+  })
 
 
 BOOST_PYTHON_MODULE(mobase)
@@ -633,23 +65,25 @@ BOOST_PYTHON_MODULE(mobase)
   PyEval_InitThreads();
 
   bpy::import("PyQt5.QtCore");
+  bpy::import("PyQt5.QtWidgets");
 
-  bpy::to_python_converter<QVariant, QVariant_to_python_obj>();
-  QVariant_from_python_obj();
+  utils::register_qstring_converter();
+  utils::register_qvariant_converter();
 
-  bpy::to_python_converter<QString, QString_to_python_str>();
-  QString_from_python_str();
+  utils::register_qclass_converter<QObject>();
+  utils::register_qclass_converter<QDateTime>();
+  utils::register_qclass_converter<QDir>();
+  utils::register_qclass_converter<QFileInfo>();
+  utils::register_qclass_converter<QWidget>();
+  utils::register_qclass_converter<QIcon>();
+  utils::register_qclass_converter<QSize>();
+  utils::register_qclass_converter<QStringList>();
+  utils::register_qclass_converter<QUrl>();
 
-  //QClass_converters<QObject>();
-  QClass_converters<QDateTime>();
-  QClass_converters<QDir>();
-  QClass_converters<QFileInfo>();
-  QClass_converters<QWidget>();
-  QClass_converters<QIcon>();
-  QClass_converters<QSize>();
-  QClass_converters<QStringList>();
-  QClass_converters<QUrl>();
-  QInterface_converters<IDownloadManager>();
+  // QFlags:
+  utils::register_qflags_converter<IPluginList::PluginStates>();
+  utils::register_qflags_converter<IPluginGame::ProfileSettings>();
+  utils::register_qflags_converter<IModList::ModStates>();
 
   // Pointers:
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
@@ -663,19 +97,21 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
-  utils::register_sequence_container<QList<QVariant>>();
+  utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
+  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
 
   utils::register_sequence_container<std::vector<unsigned int>>();
   utils::register_sequence_container<std::vector<Mapping>>();
 
   utils::register_set_container<std::set<QString>>();
   
-  utils::register_associative_container<QMap<QString, QVariant>>();
+  utils::register_associative_container<QMap<QString, QVariant>>(); // Required for QVariant since this is QVariantMap.
   utils::register_associative_container<QMap<QString, QStringList>>();
   
   utils::register_associative_container<IFileTree::OverwritesType>();
 
   // Tuple:
+  bpy::register_tuple<std::tuple<bool, DWORD>>(); // IOrganizer::waitForApplication
   bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>();
 
   // Variants:
@@ -683,22 +119,23 @@ BOOST_PYTHON_MODULE(mobase)
     IPluginInstaller::EInstallResult, 
     std::shared_ptr<IFileTree>, 
     std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>>();
-  bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t, bool>>();
+  bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t>>();
   bpy::register_variant<std::variant<QString, bool>>();
 
   // Functions:
-  Functor_converter<void()>(); // converter for the onRefreshed-callback
-  Functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
-  Functor_converter<bool(const IOrganizer::FileInfo&)>();
-  Functor_converter<void(const QString&)>();
-  Functor_converter<bool(const QString&)>();
-  Functor_converter<void(const QString&, unsigned int)>();
-  Functor_converter<std::variant<QString, bool>(QString const&)>();
-  Functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
+  utils::register_functor_converter<void()>(); // converter for the onRefreshed-callback
+  utils::register_functor_converter<void(const QString&)>();
+  utils::register_functor_converter<void(const QString&, unsigned int)>();
+  utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
+  utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
+  utils::register_functor_converter<bool(const QString&)>();
+  utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
+  utils::register_functor_converter<bool(QString const&, std::shared_ptr<const FileTreeEntry>)>();
+  utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
 
-
-  bpy::def("toPyQt", &toPyQt<IModRepositoryBridge>);
-  bpy::def("toPyQt", &toPyQt<IDownloadManager>);
+  //
+  // Class declarations:
+  //
 
   bpy::enum_<MOBase::VersionInfo::ReleaseType>("ReleaseType")
       .value("final", MOBase::VersionInfo::RELEASE_FINAL)
@@ -706,6 +143,12 @@ BOOST_PYTHON_MODULE(mobase)
       .value("beta", MOBase::VersionInfo::RELEASE_BETA)
       .value("alpha", MOBase::VersionInfo::RELEASE_ALPHA)
       .value("prealpha", MOBase::VersionInfo::RELEASE_PREALPHA)
+
+      .value("FINAL", MOBase::VersionInfo::RELEASE_FINAL)
+      .value("CANDIDATE", MOBase::VersionInfo::RELEASE_CANDIDATE)
+      .value("BETA", MOBase::VersionInfo::RELEASE_BETA)
+      .value("ALPHA", MOBase::VersionInfo::RELEASE_ALPHA)
+      .value("PRE_ALPHA", MOBase::VersionInfo::RELEASE_PREALPHA)
       ;
 
   bpy::enum_<MOBase::VersionInfo::VersionScheme>("VersionScheme")
@@ -715,6 +158,13 @@ BOOST_PYTHON_MODULE(mobase)
       .value("numbersandletters", MOBase::VersionInfo::SCHEME_NUMBERSANDLETTERS)
       .value("date", MOBase::VersionInfo::SCHEME_DATE)
       .value("literal", MOBase::VersionInfo::SCHEME_LITERAL)
+
+      .value("DISCOVER", MOBase::VersionInfo::SCHEME_DISCOVER)
+      .value("REGULAR", MOBase::VersionInfo::SCHEME_REGULAR)
+      .value("DECIMAL_MARK", MOBase::VersionInfo::SCHEME_DECIMALMARK)
+      .value("NUMBERS_AND_LETTERS", MOBase::VersionInfo::SCHEME_NUMBERSANDLETTERS)
+      .value("DATE", MOBase::VersionInfo::SCHEME_DATE)
+      .value("LITERAL", MOBase::VersionInfo::SCHEME_LITERAL)
       ;
 
   bpy::class_<VersionInfo>("VersionInfo")
@@ -730,6 +180,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("displayString", &VersionInfo::displayString)
       .def("isValid", &VersionInfo::isValid)
       .def("scheme", &VersionInfo::scheme)
+      .def("__str__", &VersionInfo::canonicalString)
       .def(bpy::self < bpy::self)
       .def(bpy::self > bpy::self)
       .def(bpy::self <= bpy::self)
@@ -754,7 +205,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isCustom", &ExecutableInfo::isCustom)
       ;
 
-  bpy::class_<ISaveGameWrapper, boost::noncopyable>("ISaveGame")
+  bpy::class_<ISaveGameWrapper, bpy::bases<>, ISaveGameWrapper*, boost::noncopyable>("ISaveGame")
       .def("getFilename", bpy::pure_virtual(&ISaveGame::getFilename))
       .def("getCreationTime", bpy::pure_virtual(&ISaveGame::getCreationTime))
       .def("getSaveGroupIdentifier", bpy::pure_virtual(&ISaveGame::getSaveGroupIdentifier))
@@ -762,53 +213,69 @@ BOOST_PYTHON_MODULE(mobase)
       .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
       ;
 
-  // TODO: ISaveGameInfoWidget bindings
+  // See Q_DELEGATE for more details.
+  bpy::class_<ISaveGameInfoWidgetWrapper, bpy::bases<>, ISaveGameInfoWidgetWrapper*, boost::noncopyable>("ISaveGameInfoWidget", bpy::init<bpy::optional<QWidget*>>())
+    .def("setSave", bpy::pure_virtual(&ISaveGameInfoWidget::setSave))
 
-  bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
-    .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
-    .def_readwrite("archive", &IOrganizer::FileInfo::archive)
-    .def_readwrite("origins", &IOrganizer::FileInfo::origins)
+    Q_DELEGATE(ISaveGameInfoWidget, QWidget, "_widget")
     ;
 
-  bpy::class_<IOrganizerWrapper, boost::noncopyable>("IOrganizer")
-      .def("createNexusBridge", bpy::pure_virtual(&IOrganizer::createNexusBridge), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("profileName", bpy::pure_virtual(&IOrganizer::profileName))
-      .def("profilePath", bpy::pure_virtual(&IOrganizer::profilePath))
-      .def("downloadsPath", bpy::pure_virtual(&IOrganizer::downloadsPath))
-      .def("overwritePath", bpy::pure_virtual(&IOrganizer::overwritePath))
-      .def("basePath", bpy::pure_virtual(&IOrganizer::basePath))
-      .def("modsPath", bpy::pure_virtual(&IOrganizer::modsPath))
-      .def("appVersion", bpy::pure_virtual(&IOrganizer::appVersion))
-      .def("getMod", bpy::pure_virtual(&IOrganizer::getMod), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("createMod", bpy::pure_virtual(&IOrganizer::createMod), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("getGame", bpy::pure_virtual(&IOrganizer::getGame), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("removeMod", bpy::pure_virtual(&IOrganizer::removeMod))
-      .def("modDataChanged", bpy::pure_virtual(&IOrganizer::modDataChanged))
-      .def("pluginSetting", bpy::pure_virtual(&IOrganizer::pluginSetting))
-      .def("setPluginSetting", bpy::pure_virtual(&IOrganizer::setPluginSetting))
-      .def("persistent", bpy::pure_virtual(&IOrganizer::persistent))
-      .def("setPersistent", bpy::pure_virtual(&IOrganizer::setPersistent))
-      .def("pluginDataPath", bpy::pure_virtual(&IOrganizer::pluginDataPath))
-      .def("installMod", bpy::pure_virtual(&IOrganizer::installMod),(bpy::arg("nameSuggestion")=""), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("resolvePath", bpy::pure_virtual(&IOrganizer::resolvePath))
-      .def("listDirectories", bpy::pure_virtual(&IOrganizer::listDirectories))
-      .def("findFiles", bpy::pure_virtual(&IOrganizer::findFiles))
-      .def("getFileOrigins", bpy::pure_virtual(&IOrganizer::getFileOrigins))
-      .def("findFileInfos", bpy::pure_virtual(&IOrganizer::findFileInfos))
-      .def("downloadManager", bpy::pure_virtual(&IOrganizer::downloadManager), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("pluginList", bpy::pure_virtual(&IOrganizer::pluginList), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modList", bpy::pure_virtual(&IOrganizer::modList), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("profile", bpy::pure_virtual(&IOrganizer::profile), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("startApplication", bpy::pure_virtual(&IOrganizer::startApplication), ((bpy::arg("args")=QStringList()), (bpy::arg("cwd")=""), (bpy::arg("profile")=""), (bpy::arg("forcedCustomOverwrite")=""), (bpy::arg("ignoreCustomOverwrite")=false)), bpy::return_value_policy<bpy::return_by_value>())
-      //.def("waitForApplication", bpy::pure_virtual(&IOrganizer::waitForApplication), (bpy::arg("exitCode")=nullptr), bpy::return_value_policy<bpy::return_by_value>())
-      // Use wrapped version
-      .def("waitForApplication", waitForApplication)
-      .def("onModInstalled", bpy::pure_virtual(&IOrganizer::onModInstalled))
-      .def("onAboutToRun", bpy::pure_virtual(&IOrganizer::onAboutToRun))
-      .def("onFinishedRun", bpy::pure_virtual(&IOrganizer::onFinishedRun))
-      .def("refreshModList", bpy::pure_virtual(&IOrganizer::refreshModList), (bpy::arg("saveChanges")=true))
-      .def("managedGame", bpy::pure_virtual(&IOrganizer::managedGame), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modsSortedByProfilePriority", bpy::pure_virtual(&IOrganizer::modsSortedByProfilePriority))
+  bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
+      .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
+      .def_readwrite("archive", &IOrganizer::FileInfo::archive)
+      .def_readwrite("origins", &IOrganizer::FileInfo::origins)
+    ;
+
+  bpy::class_<IOrganizer, boost::noncopyable>("IOrganizer", bpy::no_init)
+      .def("createNexusBridge", &IOrganizer::createNexusBridge, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("profileName", &IOrganizer::profileName)
+      .def("profilePath", &IOrganizer::profilePath)
+      .def("downloadsPath", &IOrganizer::downloadsPath)
+      .def("overwritePath", &IOrganizer::overwritePath)
+      .def("basePath", &IOrganizer::basePath)
+      .def("modsPath", &IOrganizer::modsPath)
+      .def("appVersion", &IOrganizer::appVersion)
+      .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("removeMod", &IOrganizer::removeMod)
+      .def("modDataChanged", &IOrganizer::modDataChanged)
+      .def("pluginSetting", &IOrganizer::pluginSetting)
+      .def("setPluginSetting", &IOrganizer::setPluginSetting)
+      .def("persistent", &IOrganizer::persistent, bpy::arg("persistent") = QVariant())
+      .def("setPersistent", &IOrganizer::setPersistent, bpy::arg("sync") = true)
+      .def("pluginDataPath", &IOrganizer::pluginDataPath)
+      .def("installMod", &IOrganizer::installMod, (bpy::arg("name_suggestion") = ""), bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("resolvePath", &IOrganizer::resolvePath)
+      .def("listDirectories", &IOrganizer::listDirectories)
+      .def("findFiles", &IOrganizer::findFiles)
+      .def("getFileOrigins", &IOrganizer::getFileOrigins)
+      .def("findFileInfos", &IOrganizer::findFileInfos)
+      .def("downloadManager", &IOrganizer::downloadManager, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("pluginList", &IOrganizer::pluginList, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modList", &IOrganizer::modList, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("profile", &IOrganizer::profile, bpy::return_value_policy<bpy::reference_existing_object>())
+
+      // Custom implementation for startApplication and waitForApplication because 1) HANDLE (= void*) is not properly
+      // converted from/to python, and 2) we need to convert the by-ptr argument to a return-tuple for waitForApplication:
+      .def("startApplication", 
+        +[](IOrganizer* o, const QString& executable, const QStringList& args, const QString& cwd, const QString& profile, 
+          const QString& forcedCustomOverwrite, bool ignoreCustomOverwrite) {
+            return (std::uintptr_t) o->startApplication(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite);
+        }, ((bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), 
+            (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
+      .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle) {
+          DWORD returnCode;
+          bool result = o->waitForApplication((HANDLE)handle, &returnCode);
+          return std::make_tuple(result, returnCode);
+        })
+
+      .def("onModInstalled", &IOrganizer::onModInstalled)
+      .def("onAboutToRun", &IOrganizer::onAboutToRun)
+      .def("onFinishedRun", &IOrganizer::onFinishedRun)
+      .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes")=true))
+      .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
       ;
 
   // FileTreeEntry Scope:
@@ -835,7 +302,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("name", &FileTreeEntry::name)
       .def("suffix", &FileTreeEntry::suffix)
       .def("time", &FileTreeEntry::time)
-      .def("parent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent))
+      .def("parent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent), "[optional]")
       .def("path", &FileTreeEntry::path, bpy::arg("sep") = "\\")
       .def("pathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
 
@@ -858,7 +325,7 @@ BOOST_PYTHON_MODULE(mobase)
   }
 
   // IFileTree scope:
-  auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);;
+  auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);
   {
     
     bpy::scope scope = iFileTreeClass;
@@ -870,30 +337,52 @@ BOOST_PYTHON_MODULE(mobase)
       .export_values()
       ;
 
+    bpy::enum_<IFileTree::WalkReturn>("WalkReturn")
+      .value("CONTINUE", IFileTree::WalkReturn::CONTINUE)
+      .value("STOP", IFileTree::WalkReturn::STOP)
+      .value("SKIP", IFileTree::WalkReturn::SKIP)
+      .export_values()
+      ;
+
     iFileTreeClass
 
-      // Non-mutable operations (note: iterator and some methods are at the end with 
-      // special python methods):
+      // Non-mutable operations:
       .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists), (bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
       .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find), 
-        bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>())
+        bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<utils::downcast_return<FileTreeEntry, IFileTree>>(), "[optional]")
       .def("pathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
+
+      // Note: walk() would probably be better as a generator in python, but it is likely impossible to construct
+      // from the C++ walk() method.
+      .def("walk", &IFileTree::walk, bpy::arg("sep") = "\\")
 
       // Kind-of-static operations:
       .def("createOrphanTree", &IFileTree::createOrphanTree, bpy::arg("name") = "")
 
-      // Mutable operations:
-      .def("addFile", &IFileTree::addFile, bpy::arg("time") = QDateTime())
-      .def("addDirectory", &IFileTree::addDirectory)
-      .def("insert", +[](
-        IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
-          return p->insert(entry, insertPolicy) != p->end(); }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+      // addFile() and addDirectory throws exception instead of returning null pointer in order
+      // to have better traces.
+      .def("addFile", +[](IFileTree* w, QString name, QDateTime time) {
+          auto result = w->addFile(name, time);
+          if (result == nullptr) {
+            throw std::logic_error("addFile failed");
+          }
+          return result;
+        }, bpy::arg("time") = QDateTime())
+      .def("addDirectory", +[](IFileTree* w, QString name) {
+          auto result = w->addDirectory(name);
+          if (result == nullptr) {
+            throw std::logic_error("addDirectory failed");
+          }
+          return result;
+        })
 
-      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> std::variant<IFileTree::OverwritesType, std::size_t, bool> {
+      // Merge needs custom return types depending if the user wants overrides or not. A failure is translated 
+      // into an exception for easier tracing and handling.
+      .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> std::variant<IFileTree::OverwritesType, std::size_t> {
             IFileTree::OverwritesType overwrites;
             auto result = p->merge(other, returnOverwrites ? &overwrites : nullptr);
             if (result == IFileTree::MERGE_FAILED) {
-              return { false };
+              throw std::logic_error("merge failed");
             }
             if (returnOverwrites) {
               return { overwrites };
@@ -901,10 +390,16 @@ BOOST_PYTHON_MODULE(mobase)
             return { result };
         }, bpy::arg("overwrites") = false)
 
-      .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+      // Insert and erase returns an iterator, which makes no sense in python, so we convert it to bool. Erase is also
+      // renamed "remove" since "erase" is very C++.
+      .def("insert", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
+          return p->insert(entry, insertPolicy) == p->end();
+        }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
 
       .def("remove", +[](IFileTree* p, QString name) { return p->erase(name).first != p->end(); })
       .def("remove", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry) { return p->erase(entry) != p->end(); })
+
+      .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
 
       .def("clear", &IFileTree::clear)
       .def("removeAll", &IFileTree::removeAll)
@@ -912,8 +407,8 @@ BOOST_PYTHON_MODULE(mobase)
 
       // Special methods:
       .def("__getitem__", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(std::size_t)>(&IFileTree::at),
-        bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>())
-      .def("__iter__", bpy::range<bpy::return_value_policy<DowncastReturn<FileTreeEntry, IFileTree>>>(
+        bpy::return_value_policy<utils::downcast_return<FileTreeEntry, IFileTree>>())
+      .def("__iter__", bpy::range<bpy::return_value_policy<utils::downcast_return<FileTreeEntry, IFileTree>>>(
         static_cast<IFileTree::iterator(IFileTree::*)()>(&IFileTree::begin),
         static_cast<IFileTree::iterator(IFileTree::*)()>(&IFileTree::end)))
       .def("__len__", &IFileTree::size)
@@ -923,39 +418,28 @@ BOOST_PYTHON_MODULE(mobase)
   }
   
 
-  bpy::class_<IProfileWrapper, boost::noncopyable>("IProfile")
-      .def("name", bpy::pure_virtual(&IProfile::name))
-      .def("absolutePath", bpy::pure_virtual(&IProfile::absolutePath))
-      .def("localSavesEnabled", bpy::pure_virtual(&IProfile::localSavesEnabled))
-      .def("localSettingsEnabled", bpy::pure_virtual(&IProfile::localSettingsEnabled))
-      .def("invalidationActive", bpy::pure_virtual(&IProfile::invalidationActive))
+  bpy::class_<IProfile, boost::noncopyable>("IProfile", bpy::no_init)
+      .def("name", &IProfile::name)
+      .def("absolutePath", &IProfile::absolutePath)
+      .def("localSavesEnabled", &IProfile::localSavesEnabled)
+      .def("localSettingsEnabled", &IProfile::localSettingsEnabled)
+      .def("invalidationActive", &IProfile::invalidationActive)
       ;
 
-  bpy::class_<ModRepositoryBridgeWrapper, boost::noncopyable>("ModRepositoryBridge")
-      .def(bpy::init<IModRepositoryBridge*>())
-      .def("requestDescription", &ModRepositoryBridgeWrapper::requestDescription)
-      .def("requestFiles", &ModRepositoryBridgeWrapper::requestFiles)
-      .def("requestFileInfo", &ModRepositoryBridgeWrapper::requestFileInfo)
-      .def("requestToggleEndorsement", &ModRepositoryBridgeWrapper::requestToggleEndorsement)
-      .def("onFilesAvailable", &ModRepositoryBridgeWrapper::onFilesAvailable)
-      .def("onFileInfoAvailable", &ModRepositoryBridgeWrapper::onFileInfoAvailable)
-      .def("onDescriptionAvailable", &ModRepositoryBridgeWrapper::onDescriptionAvailable)
-      .def("onEndorsementToggled", &ModRepositoryBridgeWrapper::onEndorsementToggled)
-      .def("onRequestFailed", &ModRepositoryBridgeWrapper::onRequestFailed)
+  bpy::class_<IModRepositoryBridge, boost::noncopyable>("IModRepositoryBridge", bpy::no_init)
+      .def("requestDescription", &IModRepositoryBridge::requestDescription)
+      .def("requestFiles", &IModRepositoryBridge::requestFiles)
+      .def("requestFileInfo", &IModRepositoryBridge::requestFileInfo)
+      .def("requestDownloadURL", &IModRepositoryBridge::requestDownloadURL)
+      .def("requestToggleEndorsement", &IModRepositoryBridge::requestToggleEndorsement)
+
+      Q_DELEGATE(IModRepositoryBridge, QObject, "_object")
       ;
 
-  bpy::class_<IModRepositoryBridgeWrapper, boost::noncopyable>("IModRepositoryBridge")
-      .def("requestDescription", bpy::pure_virtual(&IModRepositoryBridge::requestDescription))
-      .def("requestFiles", bpy::pure_virtual(&IModRepositoryBridge::requestFiles))
-      .def("requestFileInfo", bpy::pure_virtual(&IModRepositoryBridge::requestFileInfo))
-      .def("requestDownloadURL", bpy::pure_virtual(&IModRepositoryBridge::requestDownloadURL))
-      .def("requestToggleEndorsement", bpy::pure_virtual(&IModRepositoryBridge::requestToggleEndorsement))
-      ;
-
-  bpy::class_<ModRepositoryFileInfo>("ModRepositoryFileInfo")
+  bpy::class_<ModRepositoryFileInfo>("ModRepositoryFileInfo", bpy::no_init)
       .def(bpy::init<const ModRepositoryFileInfo &>())
       .def(bpy::init<bpy::optional<QString, int, int>>())
-      .def("toString", &ModRepositoryFileInfo::toString)
+      .def("__str__", &ModRepositoryFileInfo::toString)
       .def("createFromJson", &ModRepositoryFileInfo::createFromJson).staticmethod("createFromJson")
       .def_readwrite("name", &ModRepositoryFileInfo::name)
       .def_readwrite("uri", &ModRepositoryFileInfo::uri)
@@ -975,34 +459,35 @@ BOOST_PYTHON_MODULE(mobase)
       .def_readwrite("userData", &ModRepositoryFileInfo::userData)
       ;
 
-  bpy::class_<IDownloadManagerWrapper, boost::noncopyable>("IDownloadManager")
-      .def("startDownloadURLs", bpy::pure_virtual(&IDownloadManager::startDownloadURLs))
-      .def("startDownloadNexusFile", bpy::pure_virtual(&IDownloadManager::startDownloadNexusFile))
-      .def("downloadPath", bpy::pure_virtual(&IDownloadManager::downloadPath))
+  bpy::class_<IDownloadManager, boost::noncopyable>("IDownloadManager", bpy::no_init)
+      .def("startDownloadURLs", &IDownloadManager::startDownloadURLs)
+      .def("startDownloadNexusFile", &IDownloadManager::startDownloadNexusFile)
+      .def("downloadPath", &IDownloadManager::downloadPath)
+
+      Q_DELEGATE(IDownloadManager, QObject, "_object")
       ;
 
-  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
-  bpy::class_<IInstallationManagerWrapper, boost::noncopyable>("IInstallationManager")
-    .def("extractFile", bpy::pure_virtual(&IInstallationManager::extractFile))
-    .def("extractFiles", bpy::pure_virtual(&IInstallationManager::extractFiles))
-    .def("installArchive", bpy::pure_virtual(&IInstallationManager::installArchive))
-    .def("setURL", bpy::pure_virtual(&IInstallationManager::setURL))
+  bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
+    .def("extractFile", &IInstallationManager::extractFile)
+    .def("extractFiles", &IInstallationManager::extractFiles)
+    .def("installArchive", &IInstallationManager::installArchive)
+    .def("setURL", &IInstallationManager::setURL)
     ;
 
-  bpy::class_<IModInterfaceWrapper, boost::noncopyable>("IModInterface")
-      .def("name", bpy::pure_virtual(&IModInterface::name))
-      .def("absolutePath", bpy::pure_virtual(&IModInterface::absolutePath))
-      .def("setVersion", bpy::pure_virtual(&IModInterface::setVersion))
-      .def("setNewestVersion", bpy::pure_virtual(&IModInterface::setNewestVersion))
-      .def("setIsEndorsed", bpy::pure_virtual(&IModInterface::setIsEndorsed))
-      .def("setNexusID", bpy::pure_virtual(&IModInterface::setNexusID))
-      .def("addNexusCategory", bpy::pure_virtual(&IModInterface::addNexusCategory))
-      .def("addCategory", bpy::pure_virtual(&IModInterface::addCategory))
-      .def("removeCategory", bpy::pure_virtual(&IModInterface::removeCategory))
-      .def("categories", bpy::pure_virtual(&IModInterface::categories))
-      .def("setGameName", bpy::pure_virtual(&IModInterface::setGameName))
-      .def("setName", bpy::pure_virtual(&IModInterface::setName))
-      .def("remove", bpy::pure_virtual(&IModInterface::remove))
+  bpy::class_<IModInterface, boost::noncopyable>("IModInterface", bpy::no_init)
+      .def("name", &IModInterface::name)
+      .def("absolutePath", &IModInterface::absolutePath)
+      .def("setVersion", &IModInterface::setVersion)
+      .def("setNewestVersion", &IModInterface::setNewestVersion)
+      .def("setIsEndorsed", &IModInterface::setIsEndorsed)
+      .def("setNexusID", &IModInterface::setNexusID)
+      .def("addNexusCategory", &IModInterface::addNexusCategory)
+      .def("addCategory", &IModInterface::addCategory)
+      .def("removeCategory", &IModInterface::removeCategory)
+      .def("categories", &IModInterface::categories)
+      .def("setGameName", &IModInterface::setGameName)
+      .def("setName", &IModInterface::setName)
+      .def("remove", &IModInterface::remove)
       ;
 
   bpy::enum_<MOBase::EGuessQuality>("GuessQuality")
@@ -1050,31 +535,29 @@ BOOST_PYTHON_MODULE(mobase)
       .def("__str__", &MOBase::GuessedValue<QString>::operator const QString&, bpy::return_value_policy<bpy::copy_const_reference>())
       ;
 
-  bpy::to_python_converter<IPluginList::PluginStates, QFlags_to_int<IPluginList::PluginState>>();
-  QFlags_from_python_obj<IPluginList::PluginState>();
-
   bpy::enum_<IPluginList::PluginState>("PluginState")
       .value("missing", IPluginList::STATE_MISSING)
       .value("inactive", IPluginList::STATE_INACTIVE)
       .value("active", IPluginList::STATE_ACTIVE)
+
+      .value("MISSING", IPluginList::STATE_MISSING)
+      .value("INACTIVE", IPluginList::STATE_INACTIVE)
+      .value("ACTIVE", IPluginList::STATE_ACTIVE)
       ;
 
-  bpy::class_<IPluginListWrapper, boost::noncopyable>("IPluginList")
-      .def("state", bpy::pure_virtual(&MOBase::IPluginList::state))
-      .def("priority", bpy::pure_virtual(&MOBase::IPluginList::priority))
-      .def("loadOrder", bpy::pure_virtual(&MOBase::IPluginList::loadOrder))
-      .def("isMaster", bpy::pure_virtual(&MOBase::IPluginList::isMaster))
-      .def("masters", bpy::pure_virtual(&MOBase::IPluginList::masters))
-      .def("origin", bpy::pure_virtual(&MOBase::IPluginList::origin))
-      .def("onRefreshed", bpy::pure_virtual(&MOBase::IPluginList::onRefreshed))
-      .def("onPluginMoved", bpy::pure_virtual(&MOBase::IPluginList::onPluginMoved))
-      .def("pluginNames", bpy::pure_virtual(&MOBase::IPluginList::pluginNames))
-      .def("setState", bpy::pure_virtual(&MOBase::IPluginList::setState))
-      .def("setLoadOrder", bpy::pure_virtual(&MOBase::IPluginList::setLoadOrder))
+  bpy::class_<IPluginList, boost::noncopyable>("IPluginList", bpy::no_init)
+      .def("state", &MOBase::IPluginList::state)
+      .def("priority", &MOBase::IPluginList::priority)
+      .def("loadOrder", &MOBase::IPluginList::loadOrder)
+      .def("isMaster", &MOBase::IPluginList::isMaster)
+      .def("masters", &MOBase::IPluginList::masters)
+      .def("origin", &MOBase::IPluginList::origin)
+      .def("onRefreshed", &MOBase::IPluginList::onRefreshed)
+      .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved)
+      .def("pluginNames", &MOBase::IPluginList::pluginNames)
+      .def("setState", &MOBase::IPluginList::setState)
+      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder)
       ;
-
-  bpy::to_python_converter<IModList::ModStates, QFlags_to_int<IModList::ModState>>();
-  QFlags_from_python_obj<IModList::ModState>();
 
   bpy::enum_<IModList::ModState>("ModState")
       .value("exists", IModList::STATE_EXISTS)
@@ -1084,22 +567,38 @@ BOOST_PYTHON_MODULE(mobase)
       .value("endorsed", IModList::STATE_ENDORSED)
       .value("valid", IModList::STATE_VALID)
       .value("alternate", IModList::STATE_ALTERNATE)
+
+      .value("EXISTS", IModList::STATE_EXISTS)
+      .value("ACTIVE", IModList::STATE_ACTIVE)
+      .value("ESSENTIAL", IModList::STATE_ESSENTIAL)
+      .value("EMPTY", IModList::STATE_EMPTY)
+      .value("ENDORSED", IModList::STATE_ENDORSED)
+      .value("VALID", IModList::STATE_VALID)
+      .value("ALTERNATE", IModList::STATE_ALTERNATE)
       ;
 
-  bpy::class_<IModListWrapper, boost::noncopyable>("IModList")
-      .def("displayName", bpy::pure_virtual(&MOBase::IModList::displayName))
-      .def("allMods", bpy::pure_virtual(&MOBase::IModList::allMods))
-      .def("state", bpy::pure_virtual(&MOBase::IModList::state))
-      .def("setActive", bpy::pure_virtual(&MOBase::IModList::setActive))
-      .def("priority", bpy::pure_virtual(&MOBase::IModList::priority))
-      .def("setPriority", bpy::pure_virtual(&MOBase::IModList::setPriority))
-      .def("onModStateChanged", bpy::pure_virtual(&MOBase::IModList::onModStateChanged))
-      .def("onModMoved", bpy::pure_virtual(&MOBase::IModList::onModMoved))
+  bpy::class_<IModList, boost::noncopyable>("IModList", bpy::no_init)
+      .def("displayName", &MOBase::IModList::displayName)
+      .def("allMods", &MOBase::IModList::allMods)
+      .def("state", &MOBase::IModList::state)
+      .def("setActive", &MOBase::IModList::setActive)
+      .def("priority", &MOBase::IModList::priority)
+      .def("setPriority", &MOBase::IModList::setPriority)
+      .def("onModStateChanged", &MOBase::IModList::onModStateChanged)
+      .def("onModMoved", &MOBase::IModList::onModMoved)
       ;
 
-  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin");
+  bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
+    .def("init", bpy::pure_virtual(&MOBase::IPlugin::init))
+    .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
+    .def("author", bpy::pure_virtual(&MOBase::IPlugin::author))
+    .def("description", bpy::pure_virtual(&MOBase::IPlugin::description))
+    .def("version", bpy::pure_virtual(&MOBase::IPlugin::version))
+    .def("isActive", bpy::pure_virtual(&MOBase::IPlugin::isActive))
+    .def("settings", bpy::pure_virtual(&MOBase::IPlugin::settings))
+    ;
 
-  bpy::class_<IPluginDiagnoseWrapper, boost::noncopyable>("IPluginDiagnose")
+  bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
       .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
       .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription))
       .def("fullDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::fullDescription))
@@ -1115,13 +614,16 @@ BOOST_PYTHON_MODULE(mobase)
       .def_readwrite("createTarget", &Mapping::createTarget)
       ;
 
-  bpy::class_<IPluginFileMapperWrapper, boost::noncopyable>("IPluginFileMapper")
+  bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
       ;
 
   bpy::enum_<MOBase::IPluginGame::LoadOrderMechanism>("LoadOrderMechanism")
       .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
       .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
+
+      .value("FILE_TIME", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
+      .value("PLUGINS_TXT", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
       ;
 
   bpy::enum_<MOBase::IPluginGame::SortMechanism>("SortMechanism")
@@ -1137,12 +639,14 @@ BOOST_PYTHON_MODULE(mobase)
       .value("configuration", MOBase::IPluginGame::CONFIGURATION)
       .value("savegames", MOBase::IPluginGame::SAVEGAMES)
       .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
+
+      .value("MODS", MOBase::IPluginGame::MODS)
+      .value("CONFIGURATION", MOBase::IPluginGame::CONFIGURATION)
+      .value("SAVEGAMES", MOBase::IPluginGame::SAVEGAMES)
+      .value("PREFER_DEFAULTS", MOBase::IPluginGame::PREFER_DEFAULTS)
       ;
 
-  bpy::to_python_converter<IPluginGame::ProfileSettings, QFlags_to_int<IPluginGame::ProfileSetting>>();
-  QFlags_from_python_obj<IPluginGame::ProfileSetting>();
-
-  bpy::class_<IPluginGameWrapper, boost::noncopyable>("IPluginGame")
+  bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
       .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
@@ -1175,23 +679,44 @@ BOOST_PYTHON_MODULE(mobase)
       .def("gameVersion", bpy::pure_virtual(&MOBase::IPluginGame::gameVersion))
       .def("getLauncherName", bpy::pure_virtual(&MOBase::IPluginGame::getLauncherName))
 
-      //Plugin interface.
-      .def("init", bpy::pure_virtual(&MOBase::IPluginGame::init))
-      .def("name", bpy::pure_virtual(&MOBase::IPluginGame::name))
-      .def("author", bpy::pure_virtual(&MOBase::IPluginGame::author))
-      .def("description", bpy::pure_virtual(&MOBase::IPluginGame::description))
-      .def("version", bpy::pure_virtual(&MOBase::IPluginGame::version))
-      .def("isActive", bpy::pure_virtual(&MOBase::IPluginGame::isActive))
-      .def("settings", bpy::pure_virtual(&MOBase::IPluginGame::settings))
+      .def("featureList", +[](MOBase::IPluginGame* p) {
+        // Constructing a dict from class name to actual object:
+        bpy::dict dict;
+        mp11::mp_for_each<
+          // Must user pointers because mp_for_each construct object:
+          mp11::mp_transform<std::add_pointer_t, MpGameFeaturesList>
+        >([&](auto* pt) {
+          using T = std::remove_pointer_t<decltype(pt)>;
+          typename bpy::reference_existing_object::apply<T*>::type converter;
 
-      // The syntax has to differ slightly from C++ because these are templated
-      .def("featureBSAInvalidation", &MOBase::IPluginGame::feature<BSAInvalidation>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureDataArchives", &MOBase::IPluginGame::feature<DataArchives>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureGamePlugins", &MOBase::IPluginGame::feature<GamePlugins>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureLocalSavegames", &MOBase::IPluginGame::feature<LocalSavegames>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureSaveGameInfo", &MOBase::IPluginGame::feature<SaveGameInfo>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureScriptExtender", &MOBase::IPluginGame::feature<ScriptExtender>, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("featureUnmanagedMods", &MOBase::IPluginGame::feature<UnmanagedMods>, bpy::return_value_policy<bpy::reference_existing_object>())
+          // Retrieve the python class object:
+          const bpy::converter::registration* registration = bpy::converter::registry::query(bpy::type_id<T>());
+          bpy::object key = bpy::object(bpy::handle<>(bpy::borrowed(registration->get_class_object())));
+
+          // Set the object:
+          dict[key] = bpy::handle<>(converter(p->feature<T>()));
+        });
+        return dict;
+      })
+
+      .def("feature", +[](MOBase::IPluginGame* p, bpy::object clsObj) {
+        bpy::object feature;
+        mp11::mp_for_each<
+          // Must user pointers because mp_for_each construct object:
+          mp11::mp_transform<std::add_pointer_t, MpGameFeaturesList>
+        >([&](auto* pt) {
+          using T = std::remove_pointer_t<decltype(pt)>;
+          typename bpy::reference_existing_object::apply<T*>::type converter;
+
+          // Retrieve the python class object:
+          const bpy::converter::registration* registration = bpy::converter::registry::query(bpy::type_id<T>());
+
+          if (clsObj.ptr() == (PyObject*) registration->get_class_object()) {
+            feature = bpy::object(bpy::handle<>(converter(p->feature<T>())));
+          }
+          });
+        return feature;
+      })
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
@@ -1202,42 +727,116 @@ BOOST_PYTHON_MODULE(mobase)
       .value("NOT_ATTEMPTED", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED)
       ;
 
-  bpy::class_<IPluginInstallerSimpleWrapper, boost::noncopyable>("IPluginInstallerSimple")
-    // Note: Keeping the variant here if we always return a tuple to be consistent with the wrapper and
+  bpy::class_<IPluginInstaller, bpy::bases<IPlugin>, boost::noncopyable>("IPluginInstaller", bpy::no_init)
+    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
+    .def("priority", &IPluginInstaller::priority)
+    .def("isManualInstaller", &IPluginInstaller::isManualInstaller)
+    .def("setParentWidget", &IPluginInstaller::setParentWidget)
+    .def("setInstallationManager", &IPluginInstaller::setInstallationManager)
+    ;
+
+  bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
+    // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
     // have proper stubs generation.
     .def("install", +[](IPluginInstallerSimple* p, GuessedValue<QString>& modName, std::shared_ptr<IFileTree>& tree, QString& version, int& nexusID)
       -> std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>> {
         auto result = p->install(modName, tree, version, nexusID);
         return std::make_tuple(result, tree, version, nexusID);
       })
-    .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
-    .def("manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("_parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    .def("_manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
-      .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
-      .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
-      .def("install", &IPluginInstallerCustom::install)
-      .def("parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
-      .def("manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
-      ;
+    // Needs to add both otherwize boost does not understanda:    
+    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
+    .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
+    .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
+    .def("install", &IPluginInstallerCustom::install)
+    .def("_parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    .def("_manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
+    ;
 
   bpy::class_<IPluginModPageWrapper, boost::noncopyable>("IPluginModPage")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginModPage::setParentWidget))
-      ;
+    .def("displayName", bpy::pure_virtual(&IPluginModPage::displayName))
+    .def("icon", bpy::pure_virtual(&IPluginModPage::icon))
+    .def("pageURL", bpy::pure_virtual(&IPluginModPage::pageURL))
+    .def("useIntegratedBrowser", bpy::pure_virtual(&IPluginModPage::useIntegratedBrowser))
+    .def("handlesDownload", bpy::pure_virtual(&IPluginModPage::handlesDownload))
+    .def("setParentWidget", &IPluginModPage::setParentWidget, &IPluginModPageWrapper::setParentWidget_Default)
+    .def("_parentWidget", &IPluginModPageWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    ;
 
-  bpy::class_<IPluginPreviewWrapper, boost::noncopyable>("IPluginPreview")
-      ;
+  bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
+    .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
+    .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>())
+    ;
 
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
-      .def("setParentWidget", bpy::pure_virtual(&MOBase::IPluginTool::setParentWidget))
-      ;
-
-  HANDLE_converters();
+    .def("displayName", bpy::pure_virtual(&IPluginTool::displayName))
+    .def("tooltip", bpy::pure_virtual(&IPluginTool::tooltip))
+    .def("icon", bpy::pure_virtual(&IPluginTool::icon))
+    .def("display", bpy::pure_virtual(&IPluginTool::display))
+    .def("setParentWidget", &IPluginTool::setParentWidget, &IPluginToolWrapper::setParentWidget_Default)
+    .def("_parentWidget", &IPluginToolWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
+    ;
 
   registerGameFeaturesPythonConverters();
 }
 
+/**
+ *
+ */
+class PythonRunner : public IPythonRunner
+{
+
+public:
+  PythonRunner(const MOBase::IOrganizer* moInfo);
+  bool initPython(const QString& pythonDir);
+  QList<QObject*> instantiate(const QString& pluginName);
+  bool isPythonInstalled() const;
+  bool isPythonVersionSupported() const;
+
+private:
+
+  void initPath();
+
+  /**
+   * @brief Ensure that the given folder is in sys.path.
+   */
+  void ensureFolderInPath(QString folder);
+
+  /**
+   * @brief Append the underlying object of the given python object to the
+   *     interface list if it is an instance (pointer) of the given type.
+   *
+   * @param obj The object to check.
+   * @param interfaces The list to append the object to.
+   *
+   */
+  template <class T>
+  void appendIfInstance(bpy::object const& obj, QList<QObject*>& interfaces);
+
+private:
+
+  // List of python objects representing plugins to keep all the bpy::object "alive"
+  // during the execution.
+  std::vector<bpy::object> m_PythonObjects;
+  const MOBase::IOrganizer* m_MOInfo;
+  wchar_t* m_PythonHome;
+};
+
+IPythonRunner* CreatePythonRunner(MOBase::IOrganizer* moInfo, const QString& pythonDir)
+{
+  PythonRunner* result = new PythonRunner(moInfo);
+  if (result->initPython(pythonDir)) {
+    return result;
+  }
+  else {
+    delete result;
+    return nullptr;
+  }
+}
 
 PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
   : m_MOInfo(moInfo)
@@ -1276,6 +875,46 @@ BOOST_PYTHON_MODULE(moprivate)
     .def("startRecordingExceptionMessage", &ErrWrapper::startRecordingExceptionMessage)
     .def("stopRecordingExceptionMessage", &ErrWrapper::stopRecordingExceptionMessage)
     .def("getLastExceptionMessage", &ErrWrapper::getLastExceptionMessage);
+
+  utils::register_functor_converter<bool(QString, bool)>();
+
+  // Expose a function to create a particular tree, only for debugging purpose, not in mobase.
+  bpy::def("makeTree", +[](std::function<bool(QString, bool)> callback) -> std::shared_ptr<IFileTree> {
+    struct FileTree : IFileTree {
+
+      using callback_t = std::function<bool(QString, bool)>;
+
+      FileTree(std::shared_ptr<const IFileTree> parent, QString name, callback_t callback) : 
+        FileTreeEntry(parent, name), IFileTree(), m_Callback(callback){ }
+
+      std::shared_ptr<FileTreeEntry> addFile(QString name, QDateTime time) override {
+        if (m_Callback && !m_Callback(name, false)) {
+          throw UnsupportedOperationException("File rejected by callback.");
+        }
+        return IFileTree::addFile(name, time);
+      }
+
+      std::shared_ptr<IFileTree> addDirectory(QString name) override {
+        if (m_Callback && !m_Callback(name, true)) {
+          throw UnsupportedOperationException("Directory rejected by callback.");
+        }
+        return IFileTree::addDirectory(name);
+      }
+
+    protected:
+
+      std::shared_ptr<IFileTree> makeDirectory(std::shared_ptr<const IFileTree> parent, QString name) const override {
+        return std::make_shared<FileTree>(parent, name, m_Callback);
+      }
+
+      void doPopulate(std::shared_ptr<const IFileTree> parent, std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override { }
+      std::shared_ptr<IFileTree> doClone() const override { return std::make_shared<FileTree>(nullptr, name(), m_Callback); }
+
+    private:
+      callback_t m_Callback;
+    };
+    return std::make_shared<FileTree>(nullptr, "", callback);
+  }, bpy::arg("callback") = bpy::object{});
 }
 
 bool PythonRunner::initPython(const QString &pythonPath)
@@ -1315,6 +954,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
     mainNamespace["moprivate"] = bpy::import("moprivate");
+    mainNamespace["mobase"] = bpy::import("mobase");
     bpy::import("site");
     bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
@@ -1379,55 +1019,115 @@ void PythonRunner::appendIfInstance(bpy::object const& obj, QList<QObject*> &int
 
 QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 {
+  // `pluginName` can either be a python file (single-file plugin or a folder (whole module).
+  //
+  // For whole module, we simply add the parent folder to path, then we load the module with a simple 
+  // bpy::import, and we retrieve the associated __dict__ from which we extract either createPlugin or 
+  // createPlugins.
+  //
+  // For single file, we need to use bpy::exec_file, and we will use the context (global variables)
+  // from __main__ (already contains mobase, and other required module). Since the context is shared
+  // between called of `instantiate`, we need to make sure to remove createPlugin(s) from previous call.
   try {
     GILock lock;
-    bpy::object mainModule = bpy::import("__main__");
-    bpy::object moduleNamespace = mainModule.attr("__dict__");
 
-    bpy::object sys = bpy::import("sys");
-    moduleNamespace["sys"] = sys;
-    moduleNamespace["mobase"] = bpy::import("mobase");
+    // Dictionary that will contain createPlugin() or createPlugins().
+    bpy::dict moduleDict;
 
     if (pluginName.endsWith(".py")) {
+      bpy::object mainModule = bpy::import("__main__");
+      bpy::dict moduleNamespace = bpy::extract<bpy::dict>(mainModule.attr("__dict__"))();
+
       std::string temp = ToString(pluginName);
-      if (handled_exec_file(temp.c_str(), moduleNamespace)) {
-        reportPythonError();
-        return QList<QObject*>();
+      if (!handled_exec_file(temp.c_str(), moduleNamespace)) {
+        moduleDict = moduleNamespace;
       }
-      m_PythonObjects[pluginName] = moduleNamespace["createPlugin"]();
     }
     else {
       // Retrieve the module name:
       QStringList parts = pluginName.split("/");
       std::string moduleName = ToString(parts.takeLast());
       ensureFolderInPath(parts.join("/"));
-      bpy::object createPlugin = bpy::import(moduleName.c_str()).attr("createPlugin");
-      m_PythonObjects[pluginName] = createPlugin();
+      moduleDict = bpy::dict(bpy::import(moduleName.c_str()).attr("__dict__"));
     }
 
-    bpy::object pluginObj = m_PythonObjects[pluginName];
-    QList<QObject *> interfaceList;
+    if (bpy::len(moduleDict) == 0) {
+      MOBase::log::error("Failed to import plugin from {}.", pluginName);
+      throw pyexcept::PythonError();
+    }
 
-    appendIfInstance<IPluginGame>(pluginObj, interfaceList);
-    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-    appendIfInstance<IPluginDiagnoseWrapper>(pluginObj, interfaceList);
-    // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
-    appendIfInstance<IPluginFileMapperWrapper>(pluginObj, interfaceList); 
-    appendIfInstance<IPluginInstallerCustom>(pluginObj, interfaceList);
-    appendIfInstance<IPluginInstallerSimple>(pluginObj, interfaceList);
-    appendIfInstance<IPluginModPage>(pluginObj, interfaceList);
-    appendIfInstance<IPluginPreview>(pluginObj, interfaceList);
-    appendIfInstance<IPluginTool>(pluginObj, interfaceList);
+    // Create the plugins:
+    std::vector<bpy::object> plugins;
 
-    if (interfaceList.isEmpty())
-      appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
+    if (moduleDict.has_key("createPlugin")) {
+      plugins.push_back(moduleDict["createPlugin"]());
 
-    return interfaceList;
-  } catch (const bpy::error_already_set&) {
-    qWarning("failed to run python script \"%s\"", qUtf8Printable(pluginName));
-    reportPythonError();
+      // Clear for future call
+      bpy::delitem(moduleDict, bpy::str("createPlugin"));
+    }
+    else if (moduleDict.has_key("createPlugins")) {
+      bpy::object pyPlugins = moduleDict["createPlugins"]();
+      if (!PySequence_Check(pyPlugins.ptr())) {
+        MOBase::log::error("Plugin {}: createPlugins must return a list.", pluginName);
+      }
+      else {
+        bpy::list pyList(pyPlugins);
+        int nPlugins = bpy::len(pyList);
+        for (int i = 0; i < nPlugins; ++i) {
+          plugins.push_back(pyList[i]);
+        }
+      }
+
+      // Clear for future call
+      bpy::delitem(moduleDict, bpy::str("createPlugins"));
+    }
+    else {
+      MOBase::log::error("Plugin {}: missing a createPlugin(s) function.", pluginName);
+    }
+
+    // If we have no plugins, there was an issue, and we already logged the problem:
+    if (plugins.empty()) {
+      return QList<QObject*>();
+    }
+
+    QList<QObject*> allInterfaceList;
+
+    for (bpy::object pluginObj : plugins) {
+
+      // Add the plugin to keep it alive:
+      m_PythonObjects.push_back(pluginObj);
+
+      QList<QObject*> interfaceList;
+
+      appendIfInstance<IPluginGame>(pluginObj, interfaceList);
+      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+      appendIfInstance<IPluginDiagnoseWrapper>(pluginObj, interfaceList);
+      // Must try the wrapper because it's only a plugin extension interface in C++, so doesn't extend QObject
+      appendIfInstance<IPluginFileMapperWrapper>(pluginObj, interfaceList);
+      appendIfInstance<IPluginInstallerCustom>(pluginObj, interfaceList);
+      appendIfInstance<IPluginInstallerSimple>(pluginObj, interfaceList);
+      appendIfInstance<IPluginModPage>(pluginObj, interfaceList);
+      appendIfInstance<IPluginPreview>(pluginObj, interfaceList);
+      appendIfInstance<IPluginTool>(pluginObj, interfaceList);
+
+      if (interfaceList.isEmpty()) {
+        appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
+      }
+
+      if (interfaceList.isEmpty()) {
+        MOBase::log::error("Plugin {}: no plugin interface implemented.", pluginName);
+      }
+
+      // Append the plugins to the main list:
+      allInterfaceList.append(interfaceList);
+    }
+
+    return allInterfaceList;
+  } 
+  catch (const bpy::error_already_set&) {
+    MOBase::log::error("Failed to import plugin from {}.", pluginName);
+    throw pyexcept::PythonError();
   }
-  return QList<QObject*>();
 }
 
 bool PythonRunner::isPythonInstalled() const
@@ -1439,6 +1139,6 @@ bool PythonRunner::isPythonInstalled() const
 bool PythonRunner::isPythonVersionSupported() const
 {
   const char *version = Py_GetVersion();
-  return strstr(version, "3.7") == version;
+  return strstr(version, "3.8") == version;
 }
 
