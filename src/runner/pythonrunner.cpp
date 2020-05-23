@@ -307,7 +307,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("pathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
 
       // Mutable operation:
-      .def("setTime", &FileTreeEntry::setTime)
       .def("detach", &FileTreeEntry::detach)
       .def("moveTo", &FileTreeEntry::moveTo)
 
@@ -361,13 +360,13 @@ BOOST_PYTHON_MODULE(mobase)
 
       // addFile() and addDirectory throws exception instead of returning null pointer in order
       // to have better traces.
-      .def("addFile", +[](IFileTree* w, QString name, QDateTime time) {
-          auto result = w->addFile(name, time);
+      .def("addFile", +[](IFileTree* w, QString name) {
+          auto result = w->addFile(name);
           if (result == nullptr) {
             throw std::logic_error("addFile failed");
           }
           return result;
-        }, bpy::arg("time") = QDateTime())
+        })
       .def("addDirectory", +[](IFileTree* w, QString name) {
           auto result = w->addDirectory(name);
           if (result == nullptr) {
@@ -887,11 +886,11 @@ BOOST_PYTHON_MODULE(moprivate)
       FileTree(std::shared_ptr<const IFileTree> parent, QString name, callback_t callback) : 
         FileTreeEntry(parent, name), IFileTree(), m_Callback(callback){ }
 
-      std::shared_ptr<FileTreeEntry> addFile(QString name, QDateTime time) override {
+      std::shared_ptr<FileTreeEntry> addFile(QString name) override {
         if (m_Callback && !m_Callback(name, false)) {
           throw UnsupportedOperationException("File rejected by callback.");
         }
-        return IFileTree::addFile(name, time);
+        return IFileTree::addFile(name);
       }
 
       std::shared_ptr<IFileTree> addDirectory(QString name) override {
@@ -907,7 +906,7 @@ BOOST_PYTHON_MODULE(moprivate)
         return std::make_shared<FileTree>(parent, name, m_Callback);
       }
 
-      void doPopulate(std::shared_ptr<const IFileTree> parent, std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override { }
+      bool doPopulate(std::shared_ptr<const IFileTree> parent, std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override { return true; }
       std::shared_ptr<IFileTree> doClone() const override { return std::make_shared<FileTree>(nullptr, name(), m_Callback); }
 
     private:
