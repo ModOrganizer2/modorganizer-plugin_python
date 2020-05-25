@@ -92,6 +92,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
 
   // Containers:
+  utils::register_sequence_container<std::vector<int>>();
   utils::register_sequence_container<QList<ExecutableInfo>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
@@ -99,6 +100,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
   utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
+  utils::register_sequence_container<std::vector<ModDataContent::Content>>();
 
   utils::register_sequence_container<std::vector<unsigned int>>();
   utils::register_sequence_container<std::vector<Mapping>>();

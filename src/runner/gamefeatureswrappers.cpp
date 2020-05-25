@@ -108,6 +108,17 @@ bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTr
 
 /// end ModDataChecker Wrapper
 /////////////////////////////
+/// ModDataContent Wrapper
+
+std::vector<ModDataContent::Content> ModDataContentWrapper::getAllContents() const {
+  return basicWrapperFunctionImplementation<std::vector<Content>>(this, "getAllContents");
+}
+std::vector<int> ModDataContentWrapper::getContentsFor(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
+  return basicWrapperFunctionImplementation<std::vector<int>>(this, "getContentsFor", fileTree);
+}
+
+/// end ModDataContent Wrapper
+/////////////////////////////
 /// SaveGameInfo Wrapper
 
 
@@ -280,6 +291,20 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker")
       .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
       ;
+
+  {
+    bpy::scope scope = bpy::class_<ModDataContentWrapper, boost::noncopyable>("ModDataContent")
+      .def("getAllContents", bpy::pure_virtual(&ModDataContent::getAllContents))
+      .def("getContentsFor", bpy::pure_virtual(&ModDataContent::getContentsFor))
+      ;
+
+    bpy::class_<ModDataContent::Content>("Content", bpy::init<int, QString, QString>())
+      .add_property("id", &ModDataContent::Content::id)
+      .add_property("name", &ModDataContent::Content::name)
+      .add_property("icon", &ModDataContent::Content::icon)
+      ;
+
+  }
 
   bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
       .def("getSaveGameInfo", bpy::pure_virtual(&SaveGameInfo::getSaveGameInfo), bpy::return_value_policy<bpy::manage_new_object>())

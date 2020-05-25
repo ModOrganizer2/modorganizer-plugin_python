@@ -8,6 +8,7 @@
 #include <gameplugins.h>
 #include <localsavegames.h>
 #include <moddatachecker.h>
+#include <moddatacontent.h>
 #include <savegameinfo.h>
 #include <scriptextender.h>
 #include <unmanagedmods.h>
@@ -23,6 +24,7 @@ using MpGameFeaturesList = boost::mp11::mp_list<
   GamePlugins,
   LocalSavegames,
   ModDataChecker,
+  ModDataContent,
   SaveGameInfo,
   ScriptExtender,
   UnmanagedMods
@@ -83,7 +85,18 @@ public:
   static constexpr const char* className = "ModDataCheckerWrapper";
   using boost::python::wrapper<ModDataChecker>::get_override;
 
-  virtual bool dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const;
+  virtual bool dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const override;
+};
+
+class ModDataContentWrapper : public ModDataContent, public boost::python::wrapper<ModDataContent>
+{
+public:
+  static constexpr const char* className = "ModDataContentWrapper";
+  using boost::python::wrapper<ModDataContent>::get_override;
+
+  virtual std::vector<Content> getAllContents() const override;
+  virtual std::vector<int> getContentsFor(std::shared_ptr<const MOBase::IFileTree> fileTree) const override;
+
 };
 
 class SaveGameInfoWrapper : public SaveGameInfo, public boost::python::wrapper<SaveGameInfo>
