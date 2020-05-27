@@ -298,10 +298,11 @@ void registerGameFeaturesPythonConverters()
       .def("getContentsFor", bpy::pure_virtual(&ModDataContent::getContentsFor))
       ;
 
-    bpy::class_<ModDataContent::Content>("Content", bpy::init<int, QString, QString>())
+    bpy::class_<ModDataContent::Content>("Content", bpy::init<int, QString, QString, bpy::optional<bool>>())
       .add_property("id", &ModDataContent::Content::id)
       .add_property("name", &ModDataContent::Content::name)
       .add_property("icon", &ModDataContent::Content::icon)
+      .def("isOnlyForFilter", &ModDataContent::Content::isOnlyForFilter)
       ;
 
   }
