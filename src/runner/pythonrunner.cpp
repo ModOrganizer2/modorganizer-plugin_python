@@ -361,13 +361,13 @@ BOOST_PYTHON_MODULE(mobase)
 
       // addFile() and addDirectory throws exception instead of returning null pointer in order
       // to have better traces.
-      .def("addFile", +[](IFileTree* w, QString name) {
-          auto result = w->addFile(name);
+      .def("addFile", +[](IFileTree* w, QString name, bool replaceIfExists) {
+          auto result = w->addFile(name, replaceIfExists);
           if (result == nullptr) {
             throw std::logic_error("addFile failed");
           }
           return result;
-        })
+        }, bpy::arg("replace_if_exists") = false)
       .def("addDirectory", +[](IFileTree* w, QString name) {
           auto result = w->addDirectory(name);
           if (result == nullptr) {
@@ -470,6 +470,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
     .def("extractFile", &IInstallationManager::extractFile)
     .def("extractFiles", &IInstallationManager::extractFiles)
+    .def("createFile", &IInstallationManager::createFile)
     .def("installArchive", &IInstallationManager::installArchive)
     .def("setURL", &IInstallationManager::setURL)
     ;
@@ -887,7 +888,7 @@ BOOST_PYTHON_MODULE(moprivate)
       FileTree(std::shared_ptr<const IFileTree> parent, QString name, callback_t callback) : 
         FileTreeEntry(parent, name), IFileTree(), m_Callback(callback){ }
 
-      std::shared_ptr<FileTreeEntry> addFile(QString name) override {
+      std::shared_ptr<FileTreeEntry> addFile(QString name, bool) override {
         if (m_Callback && !m_Callback(name, false)) {
           throw UnsupportedOperationException("File rejected by callback.");
         }
