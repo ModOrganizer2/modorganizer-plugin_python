@@ -300,7 +300,7 @@ namespace utils {
             }
           }
         }
-        return 0;
+        return nullptr;
       }
     };
 
