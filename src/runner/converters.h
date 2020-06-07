@@ -201,7 +201,6 @@ namespace utils {
     template <> struct MetaData<QFileInfo> { static const char* className() { return "QFileInfo"; } };
     template <> struct MetaData<QIcon> { static const char* className() { return "QIcon"; } };
     template <> struct MetaData<QSize> { static const char* className() { return "QSize"; } };
-    template <> struct MetaData<QStringList> { static const char* className() { return "QStringList"; } };
     template <> struct MetaData<QUrl> { static const char* className() { return "QUrl"; } };
     template <> struct MetaData<QVariant> { static const char* className() { return "QVariant"; } };
 
@@ -289,16 +288,6 @@ namespace utils {
           sipWrapper* wrapper;
           wrapper = reinterpret_cast<sipWrapper*>(objPtr);
           return wrapper->super.data;
-        }
-        else {
-          if constexpr (std::is_same_v<T, QStringList>)
-          {
-            // QStringLists aren't wrapped by PyQt - regular Python string/unicode lists are used instead
-            bpy::extract<QList<QString>> extractor(objPtr);
-            if (extractor.check()) {
-              return new QStringList(extractor());
-            }
-          }
         }
         return nullptr;
       }
