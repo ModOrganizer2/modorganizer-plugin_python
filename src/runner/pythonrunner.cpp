@@ -278,6 +278,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes")=true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
+
+      Q_DELEGATE(IOrganizer, QObject, "_object")
       ;
 
   // FileTreeEntry Scope:
