@@ -295,13 +295,12 @@ namespace utils {
           {
             // QStringLists aren't wrapped by PyQt - regular Python string/unicode lists are used instead
             bpy::extract<QList<QString>> extractor(objPtr);
-            if (extractor.check())
+            if (extractor.check()) {
               return new QStringList(extractor());
+            }
           }
-          PyErr_SetString(PyExc_TypeError, "type not wrapped");
-          bpy::throw_error_already_set();
         }
-        return new void*;
+        return 0;
       }
     };
 
