@@ -8,6 +8,7 @@
 #include <log.h>
 #include <utility.h>
 
+#include "sipApiAccess.h"
 #include "error.h"
 #include "gilock.h"
 
@@ -17,7 +18,7 @@ namespace details {
    * @brief Common stuffs for all basicWrapperFunction methods.
    */
   template <class ReturnType, class WrapperTypePtr, class Fn, class... Args>
-  ReturnType wrapperFunctionImplementation(WrapperTypePtr wrapper, Fn fn, boost::python::object* objPtr, const char *methodName, Args... args) {
+  ReturnType wrapperFunctionImplementation(WrapperTypePtr wrapper, bool apiTransfer, Fn fn, boost::python::object* objPtr, const char *methodName, Args... args) {
     GILock lock;
     boost::python::override implementation = wrapper->get_override(methodName);
     if (!implementation) {
@@ -32,6 +33,9 @@ namespace details {
       boost::python::object result = implementation(args...);
       if (objPtr) {
         *objPtr = result;
+      }
+      else if (apiTransfer) {
+        sipAPIAccess::sipAPI()->api_transfer_to(result.ptr(), Py_None);
       }
       if constexpr (!std::is_same_v<ReturnType, void>) {
         return boost::python::extract<ReturnType>(result)();
@@ -65,7 +69,7 @@ namespace details {
 template <class ReturnType, class WrapperType, class... Args>
 ReturnType basicWrapperFunctionImplementation(const WrapperType *wrapper, const char *methodName, Args... args)
 {
-  return details::wrapperFunctionImplementation<ReturnType>(wrapper, nullptr, nullptr, methodName, args...);
+  return details::wrapperFunctionImplementation<ReturnType>(wrapper, false, nullptr, nullptr, methodName, args...);
 }
 
 /**
@@ -87,7 +91,29 @@ ReturnType basicWrapperFunctionImplementation(const WrapperType *wrapper, const 
 template <class ReturnType, class WrapperType, class... Args>
 ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper, boost::python::object &ref, const char* methodName, Args... args)
 {
-  return details::wrapperFunctionImplementation<ReturnType>(wrapper, nullptr, &ref, methodName, args...);
+  return details::wrapperFunctionImplementation<ReturnType>(wrapper, false, nullptr, &ref, methodName, args...);
+}
+
+/**
+ * @brief Call the given method on the wrapper with the given arguments, with proper
+ *     exception handling, and transfer the responsibility of the returned object to
+ *     the C++ side.
+ *
+ * @param wrapper The wrapper object to use to retrieve the python method. Must have a publicly
+ *     available `className` attribute.
+ * @param methodName The name of the method.
+ * @param args... Arguments for the method.
+ *
+ * @return the result of calling the given Python method on the wrapper.
+ *
+ * @throw pyexcept::MissingImplementation if the method does not exist.
+ * @throw pyexcept::PythonError if an error occurs while executing the python method.
+ * @throw pyexecpt::UnknownException if an unknown error occurs.
+ */
+template <class ReturnType, class WrapperType, class... Args>
+ReturnType wrapperFunctionImplementationWithApiTransfer(const WrapperType* wrapper, const char* methodName, Args... args)
+{
+  return details::wrapperFunctionImplementation<ReturnType>(wrapper, true, nullptr, nullptr, methodName, args...);
 }
 
 /**
@@ -110,7 +136,7 @@ ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper, boost:
 template <class ReturnType, class WrapperTypePtr, class Fn, class... Args>
 ReturnType basicWrapperFunctionImplementationWithDefault(WrapperTypePtr wrapper, Fn fn, const char* methodName, Args... args)
 {
-  return details::wrapperFunctionImplementation<ReturnType>(wrapper, fn, nullptr, methodName, args...);
+  return details::wrapperFunctionImplementation<ReturnType>(wrapper, false, fn, nullptr, methodName, args...);
 }
 
 #endif // PYTHONWRAPPERUTILITIES_H

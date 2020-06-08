@@ -5,7 +5,6 @@
 #include <QWidget>
 
 #include "pythonwrapperutilities.h"
-#include "sipApiAccess.h"
 
 #include <variant>
 #include <tuple>
@@ -405,26 +404,8 @@ std::set<QString> IPluginPreviewWrapper::supportedExtensions() const
 
 QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QSize &maxSize) const
 {
-  // This is complicated, so we can't use the basic implementation
-  try {
-    GILock lock;
-    boost::python::override implementation = this->get_override("genFilePreview");
-    if (!implementation)
-      throw pyexcept::MissingImplementation(this->className, "genFilePreview");
-    boost::python::object pyVersion = implementation(fileName, maxSize);
-    // We need responsibility for deleting the QWidget to be transferred to C++
-    sipAPIAccess::sipAPI()->api_transfer_to(pyVersion.ptr(), Py_None);
-    return boost::python::extract<QWidget *>(pyVersion)();
-  }
-  catch (const boost::python::error_already_set&) {
-    throw pyexcept::PythonError();
-  }
-  catch (pyexcept::MissingImplementation const& missingImplementation) {
-    throw missingImplementation;
-  }
-  catch (...) {
-    throw pyexcept::UnknownException();
-  }
+  // We need responsibility for deleting the QWidget to be transferred to C++:
+  return wrapperFunctionImplementationWithApiTransfer<QWidget*>(this, "genFilePreview", fileName, maxSize);
 }
 /// end IPluginPreview Wrapper
 /////////////////////////////
