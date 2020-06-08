@@ -114,6 +114,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Tuple:
   bpy::register_tuple<std::tuple<bool, DWORD>>(); // IOrganizer::waitForApplication
+  bpy::register_tuple<std::tuple<bool, bool>>();  // IProfile::invalidationActive
   bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>();
 
   // Variants:
@@ -436,7 +437,11 @@ BOOST_PYTHON_MODULE(mobase)
       .def("absolutePath", &IProfile::absolutePath)
       .def("localSavesEnabled", &IProfile::localSavesEnabled)
       .def("localSettingsEnabled", &IProfile::localSettingsEnabled)
-      .def("invalidationActive", &IProfile::invalidationActive)
+      .def("invalidationActive", +[](const IProfile* p) {
+        bool supported;
+        bool active = p->invalidationActive(&supported);
+        return std::make_tuple(active, supported);
+      })
       ;
 
   bpy::class_<IModRepositoryBridge, boost::noncopyable>("IModRepositoryBridge", bpy::no_init)
