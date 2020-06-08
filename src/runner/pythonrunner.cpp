@@ -77,7 +77,6 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_qclass_converter<QWidget>();
   utils::register_qclass_converter<QIcon>();
   utils::register_qclass_converter<QSize>();
-  utils::register_qclass_converter<QStringList>();
   utils::register_qclass_converter<QUrl>();
 
   // QFlags:
@@ -96,6 +95,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<ExecutableInfo>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
+  utils::register_sequence_container<QStringList>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
