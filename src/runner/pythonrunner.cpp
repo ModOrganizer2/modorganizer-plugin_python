@@ -250,7 +250,18 @@ BOOST_PYTHON_MODULE(mobase)
       .def("installMod", &IOrganizer::installMod, (bpy::arg("name_suggestion") = ""), bpy::return_value_policy<bpy::reference_existing_object>())
       .def("resolvePath", &IOrganizer::resolvePath)
       .def("listDirectories", &IOrganizer::listDirectories)
-      .def("findFiles", &IOrganizer::findFiles)
+
+      // Provide multiple overloads of findFiles:
+      .def("findFiles", +[](const IOrganizer* o, QString const& p, std::function<bool(QString const&)> f) { return o->findFiles(p, f); })
+
+      // In C++, it is possible to create a QStringList implicitly from a single QString. This is not possible with the current
+      // converters in python (and I do not think it is a good idea to have it everywhere), but here it is nice to be able to 
+      // pass a single string, so we add an extra overload.
+      // Important: the order matters, because a Python string can be converted to a QStringList since it iss a sequence of 
+      // single-character strings:
+      .def("findFiles", +[](const IOrganizer* o, QString const& p, const QStringList& gf) { return o->findFiles(p, gf); })
+      .def("findFiles", +[](const IOrganizer* o, QString const& p, const QString& f) { return o->findFiles(p, QStringList{ f }); })
+
       .def("getFileOrigins", &IOrganizer::getFileOrigins)
       .def("findFileInfos", &IOrganizer::findFileInfos)
       .def("downloadManager", &IOrganizer::downloadManager, bpy::return_value_policy<bpy::reference_existing_object>())
