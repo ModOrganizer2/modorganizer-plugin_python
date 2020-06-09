@@ -801,6 +801,10 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   registerGameFeaturesPythonConverters();
+
+  bpy::def("getFileVersion", &MOBase::getFileVersion);
+  bpy::def("getProductVersion", &MOBase::getProductVersion);
+  bpy::def("getIconForExecutable", &MOBase::iconForExecutable);
 }
 
 /**
