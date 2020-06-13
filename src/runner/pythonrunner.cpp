@@ -1049,6 +1049,8 @@ void PythonRunner::appendIfInstance(bpy::object const& obj, QList<QObject*> &int
 
 QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 {
+  GILock lock;
+
   // `pluginName` can either be a python file (single-file plugin or a folder (whole module).
   //
   // For whole module, we simply add the parent folder to path, then we load the module with a simple 
@@ -1059,7 +1061,6 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
   // from __main__ (already contains mobase, and other required module). Since the context is shared
   // between called of `instantiate`, we need to make sure to remove createPlugin(s) from previous call.
   try {
-    GILock lock;
 
     // Dictionary that will contain createPlugin() or createPlugins().
     bpy::dict moduleDict;
