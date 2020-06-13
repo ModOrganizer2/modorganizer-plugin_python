@@ -9,6 +9,7 @@
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
 
+#include "ifiletree.h"
 #include "pythonwrapperutilities.h"
 
 /////////////////////////////
@@ -305,7 +306,7 @@ void registerGameFeaturesPythonConverters()
 
     modDataCheckerClass
       .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
-      .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
+      .def("fix", bpy::pure_virtual(&ModDataChecker::fix))
       ;
   }
 
