@@ -9,6 +9,7 @@
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
 
+#include "ifiletree.h"
 #include "pythonwrapperutilities.h"
 
 /////////////////////////////
@@ -102,8 +103,12 @@ bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile * profile)
 /////////////////////////////
 /// ModDataChecker Wrapper
 
-bool ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
-  return basicWrapperFunctionImplementation<bool>(this, "dataLooksValid", fileTree);
+ModDataChecker::CheckReturn ModDataCheckerWrapper::dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const {
+  return basicWrapperFunctionImplementation<CheckReturn>(this, "dataLooksValid", fileTree);
+}
+
+std::shared_ptr<MOBase::IFileTree> ModDataCheckerWrapper::fix(std::shared_ptr<MOBase::IFileTree> fileTree) const {
+  return basicWrapperFunctionImplementationWithDefault<std::shared_ptr<MOBase::IFileTree>>(this, [](auto&&... args) { return nullptr; }, "fix", fileTree);
 }
 
 /// end ModDataChecker Wrapper
@@ -288,9 +293,22 @@ void registerGameFeaturesPythonConverters()
       .def("prepareProfile", bpy::pure_virtual(&LocalSavegames::prepareProfile))
       ;
 
-  bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker")
-      .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
+  auto modDataCheckerClass = bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker");
+  {
+    bpy::scope scope = modDataCheckerClass;
+
+    bpy::enum_<ModDataChecker::CheckReturn>("CheckReturn")
+      .value("INVALID", ModDataChecker::CheckReturn::INVALID)
+      .value("FIXABLE", ModDataChecker::CheckReturn::FIXABLE)
+      .value("VALID", ModDataChecker::CheckReturn::VALID)
+      .export_values()
       ;
+
+    modDataCheckerClass
+      .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid))
+      .def("fix", bpy::pure_virtual(&ModDataChecker::fix))
+      ;
+  }
 
   {
     bpy::scope scope = bpy::class_<ModDataContentWrapper, boost::noncopyable>("ModDataContent")

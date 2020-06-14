@@ -85,7 +85,8 @@ public:
   static constexpr const char* className = "ModDataCheckerWrapper";
   using boost::python::wrapper<ModDataChecker>::get_override;
 
-  virtual bool dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const override;
+  virtual CheckReturn dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const override;
+  virtual std::shared_ptr<MOBase::IFileTree> fix(std::shared_ptr<MOBase::IFileTree> fileTree) const override;
 };
 
 class ModDataContentWrapper : public ModDataContent, public boost::python::wrapper<ModDataContent>
