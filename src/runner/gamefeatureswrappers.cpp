@@ -76,7 +76,7 @@ void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
 
 void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
 {
-  return basicWrapperFunctionImplementation<void>(this, "getLoadOrder", loadOrder);
+  loadOrder = basicWrapperFunctionImplementation<QStringList>(this, "getLoadOrder");
 }
 
 bool GamePluginsWrapper::lightPluginsAreSupported()
@@ -284,7 +284,11 @@ void registerGameFeaturesPythonConverters()
   bpy::class_<GamePluginsWrapper, boost::noncopyable>("GamePlugins")
       .def("writePluginLists", bpy::pure_virtual(&GamePlugins::writePluginLists))
       .def("readPluginLists", bpy::pure_virtual(&GamePlugins::readPluginLists))
-      .def("getLoadOrder", bpy::pure_virtual(&GamePlugins::getLoadOrder))
+      .def("getLoadOrder", +[](GamePlugins* p) {
+        QStringList loadOrder;
+        p->getLoadOrder(loadOrder);
+        return loadOrder;
+      })
       .def("lightPluginsAreSupported", bpy::pure_virtual(&GamePlugins::lightPluginsAreSupported))
       ;
 
