@@ -74,9 +74,9 @@ void GamePluginsWrapper::readPluginLists(MOBase::IPluginList * pluginList)
   return basicWrapperFunctionImplementation<void>(this, "readPluginLists", boost::python::ptr(pluginList));
 }
 
-void GamePluginsWrapper::getLoadOrder(QStringList &loadOrder)
+QStringList GamePluginsWrapper::getLoadOrder()
 {
-  return basicWrapperFunctionImplementation<void>(this, "getLoadOrder", loadOrder);
+  return basicWrapperFunctionImplementation<QStringList>(this, "getLoadOrder");
 }
 
 bool GamePluginsWrapper::lightPluginsAreSupported()
