@@ -196,6 +196,7 @@ namespace utils {
 
     template <> struct MetaData<QObject> { static const char* className() { return "QObject"; } };
     template <> struct MetaData<QWidget> { static const char* className() { return "QWidget"; } };
+    template <> struct MetaData<QMainWindow> { static const char* className() { return "QMainWindow"; } };
     template <> struct MetaData<QDateTime> { static const char* className() { return "QDateTime"; } };
     template <> struct MetaData<QDir> { static const char* className() { return "QDir"; } };
     template <> struct MetaData<QFileInfo> { static const char* className() { return "QFileInfo"; } };
@@ -295,8 +296,9 @@ namespace utils {
 
   }
 
-  namespace {
-    bool has_arity(PyObject* object, std::size_t arity) {
+  namespace details {
+
+    inline bool has_arity(PyObject* object, std::size_t arity) {
       // Mostly from https://stackoverflow.com/a/36143796/2666289
       bpy::object fn(bpy::handle<>(bpy::borrowed(object)));
 
@@ -318,18 +320,55 @@ namespace utils {
       return required_count <= arity          // Cannot require more parameters than given,
         && (args_count >= arity || varargs);  // Must accept enough parameters.
     }
+
+    template <class... Ws>
+    struct wrap_impl;
+
+    template <>
+    struct wrap_impl<> {
+      template <class T>
+      static decltype(auto) apply(T&& t) { return std::forward<T>(t); }
+    };
+
+    template <class T, class... Ws>
+    struct wrap_impl<boost::reference_wrapper<T>, Ws... > {
+      static auto apply(T t) {
+        return boost::ref(t);
+      }
+    };
+
+    template <class T, class... Ws>
+    struct wrap_impl<boost::python::pointer_wrapper<T>, Ws... > {
+      static auto apply(T t) {
+        return bpy::ptr(t);
+      }
+    };
+
+    template <class W, class... Ws>
+    struct wrap_impl<W, Ws... > {
+      template <class T>
+      static decltype(auto) apply(T&& t) {
+        return wrap<Ws... >::apply(std::forward<T>(t));
+      }
+    };
+
   }
 
   /**
    * @brief Convert a python callable to a valid C++ Callable object. Also works
    *     for None.
    */
-  template <typename>
+  template <typename, typename... >
   struct Functor_converter;
 
-  template <typename RET, typename... PARAMS>
-  struct Functor_converter<RET(PARAMS...)>
+  template <typename R, typename... Args, typename... Wrappers>
+  struct Functor_converter<R(Args...), Wrappers... >
   {
+  
+    template <class T>
+    static decltype(auto) wrap(T&& t) {
+      return details::wrap_impl<Wrappers... >::apply(std::forward<T>(t));
+    }
 
     struct FunctorWrapper
     {
@@ -341,13 +380,21 @@ namespace utils {
         m_Callable = bpy::object();
       }
 
-      RET operator()(const PARAMS&...params) {
+      R operator()(Args... params) {
         GILock lock;
-        if constexpr (std::is_same_v<RET, void>) {
-          m_Callable(params...);
+        try {
+          if constexpr (std::is_same_v<R, void>) {
+            m_Callable(wrap(params)... );
+          }
+          else {
+            return bpy::extract<R>(m_Callable(wrap(params)... ));
+          }
         }
-        else {
-          return bpy::extract<RET>(m_Callable(params...));
+        catch (const boost::python::error_already_set&) {
+          throw pyexcept::PythonError();
+        }
+        catch (...) {
+          throw pyexcept::UnknownException();
         }
       }
 
@@ -362,7 +409,7 @@ namespace utils {
       }
 
       // Otherwize we check that we have a callable object:
-      if (!PyCallable_Check(object) || !has_arity(object, sizeof...(PARAMS))) {
+      if (!PyCallable_Check(object) || !details::has_arity(object, sizeof...(Args))) {
         return nullptr;
       }
       return object;
@@ -371,12 +418,12 @@ namespace utils {
     static void construct(PyObject* object, bpy::converter::rvalue_from_python_stage1_data* data)
     {
       bpy::object callable(bpy::handle<>(bpy::borrowed(object)));
-      void* storage =((bpy::converter::rvalue_from_python_storage<std::function<RET(PARAMS...)>>*)data)->storage.bytes;
+      void* storage =((bpy::converter::rvalue_from_python_storage<std::function<R(Args...)>>*)data)->storage.bytes;
       if (callable.is_none()) {
-        new (storage) std::function<RET(PARAMS...)>{};
+        new (storage) std::function<R(Args...)>{};
       }
       else {
-        new (storage) std::function<RET(PARAMS...)>(FunctorWrapper(callable));
+        new (storage) std::function<R(Args...)>(FunctorWrapper(callable));
       }
       data->convertible = storage;
     }
@@ -466,9 +513,16 @@ namespace utils {
     bpy::to_python_converter<QClass, typename Converter::QClass_to_PyQt>();
   }
 
-  template <class Fn>
+  /**
+   * @brief Register a functor converter.
+   *
+   * @tparam Fn The function type to register.
+   * @tparam Wrappers... A list of wrapper (boost::python::pointer_wrapper or boost::reference_wrapper)
+   *   indicating if parameters of the given (wrapped) type must be wrapped.
+   */
+  template <class Fn, class... Wrappers>
   inline void register_functor_converter() {
-    using Converter = Functor_converter<Fn>;
+    using Converter = Functor_converter<Fn, Wrappers... >;
     bpy::converter::registry::push_back(
       &Converter::convertible, 
       &Converter::construct, 

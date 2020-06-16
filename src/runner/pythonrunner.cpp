@@ -75,6 +75,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_qclass_converter<QDir>();
   utils::register_qclass_converter<QFileInfo>();
   utils::register_qclass_converter<QWidget>();
+  utils::register_qclass_converter<QMainWindow>();
   utils::register_qclass_converter<QIcon>();
   utils::register_qclass_converter<QSize>();
   utils::register_qclass_converter<QUrl>();
@@ -130,6 +131,9 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(const QString&)>();
   utils::register_functor_converter<void(const QString&, unsigned int)>();
   utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
+  utils::register_functor_converter<void(QMainWindow *)>();
+  utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
+  utils::register_functor_converter<void(QString const&, const QString& key, const QVariant&, const QVariant&)>();
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(const QString&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
@@ -292,15 +296,16 @@ BOOST_PYTHON_MODULE(mobase)
           bool result = o->waitForApplication((HANDLE)handle, &returnCode);
           return std::make_tuple(result, returnCode);
         })
+      .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes") = true))
+      .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
 
       .def("onModInstalled", &IOrganizer::onModInstalled)
       .def("onAboutToRun", &IOrganizer::onAboutToRun)
       .def("onFinishedRun", &IOrganizer::onFinishedRun)
-      .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes")=true))
-      .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
-
-      Q_DELEGATE(IOrganizer, QObject, "_object")
+      .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized)
+      .def("onProfileChanged", &IOrganizer::onProfileChanged)
+      .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged)
       ;
 
   // FileTreeEntry Scope:
