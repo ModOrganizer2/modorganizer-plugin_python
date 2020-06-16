@@ -827,6 +827,9 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::def("getFileVersion", &MOBase::getFileVersion);
   bpy::def("getProductVersion", &MOBase::getProductVersion);
   bpy::def("getIconForExecutable", &MOBase::iconForExecutable);
+
+  // Expose MoVariant:
+  bpy::scope().attr("MoVariant") = bpy::object();
 }
 
 /**
