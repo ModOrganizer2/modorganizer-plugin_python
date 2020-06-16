@@ -828,7 +828,10 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::def("getProductVersion", &MOBase::getProductVersion);
   bpy::def("getIconForExecutable", &MOBase::iconForExecutable);
 
-  // Expose MoVariant:
+  // Expose MoVariant: MoVariant is a fake object whose only purpose is to be used as a type-hint 
+  // on the python side (e.g., def foo(x: mobase.MoVariant)). The real MoVariant is defined in the
+  // generated stubs, since it's only relevant when doing type-checking, but this needs to be defined,
+  // otherwise MoVariant is not found when actually running plugins through MO2, making them crash.
   bpy::scope().attr("MoVariant") = bpy::object();
 }
 
