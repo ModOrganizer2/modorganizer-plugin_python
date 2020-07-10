@@ -4,6 +4,7 @@ project(pythonrunner)
 set(project_type plugin)
 set(enable_warnings OFF)
 set(install_dir bin/plugins/data)
+set(create_translations ON)
 
 add_compile_definitions(
 	QT_NO_KEYWORDS
