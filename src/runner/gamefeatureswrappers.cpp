@@ -316,7 +316,8 @@ void registerGameFeaturesPythonConverters()
       .def("getContentsFor", bpy::pure_virtual(&ModDataContent::getContentsFor), bpy::arg("filetree"))
       ;
 
-    bpy::class_<ModDataContent::Content>("Content", bpy::init<int, QString, QString, bpy::optional<bool>>())
+    bpy::class_<ModDataContent::Content>("Content", 
+      bpy::init<int, QString, QString, bpy::optional<bool>>((bpy::arg("id"), "name", "icon", bpy::arg("filter_only") = false)))
       .add_property("id", &ModDataContent::Content::id)
       .add_property("name", &ModDataContent::Content::name)
       .add_property("icon", &ModDataContent::Content::icon)

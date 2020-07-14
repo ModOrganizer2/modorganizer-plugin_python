@@ -187,7 +187,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("parse", &VersionInfo::parse,
         (bpy::arg("value"), bpy::arg("scheme") = VersionInfo::SCHEME_DISCOVER, bpy::arg("is_manual") = false))
       .def("canonicalString", &VersionInfo::canonicalString)
-      .def("displayString", &VersionInfo::displayString)
+      .def("displayString", &VersionInfo::displayString, bpy::arg("forced_segments") = 2)
       .def("isValid", &VersionInfo::isValid)
       .def("scheme", &VersionInfo::scheme)
       .def("__str__", &VersionInfo::canonicalString)
@@ -570,9 +570,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("reset", +[](GuessedValue<QString>* gv) { 
         *gv = GuessedValue<QString>(); }, bpy::return_self<>())
       .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) { 
-        *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>(), bpy::arg("other"))
+        *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>(), (bpy::arg("value"), "quality"))
       .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { 
-        *gv = other; }, bpy::return_self<>(), (bpy::arg("value"), "quality"))
+        *gv = other; }, bpy::return_self<>(), bpy::arg("other"))
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
       .def("setFilter", +[](GuessedValue<QString>* gv, std::function<std::variant<QString, bool>(QString const&)> fn) {
@@ -649,7 +649,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
-    .def("init", bpy::pure_virtual(&MOBase::IPlugin::init))
+    .def("init", bpy::pure_virtual(&MOBase::IPlugin::init), bpy::arg("organizer"))
     .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
     .def("author", bpy::pure_virtual(&MOBase::IPlugin::author))
     .def("description", bpy::pure_virtual(&MOBase::IPlugin::description))
