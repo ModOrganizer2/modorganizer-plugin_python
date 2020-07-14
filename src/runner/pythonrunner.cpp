@@ -177,10 +177,12 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<VersionInfo>("VersionInfo")
       .def(bpy::init<QString, VersionInfo::VersionScheme>(
         (bpy::arg("value"), bpy::arg("scheme") = VersionInfo::SCHEME_DISCOVER)))
-      .def(bpy::init<int, int, int, VersionInfo::ReleaseType>(
-        (bpy::arg("major"), "minor", "subminor", bpy::arg("release_type") = VersionInfo::RELEASE_FINAL)))
+      // Note: Order of the two init<> below is important because ReleaseType is a simple enum with an
+      // implicit int conversion.
       .def(bpy::init<int, int, int, int, VersionInfo::ReleaseType>(
         (bpy::arg("major"), "minor", "subminor", "subsubminor", bpy::arg("release_type") = VersionInfo::RELEASE_FINAL)))
+      .def(bpy::init<int, int, int, VersionInfo::ReleaseType>(
+        (bpy::arg("major"), "minor", "subminor", bpy::arg("release_type") = VersionInfo::RELEASE_FINAL)))
       .def("clear", &VersionInfo::clear)
       .def("parse", &VersionInfo::parse,
         (bpy::arg("value"), bpy::arg("scheme") = VersionInfo::SCHEME_DISCOVER, bpy::arg("is_manual") = false))
