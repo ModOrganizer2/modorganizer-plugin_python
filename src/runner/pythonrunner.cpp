@@ -524,6 +524,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
+    .def("getSupportedExtensions", &IInstallationManager::getSupportedExtensions)
     .def("extractFile", &IInstallationManager::extractFile, (bpy::arg("entry"), bpy::arg("silent") = false))
     .def("extractFiles", &IInstallationManager::extractFiles, (bpy::arg("entries"), bpy::arg("silent") = false))
     .def("createFile", &IInstallationManager::createFile, bpy::arg("entry"))
