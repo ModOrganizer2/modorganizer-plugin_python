@@ -175,16 +175,19 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<VersionInfo>("VersionInfo")
-      .def(bpy::init<QString>())
-      .def(bpy::init<QString, VersionInfo::VersionScheme>())
-      .def(bpy::init<int, int, int>())
-      .def(bpy::init<int, int, int, VersionInfo::ReleaseType>())
-      .def(bpy::init<int, int, int, int>())
-      .def(bpy::init<int, int, int, int, VersionInfo::ReleaseType>())
+      .def(bpy::init<QString, VersionInfo::VersionScheme>(
+        (bpy::arg("value"), bpy::arg("scheme") = VersionInfo::SCHEME_DISCOVER)))
+      // Note: Order of the two init<> below is important because ReleaseType is a simple enum with an
+      // implicit int conversion.
+      .def(bpy::init<int, int, int, int, VersionInfo::ReleaseType>(
+        (bpy::arg("major"), "minor", "subminor", "subsubminor", bpy::arg("release_type") = VersionInfo::RELEASE_FINAL)))
+      .def(bpy::init<int, int, int, VersionInfo::ReleaseType>(
+        (bpy::arg("major"), "minor", "subminor", bpy::arg("release_type") = VersionInfo::RELEASE_FINAL)))
       .def("clear", &VersionInfo::clear)
-      .def("parse", &VersionInfo::parse)
+      .def("parse", &VersionInfo::parse,
+        (bpy::arg("value"), bpy::arg("scheme") = VersionInfo::SCHEME_DISCOVER, bpy::arg("is_manual") = false))
       .def("canonicalString", &VersionInfo::canonicalString)
-      .def("displayString", &VersionInfo::displayString)
+      .def("displayString", &VersionInfo::displayString, bpy::arg("forced_segments") = 2)
       .def("isValid", &VersionInfo::isValid)
       .def("scheme", &VersionInfo::scheme)
       .def("__str__", &VersionInfo::canonicalString)
@@ -196,12 +199,18 @@ BOOST_PYTHON_MODULE(mobase)
       .def(bpy::self == bpy::self)
       ;
 
-  bpy::class_<PluginSetting>("PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>());
+  bpy::class_<PluginSetting>(
+    "PluginSetting", bpy::init<const QString&, const QString&, const QVariant&>(
+      (bpy::arg("key"), "description", "default_value")))
+    .def_readwrite("key", &PluginSetting::key)
+    .def_readwrite("description", &PluginSetting::description)
+    .def_readwrite("default_value", &PluginSetting::defaultValue);
 
-  bpy::class_<ExecutableInfo>("ExecutableInfo", bpy::init<const QString&, const QFileInfo&>())
-      .def("withArgument", &ExecutableInfo::withArgument, bpy::return_self<>())
-      .def("withWorkingDirectory", &ExecutableInfo::withWorkingDirectory, bpy::return_self<>())
-      .def("withSteamAppId", &ExecutableInfo::withSteamAppId, bpy::return_self<>())
+  bpy::class_<ExecutableInfo>("ExecutableInfo", 
+    bpy::init<const QString&, const QFileInfo&>((bpy::arg("title"), "binary")))
+      .def("withArgument", &ExecutableInfo::withArgument, bpy::return_self<>(), bpy::arg("argument"))
+      .def("withWorkingDirectory", &ExecutableInfo::withWorkingDirectory, bpy::return_self<>(), bpy::arg("directory"))
+      .def("withSteamAppId", &ExecutableInfo::withSteamAppId, bpy::return_self<>(), bpy::arg("app_id"))
       .def("asCustom", &ExecutableInfo::asCustom, bpy::return_self<>())
       .def("isValid", &ExecutableInfo::isValid)
       .def("title", &ExecutableInfo::title)
@@ -212,9 +221,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isCustom", &ExecutableInfo::isCustom)
       ;
 
-  bpy::class_<ExecutableForcedLoadSetting>("ExecutableForcedLoadSetting", bpy::init<const QString&, const QString&>())
-      .def("withForced", &ExecutableForcedLoadSetting::withForced, bpy::return_self<>())
-      .def("withEnabled", &ExecutableForcedLoadSetting::withEnabled, bpy::return_self<>())
+  bpy::class_<ExecutableForcedLoadSetting>("ExecutableForcedLoadSetting", 
+    bpy::init<const QString&, const QString&>((bpy::arg("process"), "library")))
+      .def("withForced", &ExecutableForcedLoadSetting::withForced, bpy::return_self<>(), bpy::arg("forced"))
+      .def("withEnabled", &ExecutableForcedLoadSetting::withEnabled, bpy::return_self<>(), bpy::arg("enabled"))
       .def("enabled", &ExecutableForcedLoadSetting::enabled)
       .def("forced", &ExecutableForcedLoadSetting::forced)
       .def("library", &ExecutableForcedLoadSetting::library)
@@ -230,8 +240,9 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   // See Q_DELEGATE for more details.
-  bpy::class_<ISaveGameInfoWidgetWrapper, bpy::bases<>, ISaveGameInfoWidgetWrapper*, boost::noncopyable>("ISaveGameInfoWidget", bpy::init<bpy::optional<QWidget*>>())
-    .def("setSave", bpy::pure_virtual(&ISaveGameInfoWidget::setSave))
+  bpy::class_<ISaveGameInfoWidgetWrapper, bpy::bases<>, ISaveGameInfoWidgetWrapper*, boost::noncopyable>(
+    "ISaveGameInfoWidget", bpy::init<bpy::optional<QWidget*>>(bpy::arg("parent")))
+    .def("setSave", bpy::pure_virtual(&ISaveGameInfoWidget::setSave), bpy::arg("save"))
 
     Q_DELEGATE(ISaveGameInfoWidget, QWidget, "_widget")
     ;
@@ -251,33 +262,36 @@ BOOST_PYTHON_MODULE(mobase)
       .def("basePath", &IOrganizer::basePath)
       .def("modsPath", &IOrganizer::modsPath)
       .def("appVersion", &IOrganizer::appVersion)
-      .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("removeMod", &IOrganizer::removeMod)
-      .def("modDataChanged", &IOrganizer::modDataChanged)
-      .def("pluginSetting", &IOrganizer::pluginSetting)
-      .def("setPluginSetting", &IOrganizer::setPluginSetting)
-      .def("persistent", &IOrganizer::persistent, bpy::arg("persistent") = QVariant())
-      .def("setPersistent", &IOrganizer::setPersistent, bpy::arg("sync") = true)
+      .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
+      .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
+      .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
+      .def("removeMod", &IOrganizer::removeMod, bpy::arg("mod"))
+      .def("modDataChanged", &IOrganizer::modDataChanged, bpy::arg("mod"))
+      .def("pluginSetting", &IOrganizer::pluginSetting, (bpy::arg("plugin_name"), "key"))
+      .def("setPluginSetting", &IOrganizer::setPluginSetting, (bpy::arg("plugin_name"), "key", "value"))
+      .def("persistent", &IOrganizer::persistent, (bpy::arg("plugin_name"), "key", bpy::arg("persistent") = QVariant()))
+      .def("setPersistent", &IOrganizer::setPersistent, (bpy::arg("plugin_name"), "key", "value", bpy::arg("sync") = true))
       .def("pluginDataPath", &IOrganizer::pluginDataPath)
-      .def("installMod", &IOrganizer::installMod, (bpy::arg("name_suggestion") = ""), bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("resolvePath", &IOrganizer::resolvePath)
-      .def("listDirectories", &IOrganizer::listDirectories)
+      .def("installMod", &IOrganizer::installMod, bpy::return_value_policy<bpy::reference_existing_object>(), (bpy::arg("filename"), bpy::arg("name_suggestion") = ""))
+      .def("resolvePath", &IOrganizer::resolvePath, bpy::arg("filename"))
+      .def("listDirectories", &IOrganizer::listDirectories, bpy::arg("directory"))
 
       // Provide multiple overloads of findFiles:
-      .def("findFiles", +[](const IOrganizer* o, QString const& p, std::function<bool(QString const&)> f) { return o->findFiles(p, f); })
+      .def("findFiles", +[](const IOrganizer* o, QString const& p, std::function<bool(QString const&)> f) { return o->findFiles(p, f); },
+        (bpy::arg("path"), "filter"))
 
       // In C++, it is possible to create a QStringList implicitly from a single QString. This is not possible with the current
       // converters in python (and I do not think it is a good idea to have it everywhere), but here it is nice to be able to 
       // pass a single string, so we add an extra overload.
-      // Important: the order matters, because a Python string can be converted to a QStringList since it iss a sequence of 
+      // Important: the order matters, because a Python string can be converted to a QStringList since it is a sequence of 
       // single-character strings:
-      .def("findFiles", +[](const IOrganizer* o, QString const& p, const QStringList& gf) { return o->findFiles(p, gf); })
-      .def("findFiles", +[](const IOrganizer* o, QString const& p, const QString& f) { return o->findFiles(p, QStringList{ f }); })
+      .def("findFiles", +[](const IOrganizer* o, QString const& p, const QStringList& gf) { return o->findFiles(p, gf); },
+        (bpy::arg("path"), "patterns"))
+      .def("findFiles", +[](const IOrganizer* o, QString const& p, const QString& f) { return o->findFiles(p, QStringList{ f }); },
+        (bpy::arg("path"), "pattern"))
 
-      .def("getFileOrigins", &IOrganizer::getFileOrigins)
-      .def("findFileInfos", &IOrganizer::findFileInfos)
+      .def("getFileOrigins", &IOrganizer::getFileOrigins, bpy::arg("filename"))
+      .def("findFileInfos", &IOrganizer::findFileInfos, (bpy::arg("path"), "filter"))
       .def("downloadManager", &IOrganizer::downloadManager, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("pluginList", &IOrganizer::pluginList, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", &IOrganizer::modList, bpy::return_value_policy<bpy::reference_existing_object>())
@@ -289,23 +303,23 @@ BOOST_PYTHON_MODULE(mobase)
         +[](IOrganizer* o, const QString& executable, const QStringList& args, const QString& cwd, const QString& profile, 
           const QString& forcedCustomOverwrite, bool ignoreCustomOverwrite) {
             return (std::uintptr_t) o->startApplication(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite);
-        }, ((bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), 
+        }, (bpy::arg("executable"), (bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), 
             (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
       .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle) {
           DWORD returnCode;
           bool result = o->waitForApplication((HANDLE)handle, &returnCode);
           return std::make_tuple(result, returnCode);
-        })
+        }, bpy::arg("handle"))
       .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes") = true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
 
-      .def("onModInstalled", &IOrganizer::onModInstalled)
-      .def("onAboutToRun", &IOrganizer::onAboutToRun)
-      .def("onFinishedRun", &IOrganizer::onFinishedRun)
-      .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized)
-      .def("onProfileChanged", &IOrganizer::onProfileChanged)
-      .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged)
+      .def("onModInstalled", &IOrganizer::onModInstalled, bpy::arg("callback"))
+      .def("onAboutToRun", &IOrganizer::onAboutToRun, bpy::arg("callback"))
+      .def("onFinishedRun", &IOrganizer::onFinishedRun, bpy::arg("callback"))
+      .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized, bpy::arg("callback"))
+      .def("onProfileChanged", &IOrganizer::onProfileChanged, bpy::arg("callback"))
+      .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
       ;
 
   // FileTreeEntry Scope:
@@ -331,13 +345,15 @@ BOOST_PYTHON_MODULE(mobase)
       // .def("getTree", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::astree))
       .def("name", &FileTreeEntry::name)
       .def("suffix", &FileTreeEntry::suffix)
+      .def("hasSuffix", +[](FileTreeEntry* entry, QStringList suffixes) { return entry->hasSuffix(suffixes); }, bpy::arg("suffixes"))
+      .def("hasSuffix", +[](FileTreeEntry* entry, QString suffix) { return entry->hasSuffix(suffix); }, bpy::arg("suffix"))
       .def("parent", static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::parent), "[optional]")
       .def("path", &FileTreeEntry::path, bpy::arg("sep") = "\\")
-      .def("pathFrom", &FileTreeEntry::pathFrom, bpy::arg("sep") = "\\")
+      .def("pathFrom", &FileTreeEntry::pathFrom, (bpy::arg("tree"), bpy::arg("sep") = "\\"))
 
       // Mutable operation:
       .def("detach", &FileTreeEntry::detach)
-      .def("moveTo", &FileTreeEntry::moveTo)
+      .def("moveTo", &FileTreeEntry::moveTo, bpy::arg("tree"))
 
       // Special methods:
       .def("__eq__", +[](const FileTreeEntry* entry, QString other) {
@@ -375,34 +391,35 @@ BOOST_PYTHON_MODULE(mobase)
     iFileTreeClass
 
       // Non-mutable operations:
-      .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists), (bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
-      .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find), 
-        bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY, bpy::return_value_policy<utils::downcast_return<FileTreeEntry, IFileTree>>(), "[optional]")
-      .def("pathTo", &IFileTree::pathTo, bpy::arg("sep") = "\\")
+      .def("exists", static_cast<bool(IFileTree::*)(QString, IFileTree::FileTypes) const>(&IFileTree::exists),
+        (bpy::arg("path"), bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY))
+      .def("find", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(QString, IFileTree::FileTypes)>(&IFileTree::find),
+        bpy::return_value_policy<utils::downcast_return<FileTreeEntry, IFileTree>>(), (bpy::arg("path"), bpy::arg("type") = IFileTree::FILE_OR_DIRECTORY), "[optional]")
+      .def("pathTo", &IFileTree::pathTo, (bpy::arg("entry"), bpy::arg("sep") = "\\"))
 
       // Note: walk() would probably be better as a generator in python, but it is likely impossible to construct
       // from the C++ walk() method.
-      .def("walk", &IFileTree::walk, bpy::arg("sep") = "\\")
+      .def("walk", &IFileTree::walk, (bpy::arg("callback"), bpy::arg("sep") = "\\"))
 
       // Kind-of-static operations:
       .def("createOrphanTree", &IFileTree::createOrphanTree, bpy::arg("name") = "")
 
       // addFile() and addDirectory throws exception instead of returning null pointer in order
       // to have better traces.
-      .def("addFile", +[](IFileTree* w, QString name, bool replaceIfExists) {
-          auto result = w->addFile(name, replaceIfExists);
+      .def("addFile", +[](IFileTree* w, QString path, bool replaceIfExists) {
+          auto result = w->addFile(path, replaceIfExists);
           if (result == nullptr) {
             throw std::logic_error("addFile failed");
           }
           return result;
-        }, bpy::arg("replace_if_exists") = false)
-      .def("addDirectory", +[](IFileTree* w, QString name) {
-          auto result = w->addDirectory(name);
+        }, (bpy::arg("path"), bpy::arg("replace_if_exists") = false))
+      .def("addDirectory", +[](IFileTree* w, QString path) {
+          auto result = w->addDirectory(path);
           if (result == nullptr) {
             throw std::logic_error("addDirectory failed");
           }
           return result;
-        })
+        }, bpy::arg("path"))
 
       // Merge needs custom return types depending if the user wants overrides or not. A failure is translated 
       // into an exception for easier tracing and handling.
@@ -416,29 +433,29 @@ BOOST_PYTHON_MODULE(mobase)
               return { overwrites };
             }
             return { result };
-        }, bpy::arg("overwrites") = false)
+        }, (bpy::arg("other"), bpy::arg("overwrites") = false))
 
       // Insert and erase returns an iterator, which makes no sense in python, so we convert it to bool. Erase is also
       // renamed "remove" since "erase" is very C++.
       .def("insert", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry, IFileTree::InsertPolicy insertPolicy) {
           return p->insert(entry, insertPolicy) == p->end();
-        }, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+        }, (bpy::arg("entry"), bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS))
 
-      .def("remove", +[](IFileTree* p, QString name) { return p->erase(name).first != p->end(); })
-      .def("remove", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry) { return p->erase(entry) != p->end(); })
+      .def("remove", +[](IFileTree* p, QString name) { return p->erase(name).first != p->end(); }, bpy::arg("name"))
+      .def("remove", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry) { return p->erase(entry) != p->end(); }, bpy::arg("entry"))
 
-      .def("move", &IFileTree::move, bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)
+      .def("move", &IFileTree::move, (bpy::arg("entry"), "path", bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS))
       .def("copy", +[](IFileTree* w, std::shared_ptr<const FileTreeEntry> entry, QString path, IFileTree::InsertPolicy insertPolicy) {
         auto result = w->copy(entry, path, insertPolicy);
         if (result == nullptr) {
           throw std::logic_error("copy failed");
         }
         return result;
-      }, ((bpy::arg("path") = ""), (bpy::arg("insert_policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS)))
+      }, (bpy::arg("entry"), bpy::arg("path") = "", bpy::arg("insert_policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS))
 
       .def("clear", &IFileTree::clear)
-      .def("removeAll", &IFileTree::removeAll)
-      .def("removeIf", &IFileTree::removeIf)
+      .def("removeAll", &IFileTree::removeAll, bpy::arg("names"))
+      .def("removeIf", &IFileTree::removeIf, bpy::arg("filter"))
 
       // Special methods:
       .def("__getitem__", static_cast<std::shared_ptr<FileTreeEntry>(IFileTree::*)(std::size_t)>(&IFileTree::at),
@@ -466,20 +483,20 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IModRepositoryBridge, boost::noncopyable>("IModRepositoryBridge", bpy::no_init)
-      .def("requestDescription", &IModRepositoryBridge::requestDescription)
-      .def("requestFiles", &IModRepositoryBridge::requestFiles)
-      .def("requestFileInfo", &IModRepositoryBridge::requestFileInfo)
-      .def("requestDownloadURL", &IModRepositoryBridge::requestDownloadURL)
-      .def("requestToggleEndorsement", &IModRepositoryBridge::requestToggleEndorsement)
+      .def("requestDescription", &IModRepositoryBridge::requestDescription, (bpy::arg("game_name"), "mod_id", "user_data"))
+      .def("requestFiles", &IModRepositoryBridge::requestFiles, (bpy::arg("game_name"), "mod_id", "user_data"))
+      .def("requestFileInfo", &IModRepositoryBridge::requestFileInfo, (bpy::arg("game_name"), "mod_id", "file_id", "user_data"))
+      .def("requestDownloadURL", &IModRepositoryBridge::requestDownloadURL, (bpy::arg("game_name"), "mod_id", "file_id", "user_data"))
+      .def("requestToggleEndorsement", &IModRepositoryBridge::requestToggleEndorsement, (bpy::arg("game_name"), "mod_id", "mod_version", "endorse", "user_data"))
 
       Q_DELEGATE(IModRepositoryBridge, QObject, "_object")
       ;
 
   bpy::class_<ModRepositoryFileInfo>("ModRepositoryFileInfo", bpy::no_init)
-      .def(bpy::init<const ModRepositoryFileInfo &>())
-      .def(bpy::init<bpy::optional<QString, int, int>>())
+      .def(bpy::init<const ModRepositoryFileInfo &>(bpy::arg("other")))
+      .def(bpy::init<bpy::optional<QString, int, int>>((bpy::arg("game_name"), "mod_id", "file_id")))
       .def("__str__", &ModRepositoryFileInfo::toString)
-      .def("createFromJson", &ModRepositoryFileInfo::createFromJson).staticmethod("createFromJson")
+      .def("createFromJson", &ModRepositoryFileInfo::createFromJson, bpy::arg("data")).staticmethod("createFromJson")
       .def_readwrite("name", &ModRepositoryFileInfo::name)
       .def_readwrite("uri", &ModRepositoryFileInfo::uri)
       .def_readwrite("description", &ModRepositoryFileInfo::description)
@@ -499,34 +516,35 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IDownloadManager, boost::noncopyable>("IDownloadManager", bpy::no_init)
-      .def("startDownloadURLs", &IDownloadManager::startDownloadURLs)
-      .def("startDownloadNexusFile", &IDownloadManager::startDownloadNexusFile)
-      .def("downloadPath", &IDownloadManager::downloadPath)
+      .def("startDownloadURLs", &IDownloadManager::startDownloadURLs, bpy::arg("urls"))
+      .def("startDownloadNexusFile", &IDownloadManager::startDownloadNexusFile, (bpy::arg("mod_id"), "file_id"))
+      .def("downloadPath", &IDownloadManager::downloadPath, bpy::arg("id"))
 
       Q_DELEGATE(IDownloadManager, QObject, "_object")
       ;
 
   bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
-    .def("extractFile", &IInstallationManager::extractFile)
-    .def("extractFiles", &IInstallationManager::extractFiles)
-    .def("createFile", &IInstallationManager::createFile)
-    .def("installArchive", &IInstallationManager::installArchive)
-    .def("setURL", &IInstallationManager::setURL)
+    .def("getSupportedExtensions", &IInstallationManager::getSupportedExtensions)
+    .def("extractFile", &IInstallationManager::extractFile, (bpy::arg("entry"), bpy::arg("silent") = false))
+    .def("extractFiles", &IInstallationManager::extractFiles, (bpy::arg("entries"), bpy::arg("silent") = false))
+    .def("createFile", &IInstallationManager::createFile, bpy::arg("entry"))
+    .def("installArchive", &IInstallationManager::installArchive, (bpy::arg("mod_name"), "archive", "mod_id"))
+    .def("setURL", &IInstallationManager::setURL, bpy::arg("url"))
     ;
 
   bpy::class_<IModInterface, boost::noncopyable>("IModInterface", bpy::no_init)
       .def("name", &IModInterface::name)
       .def("absolutePath", &IModInterface::absolutePath)
-      .def("setVersion", &IModInterface::setVersion)
-      .def("setNewestVersion", &IModInterface::setNewestVersion)
-      .def("setIsEndorsed", &IModInterface::setIsEndorsed)
-      .def("setNexusID", &IModInterface::setNexusID)
-      .def("addNexusCategory", &IModInterface::addNexusCategory)
-      .def("addCategory", &IModInterface::addCategory)
-      .def("removeCategory", &IModInterface::removeCategory)
+      .def("setVersion", &IModInterface::setVersion, bpy::arg("version"))
+      .def("setNewestVersion", &IModInterface::setNewestVersion, bpy::arg("version"))
+      .def("setIsEndorsed", &IModInterface::setIsEndorsed, bpy::arg("endorsed"))
+      .def("setNexusID", &IModInterface::setNexusID, bpy::arg("nexus_id"))
+      .def("addNexusCategory", &IModInterface::addNexusCategory, bpy::arg("category_id"))
+      .def("addCategory", &IModInterface::addCategory, bpy::arg("name"))
+      .def("removeCategory", &IModInterface::removeCategory, bpy::arg("name"))
       .def("categories", &IModInterface::categories)
-      .def("setGameName", &IModInterface::setGameName)
-      .def("setName", &IModInterface::setName)
+      .def("setGameName", &IModInterface::setGameName, bpy::arg("name"))
+      .def("setName", &IModInterface::setName, bpy::arg("name"))
       .def("remove", &IModInterface::remove)
       ;
 
@@ -541,18 +559,21 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def(bpy::init<>())
-      .def(bpy::init<QString const&, EGuessQuality>())
+      .def(bpy::init<QString const&, EGuessQuality>((bpy::arg("value"), "quality")))
       .def("update",
            static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&)>(&GuessedValue<QString>::update),
-           bpy::return_self<>())
+           bpy::return_self<>(), bpy::arg("value"))
       .def("update",
            static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&, EGuessQuality)>(&GuessedValue<QString>::update),
-           bpy::return_self<>())
+           bpy::return_self<>(), (bpy::arg("value"), "quality"))
 
       // Methods to simulate the assignment operator:
-      .def("reset", +[](GuessedValue<QString>* gv) { *gv = GuessedValue<QString>(); }, bpy::return_self<>())
-      .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) { *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>())
-      .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { *gv = other; }, bpy::return_self<>())
+      .def("reset", +[](GuessedValue<QString>* gv) { 
+        *gv = GuessedValue<QString>(); }, bpy::return_self<>())
+      .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) { 
+        *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>(), (bpy::arg("value"), "quality"))
+      .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { 
+        *gv = other; }, bpy::return_self<>(), bpy::arg("other"))
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
       .def("setFilter", +[](GuessedValue<QString>* gv, std::function<std::variant<QString, bool>(QString const&)> fn) {
@@ -568,7 +589,7 @@ BOOST_PYTHON_MODULE(mobase)
             }
           }, ret);
         });
-      })
+      }, bpy::arg("filter"))
 
       // This makes a copy in python but it more practical than exposing an iterator:
       .def("variants", &GuessedValue<QString>::variants, bpy::return_value_policy<bpy::copy_const_reference>())
@@ -586,17 +607,17 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginList, boost::noncopyable>("IPluginList", bpy::no_init)
-      .def("state", &MOBase::IPluginList::state)
-      .def("priority", &MOBase::IPluginList::priority)
-      .def("loadOrder", &MOBase::IPluginList::loadOrder)
-      .def("isMaster", &MOBase::IPluginList::isMaster)
-      .def("masters", &MOBase::IPluginList::masters)
-      .def("origin", &MOBase::IPluginList::origin)
-      .def("onRefreshed", &MOBase::IPluginList::onRefreshed)
-      .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved)
+      .def("state", &MOBase::IPluginList::state, bpy::arg("name"))
+      .def("priority", &MOBase::IPluginList::priority, bpy::arg("name"))
+      .def("loadOrder", &MOBase::IPluginList::loadOrder, bpy::arg("name"))
+      .def("isMaster", &MOBase::IPluginList::isMaster, bpy::arg("name"))
+      .def("masters", &MOBase::IPluginList::masters, bpy::arg("name"))
+      .def("origin", &MOBase::IPluginList::origin, bpy::arg("name"))
+      .def("onRefreshed", &MOBase::IPluginList::onRefreshed, bpy::arg("callback"))
+      .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, bpy::arg("callback"))
       .def("pluginNames", &MOBase::IPluginList::pluginNames)
-      .def("setState", &MOBase::IPluginList::setState)
-      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder)
+      .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
+      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, bpy::arg("loadorder"))
       ;
 
   bpy::enum_<IModList::ModState>("ModState")
@@ -618,18 +639,18 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IModList, boost::noncopyable>("IModList", bpy::no_init)
-      .def("displayName", &MOBase::IModList::displayName)
+      .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
-      .def("state", &MOBase::IModList::state)
-      .def("setActive", &MOBase::IModList::setActive)
-      .def("priority", &MOBase::IModList::priority)
-      .def("setPriority", &MOBase::IModList::setPriority)
-      .def("onModStateChanged", &MOBase::IModList::onModStateChanged)
-      .def("onModMoved", &MOBase::IModList::onModMoved)
+      .def("state", &MOBase::IModList::state, bpy::arg("name"))
+      .def("setActive", &MOBase::IModList::setActive, (bpy::arg("name"), "active"))
+      .def("priority", &MOBase::IModList::priority, bpy::arg("name"))
+      .def("setPriority", &MOBase::IModList::setPriority, (bpy::arg("name"), "priority"))
+      .def("onModStateChanged", &MOBase::IModList::onModStateChanged, bpy::arg("callback"))
+      .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
 
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
-    .def("init", bpy::pure_virtual(&MOBase::IPlugin::init))
+    .def("init", bpy::pure_virtual(&MOBase::IPlugin::init), bpy::arg("organizer"))
     .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
     .def("author", bpy::pure_virtual(&MOBase::IPlugin::author))
     .def("description", bpy::pure_virtual(&MOBase::IPlugin::description))
@@ -640,10 +661,10 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
       .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
-      .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription))
-      .def("fullDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::fullDescription))
-      .def("hasGuidedFix", bpy::pure_virtual(&MOBase::IPluginDiagnose::hasGuidedFix))
-      .def("startGuidedFix", bpy::pure_virtual(&MOBase::IPluginDiagnose::startGuidedFix))
+      .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription), bpy::arg("key"))
+      .def("fullDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::fullDescription), bpy::arg("key"))
+      .def("hasGuidedFix", bpy::pure_virtual(&MOBase::IPluginDiagnose::hasGuidedFix), bpy::arg("key"))
+      .def("startGuidedFix", bpy::pure_virtual(&MOBase::IPluginDiagnose::startGuidedFix), bpy::arg("key"))
       .def("_invalidate", &IPluginDiagnoseWrapper::invalidate)
       ;
 
@@ -688,14 +709,14 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
-      .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile))
+      .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile), (bpy::arg("directory"), "settings"))
       .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
       .def("savegameSEExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameSEExtension))
       .def("isInstalled", bpy::pure_virtual(&MOBase::IPluginGame::isInstalled))
       .def("gameIcon", bpy::pure_virtual(&MOBase::IPluginGame::gameIcon))
       .def("gameDirectory", bpy::pure_virtual(&MOBase::IPluginGame::gameDirectory))
       .def("dataDirectory", bpy::pure_virtual(&MOBase::IPluginGame::dataDirectory))
-      .def("setGamePath", bpy::pure_virtual(&MOBase::IPluginGame::setGamePath))
+      .def("setGamePath", bpy::pure_virtual(&MOBase::IPluginGame::setGamePath), bpy::arg("path"))
       .def("documentsDirectory", bpy::pure_virtual(&MOBase::IPluginGame::documentsDirectory))
       .def("savesDirectory", bpy::pure_virtual(&MOBase::IPluginGame::savesDirectory))
       .def("executables", bpy::pure_virtual(&MOBase::IPluginGame::executables))
@@ -703,7 +724,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("steamAPPId", bpy::pure_virtual(&MOBase::IPluginGame::steamAPPId))
       .def("primaryPlugins", bpy::pure_virtual(&MOBase::IPluginGame::primaryPlugins))
       .def("gameVariants", bpy::pure_virtual(&MOBase::IPluginGame::gameVariants))
-      .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant))
+      .def("setGameVariant", bpy::pure_virtual(&MOBase::IPluginGame::setGameVariant), bpy::arg("variant"))
       .def("binaryName", bpy::pure_virtual(&MOBase::IPluginGame::binaryName))
       .def("gameShortName", bpy::pure_virtual(&MOBase::IPluginGame::gameShortName))
       .def("primarySources", bpy::pure_virtual(&MOBase::IPluginGame::primarySources))
@@ -716,7 +737,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("sortMechanism", bpy::pure_virtual(&MOBase::IPluginGame::sortMechanism))
       .def("nexusModOrganizerID", bpy::pure_virtual(&MOBase::IPluginGame::nexusModOrganizerID))
       .def("nexusGameID", bpy::pure_virtual(&MOBase::IPluginGame::nexusGameID))
-      .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid))
+      .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid), bpy::arg("directory"))
       .def("gameVersion", bpy::pure_virtual(&MOBase::IPluginGame::gameVersion))
       .def("getLauncherName", bpy::pure_virtual(&MOBase::IPluginGame::getLauncherName))
 
@@ -757,7 +778,7 @@ BOOST_PYTHON_MODULE(mobase)
           }
           });
         return feature;
-      })
+      }, bpy::arg("feature_type"))
       ;
 
   bpy::enum_<MOBase::IPluginInstaller::EInstallResult>("InstallResult")
@@ -769,11 +790,11 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginInstaller, bpy::bases<IPlugin>, boost::noncopyable>("IPluginInstaller", bpy::no_init)
-    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
+    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("priority", &IPluginInstaller::priority)
     .def("isManualInstaller", &IPluginInstaller::isManualInstaller)
-    .def("setParentWidget", &IPluginInstaller::setParentWidget)
-    .def("setInstallationManager", &IPluginInstaller::setInstallationManager)
+    .def("setParentWidget", &IPluginInstaller::setParentWidget, bpy::arg("parent"))
+    .def("setInstallationManager", &IPluginInstaller::setInstallationManager, bpy::arg("manager"))
     ;
 
   bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
@@ -783,17 +804,17 @@ BOOST_PYTHON_MODULE(mobase)
       -> std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>> {
         auto result = p->install(modName, tree, version, nexusID);
         return std::make_tuple(result, tree, version, nexusID);
-      })
+      }, (bpy::arg("name"), "tree", "version", "nexus_id"))
     .def("_parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     .def("_manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
   bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
-    // Needs to add both otherwize boost does not understanda:    
-    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported)
-    .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported)
+    // Needs to add both otherwize boost does not understand:    
+    .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
+    .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported, bpy::arg("archive_name"))
     .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
-    .def("install", &IPluginInstallerCustom::install)
+    .def("install", &IPluginInstallerCustom::install, (bpy::arg("mod_name"), "game_name", "archive_name", "version", "nexus_id"))
     .def("_parentWidget", &IPluginInstallerSimpleWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     .def("_manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
@@ -803,14 +824,15 @@ BOOST_PYTHON_MODULE(mobase)
     .def("icon", bpy::pure_virtual(&IPluginModPage::icon))
     .def("pageURL", bpy::pure_virtual(&IPluginModPage::pageURL))
     .def("useIntegratedBrowser", bpy::pure_virtual(&IPluginModPage::useIntegratedBrowser))
-    .def("handlesDownload", bpy::pure_virtual(&IPluginModPage::handlesDownload))
-    .def("setParentWidget", &IPluginModPage::setParentWidget, &IPluginModPageWrapper::setParentWidget_Default)
+    .def("handlesDownload", bpy::pure_virtual(&IPluginModPage::handlesDownload), (bpy::arg("page_url"), "download_url", "fileinfo"))
+    .def("setParentWidget", &IPluginModPage::setParentWidget, &IPluginModPageWrapper::setParentWidget_Default, bpy::arg("parent"))
     .def("_parentWidget", &IPluginModPageWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     ;
 
   bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
     .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
-    .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>())
+    .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>(), 
+      (bpy::arg("filename"), "max_size"))
     ;
 
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
@@ -818,15 +840,15 @@ BOOST_PYTHON_MODULE(mobase)
     .def("tooltip", bpy::pure_virtual(&IPluginTool::tooltip))
     .def("icon", bpy::pure_virtual(&IPluginTool::icon))
     .def("display", bpy::pure_virtual(&IPluginTool::display))
-    .def("setParentWidget", &IPluginTool::setParentWidget, &IPluginToolWrapper::setParentWidget_Default)
+    .def("setParentWidget", &IPluginTool::setParentWidget, &IPluginToolWrapper::setParentWidget_Default, bpy::arg("parent"))
     .def("_parentWidget", &IPluginToolWrapper::parentWidget, bpy::return_value_policy<bpy::return_by_value>())
     ;
 
   registerGameFeaturesPythonConverters();
 
-  bpy::def("getFileVersion", &MOBase::getFileVersion);
-  bpy::def("getProductVersion", &MOBase::getProductVersion);
-  bpy::def("getIconForExecutable", &MOBase::iconForExecutable);
+  bpy::def("getFileVersion", &MOBase::getFileVersion, bpy::arg("filepath"));
+  bpy::def("getProductVersion", &MOBase::getProductVersion, bpy::arg("executable"));
+  bpy::def("getIconForExecutable", &MOBase::iconForExecutable, bpy::arg("executable"));
 
   // Expose MoVariant: MoVariant is a fake object whose only purpose is to be used as a type-hint 
   // on the python side (e.g., def foo(x: mobase.MoVariant)). The real MoVariant is defined in the
