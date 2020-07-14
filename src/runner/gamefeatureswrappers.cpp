@@ -331,7 +331,7 @@ void registerGameFeaturesPythonConverters()
         bpy::arg("filepath"))
       .def("getMissingAssets", bpy::pure_virtual(&SaveGameInfo::getMissingAssets), bpy::arg("filepath"))
       .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>(), 
-        bpy::arg("widget"), "[optional]")
+        bpy::arg("parent"), "[optional]")
       .def("hasScriptExtenderSave", bpy::pure_virtual(&SaveGameInfo::hasScriptExtenderSave), bpy::arg("filepath"))
       ;
 
