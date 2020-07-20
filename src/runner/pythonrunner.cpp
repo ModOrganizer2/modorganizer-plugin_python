@@ -94,6 +94,7 @@ BOOST_PYTHON_MODULE(mobase)
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
   utils::register_sequence_container<QList<ExecutableInfo>>();
+  utils::register_sequence_container<QList<ExecutableForcedLoadSetting>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
   utils::register_sequence_container<QStringList>();
@@ -269,7 +270,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("modDataChanged", &IOrganizer::modDataChanged, bpy::arg("mod"))
       .def("pluginSetting", &IOrganizer::pluginSetting, (bpy::arg("plugin_name"), "key"))
       .def("setPluginSetting", &IOrganizer::setPluginSetting, (bpy::arg("plugin_name"), "key", "value"))
-      .def("persistent", &IOrganizer::persistent, (bpy::arg("plugin_name"), "key", bpy::arg("persistent") = QVariant()))
+      .def("persistent", &IOrganizer::persistent, (bpy::arg("plugin_name"), "key", bpy::arg("default") = QVariant()))
       .def("setPersistent", &IOrganizer::setPersistent, (bpy::arg("plugin_name"), "key", "value", bpy::arg("sync") = true))
       .def("pluginDataPath", &IOrganizer::pluginDataPath)
       .def("installMod", &IOrganizer::installMod, bpy::return_value_policy<bpy::reference_existing_object>(), (bpy::arg("filename"), bpy::arg("name_suggestion") = ""))
