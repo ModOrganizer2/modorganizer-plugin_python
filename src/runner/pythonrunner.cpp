@@ -94,6 +94,7 @@ BOOST_PYTHON_MODULE(mobase)
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
   utils::register_sequence_container<QList<ExecutableInfo>>();
+  utils::register_sequence_container<QList<ExecutableForcedLoadSetting>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
   utils::register_sequence_container<QStringList>();
