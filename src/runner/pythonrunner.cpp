@@ -810,7 +810,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("_manager", &IPluginInstallerSimpleWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
-  bpy::class_<IPluginInstallerCustomWrapper, boost::noncopyable>("IPluginInstallerCustom")
+  bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
     // Needs to add both otherwize boost does not understand:    
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported, bpy::arg("archive_name"))
@@ -820,7 +820,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("_manager", &IPluginInstallerCustomWrapper::manager, bpy::return_value_policy<bpy::reference_existing_object>())
     ;
 
-  bpy::class_<IPluginModPageWrapper, boost::noncopyable>("IPluginModPage")
+  bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
     .def("displayName", bpy::pure_virtual(&IPluginModPage::displayName))
     .def("icon", bpy::pure_virtual(&IPluginModPage::icon))
     .def("pageURL", bpy::pure_virtual(&IPluginModPage::pageURL))
