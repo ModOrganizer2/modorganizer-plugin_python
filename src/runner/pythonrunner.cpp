@@ -446,7 +446,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("remove", +[](IFileTree* p, std::shared_ptr<FileTreeEntry> entry) { return p->erase(entry) != p->end(); }, bpy::arg("entry"))
 
       .def("move", &IFileTree::move, (bpy::arg("entry"), "path", bpy::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS))
-      .def("copy", +[](IFileTree* w, std::shared_ptr<const FileTreeEntry> entry, QString path, IFileTree::InsertPolicy insertPolicy) {
+      .def("copy", +[](IFileTree* w, std::shared_ptr<FileTreeEntry> entry, QString path, IFileTree::InsertPolicy insertPolicy) {
         auto result = w->copy(entry, path, insertPolicy);
         if (result == nullptr) {
           throw std::logic_error("copy failed");
