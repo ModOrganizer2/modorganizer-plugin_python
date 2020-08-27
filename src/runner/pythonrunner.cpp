@@ -131,14 +131,16 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void()>(); // converter for the onRefreshed-callback
   utils::register_functor_converter<void(const QString&)>();
   utils::register_functor_converter<void(const QString&, unsigned int)>();
-  utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback
-  utils::register_functor_converter<void(QMainWindow *)>();
+  utils::register_functor_converter<void(const QString&, int, int)>(); // converter for the onModMoved-callback and onPluginMoved callbacks
+  utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList)
+  utils::register_functor_converter<void(const QString&, IPluginList::PluginStates)>(); // converter for the onPluginStateChanged-callback (IPluginList)
+  utils::register_functor_converter<void(const QString&, const QString&, const QVariant&, const QVariant&)>();
+  utils::register_functor_converter<void(QMainWindow*)>();
   utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
-  utils::register_functor_converter<void(QString const&, const QString& key, const QVariant&, const QVariant&)>();
-  utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(const QString&)>();
+  utils::register_functor_converter<bool(const QString&, std::shared_ptr<const FileTreeEntry>)>();
+  utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
-  utils::register_functor_converter<bool(QString const&, std::shared_ptr<const FileTreeEntry>)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
 
   //
@@ -616,6 +618,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("origin", &MOBase::IPluginList::origin, bpy::arg("name"))
       .def("onRefreshed", &MOBase::IPluginList::onRefreshed, bpy::arg("callback"))
       .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, bpy::arg("callback"))
+      .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged, bpy::arg("callback"))
       .def("pluginNames", &MOBase::IPluginList::pluginNames)
       .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
       .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, bpy::arg("loadorder"))
