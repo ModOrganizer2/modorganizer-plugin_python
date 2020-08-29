@@ -3,6 +3,8 @@
 
 #include <boost/python.hpp>
 
+#include "error.h"
+
 namespace utils {
 
   namespace bpy = boost::python;
@@ -194,6 +196,18 @@ namespace utils {
       , &container_from_python_list<Container>::construct
       , bpy::type_id<Container>());
   };
+
+
+  /**
+   * @brief Show a depreciation warning.
+   * 
+   * @param name Name of the deprecated function.
+   * @param message Depreciation message.
+   * @param show_once Only show the message once.
+   *
+   * @return a depreciation object.
+   */
+  void show_depreciation_warning(std::string_view name, std::string_view message = "", bool show_once = true);
 
 }
 
