@@ -646,7 +646,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
-      .def("setActive", &MOBase::IModList::setActive, (bpy::arg("name"), "active"))
+      .def("setActive",
+        static_cast<int(IModList::*)(QStringList const&, bool)>(&MOBase::IModList::setActive), (bpy::arg("names"), "active"))
+      .def("setActive",
+        static_cast<bool(IModList::*)(QString const&, bool)>(&MOBase::IModList::setActive), (bpy::arg("name"), "active"))
       .def("priority", &MOBase::IModList::priority, bpy::arg("name"))
       .def("setPriority", &MOBase::IModList::setPriority, (bpy::arg("name"), "priority"))
       .def("onModStateChanged", &MOBase::IModList::onModStateChanged, bpy::arg("callback"))
