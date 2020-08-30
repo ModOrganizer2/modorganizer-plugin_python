@@ -200,7 +200,7 @@ namespace utils {
 
   /**
    * @brief Show a depreciation warning.
-   * 
+   *
    * @param name Name of the deprecated function.
    * @param message Depreciation message.
    * @param show_once Only show the message once.
