@@ -199,15 +199,17 @@ namespace utils {
 
 
   /**
-   * @brief Show a depreciation warning.
+   * @brief Show a deprecation warning.
+   *
+   * This methods will print a warning in MO2 log containing the location of the call to
+   * the deprecated function. If show_once is true, the deprecation warning will only be
+   * logged the first time the function is called at this location.
    *
    * @param name Name of the deprecated function.
-   * @param message Depreciation message.
-   * @param show_once Only show the message once.
-   *
-   * @return a depreciation object.
+   * @param message Deprecation message.
+   * @param show_once Only show the message once per call location.
    */
-  void show_depreciation_warning(std::string_view name, std::string_view message = "", bool show_once = true);
+  void show_deprecation_warning(std::string_view name, std::string_view message = "", bool show_once = true);
 
 }
 

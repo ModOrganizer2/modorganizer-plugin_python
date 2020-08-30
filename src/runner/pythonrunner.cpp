@@ -658,7 +658,7 @@ BOOST_PYTHON_MODULE(mobase)
 
       // Kept but deprecated for backward compatibility:
       .def("onModStateChanged", +[](IModList* modList, const std::function<void(const QString&, IModList::ModStates)>& fn) {
-        utils::show_depreciation_warning("onModStateChanged",
+        utils::show_deprecation_warning("onModStateChanged",
           "onModStateChanged(Callable[[str, IModList.ModStates], None]) is deprecated, "
           "use onModStateChanged(Callable[[Dict[str, IModList.ModStates], None]) instead.");
         return modList->onModStateChanged([fn](auto const& map) {
