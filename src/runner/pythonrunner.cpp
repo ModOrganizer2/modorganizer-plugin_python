@@ -59,7 +59,6 @@ namespace mp11 = boost::mp11;
     return bpy::object{ (QClass*)w }.attr(str);                               \
   })
 
-
 BOOST_PYTHON_MODULE(mobase)
 {
   PyEval_InitThreads();
@@ -111,7 +110,8 @@ BOOST_PYTHON_MODULE(mobase)
   
   utils::register_associative_container<QMap<QString, QVariant>>(); // Required for QVariant since this is QVariantMap.
   utils::register_associative_container<QMap<QString, QStringList>>();
-  
+  utils::register_associative_container<std::map<QString, IModList::ModStates>>();
+
   utils::register_associative_container<IFileTree::OverwritesType>();
 
   // Tuple:
@@ -132,7 +132,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(const QString&)>();
   utils::register_functor_converter<void(const QString&, unsigned int)>();
   utils::register_functor_converter<void(const QString&, int, int)>(); // converter for the onModMoved-callback and onPluginMoved callbacks
-  utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList)
+  utils::register_functor_converter<void(const std::map<QString, IModList::ModStates>&)>(); // converter for the onModStateChanged-callback (IModList)
   utils::register_functor_converter<void(const QString&, IPluginList::PluginStates)>(); // converter for the onPluginStateChanged-callback (IPluginList)
   utils::register_functor_converter<void(const QString&, const QString&, const QVariant&, const QVariant&)>();
   utils::register_functor_converter<void(QMainWindow*)>();
@@ -142,6 +142,9 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
+
+  // This one is kept for backward-compatibility while we deprecate onModStateChanged for singl mod.
+  utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList).
 
   //
   // Class declarations:
@@ -646,9 +649,24 @@ BOOST_PYTHON_MODULE(mobase)
       .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
-      .def("setActive", &MOBase::IModList::setActive, (bpy::arg("name"), "active"))
+      .def("setActive",
+        static_cast<int(IModList::*)(QStringList const&, bool)>(&MOBase::IModList::setActive), (bpy::arg("names"), "active"))
+      .def("setActive",
+        static_cast<bool(IModList::*)(QString const&, bool)>(&MOBase::IModList::setActive), (bpy::arg("name"), "active"))
       .def("priority", &MOBase::IModList::priority, bpy::arg("name"))
       .def("setPriority", &MOBase::IModList::setPriority, (bpy::arg("name"), "priority"))
+
+      // Kept but deprecated for backward compatibility:
+      .def("onModStateChanged", +[](IModList* modList, const std::function<void(const QString&, IModList::ModStates)>& fn) {
+        utils::show_deprecation_warning("onModStateChanged",
+          "onModStateChanged(Callable[[str, IModList.ModStates], None]) is deprecated, "
+          "use onModStateChanged(Callable[[Dict[str, IModList.ModStates], None]) instead.");
+        return modList->onModStateChanged([fn](auto const& map) {
+          for (const auto& entry : map) {
+            fn(entry.first, entry.second);
+          }
+          });
+        }, bpy::arg("callback"))
       .def("onModStateChanged", &MOBase::IModList::onModStateChanged, bpy::arg("callback"))
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
