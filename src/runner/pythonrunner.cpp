@@ -625,7 +625,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, bpy::arg("callback"))
 
       // Kept but deprecated for backward compatibility:
-      .def("onModStateChanged", +[](IPluginList* modList, const std::function<void(const QString&, IPluginList::PluginStates)>& fn) {
+      .def("onPluginStateChanged", +[](IPluginList* modList, const std::function<void(const QString&, IPluginList::PluginStates)>& fn) {
         utils::show_deprecation_warning("onPluginStateChanged",
           "onPluginStateChanged(Callable[[str, IPluginList.PluginStates], None]) is deprecated, "
           "use onPluginStateChanged(Callable[[Dict[str, IPluginList.PluginStates], None]) instead.");
