@@ -19,8 +19,10 @@ namespace details {
    */
   template <class ReturnType, class WrapperTypePtr, class Fn, class... Args>
   ReturnType wrapperFunctionImplementation(WrapperTypePtr wrapper, bool apiTransfer, Fn fn, boost::python::object* objPtr, const char *methodName, Args... args) {
-    GILock lock;
-    boost::python::override implementation = wrapper->get_override(methodName);
+    boost::python::override implementation = [&]() {
+      GILock lock;
+      return wrapper->get_override(methodName);
+    }();
     if (!implementation) {
       if constexpr (std::is_same_v<Fn, std::nullptr_t>) {
         throw pyexcept::MissingImplementation(wrapper->className, methodName);
@@ -29,6 +31,8 @@ namespace details {
         return std::invoke(fn, wrapper, args...);
       }
     }
+
+    GILock lock;
     try {
       boost::python::object result = implementation(args...);
       if (objPtr) {

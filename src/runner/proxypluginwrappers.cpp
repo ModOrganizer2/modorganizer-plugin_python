@@ -38,6 +38,17 @@ QString class_name::name() const \
   return basicWrapperFunctionImplementation<QString>(this, "name"); \
 } \
  \
+QString class_name::localizedName() const \
+{ \
+  log::error("{}::{}", #class_name, "localizedName"); \
+  return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::localizedName_Default, "localizedName"); \
+} \
+ \
+IPlugin* class_name::master() const \
+{ \
+  return basicWrapperFunctionImplementationWithDefault<IPlugin*>(this, &class_name::master_Default, "master"); \
+} \
+ \
 QString class_name::author() const \
 { \
   return basicWrapperFunctionImplementation<QString>(this, "author"); \
@@ -61,7 +72,9 @@ bool class_name::isActive() const \
 QList<MOBase::PluginSetting> class_name::settings() const \
 { \
   return basicWrapperFunctionImplementation<QList<MOBase::PluginSetting>>(this, "settings"); \
-}
+} \
+QString class_name::localizedName_Default() const { log::error("{}::{}", #class_name, "localizedName_Default"); return IPlugin::localizedName(); } \
+IPlugin* class_name::master_Default() const { return IPlugin::master(); }
 
 /// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
 /////////////////////////////

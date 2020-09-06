@@ -19,12 +19,15 @@
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS public: \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
+virtual QString localizedName() const override; \
+virtual IPlugin* master() const override; \
 virtual QString author() const override; \
 virtual QString description() const override; \
 virtual MOBase::VersionInfo version() const override; \
 virtual bool isActive() const override; \
-virtual QList<MOBase::PluginSetting> settings() const override;
-
+virtual QList<MOBase::PluginSetting> settings() const override; \
+QString localizedName_Default() const; \
+IPlugin* master_Default() const;
 
 // Even though the base interface is not a QObject, this has to be because we have no way to pass Mod Organizer a plugin that implements multiple interfaces.
 // QObject must be the first base class because moc assumes the first base class is a QObject
