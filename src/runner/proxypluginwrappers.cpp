@@ -40,7 +40,6 @@ QString class_name::name() const \
  \
 QString class_name::localizedName() const \
 { \
-  log::error("{}::{}", #class_name, "localizedName"); \
   return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::localizedName_Default, "localizedName"); \
 } \
  \
@@ -73,7 +72,7 @@ QList<MOBase::PluginSetting> class_name::settings() const \
 { \
   return basicWrapperFunctionImplementation<QList<MOBase::PluginSetting>>(this, "settings"); \
 } \
-QString class_name::localizedName_Default() const { log::error("{}::{}", #class_name, "localizedName_Default"); return IPlugin::localizedName(); } \
+QString class_name::localizedName_Default() const { return IPlugin::localizedName(); } \
 IPlugin* class_name::master_Default() const { return IPlugin::master(); }
 
 /// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
