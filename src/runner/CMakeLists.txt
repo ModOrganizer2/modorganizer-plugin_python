@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(pythonrunner)
 set(project_type plugin)
 set(enable_warnings OFF)
+set(enable_bigobj ON)
 set(install_dir bin/plugins/data)
 set(create_translations ON)
 
