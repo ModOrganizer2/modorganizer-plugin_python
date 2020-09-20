@@ -111,6 +111,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_associative_container<QMap<QString, QVariant>>(); // Required for QVariant since this is QVariantMap.
   utils::register_associative_container<QMap<QString, QStringList>>();
   utils::register_associative_container<std::map<QString, IModList::ModStates>>();
+  utils::register_associative_container<std::map<QString, QVariant>>();
 
   utils::register_associative_container<IFileTree::OverwritesType>();
 
@@ -552,6 +553,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("setGameName", &IModInterface::setGameName, bpy::arg("name"))
       .def("setName", &IModInterface::setName, bpy::arg("name"))
       .def("remove", &IModInterface::remove)
+      .def("pluginSetting", &IModInterface::pluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("default") = QVariant()))
+      .def("pluginSettings", &IModInterface::pluginSettings, bpy::arg("plugin_name"))
+      .def("setPluginSetting", &IModInterface::setPluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("value")))
+
       ;
 
   bpy::enum_<MOBase::EGuessQuality>("GuessQuality")
