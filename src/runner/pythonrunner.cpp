@@ -820,12 +820,16 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstaller, bpy::bases<IPlugin>, boost::noncopyable>("IPluginInstaller", bpy::no_init)
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("priority", &IPluginInstaller::priority)
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("current_mod")))
+    .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("isManualInstaller", &IPluginInstaller::isManualInstaller)
     .def("setParentWidget", &IPluginInstaller::setParentWidget, bpy::arg("parent"))
     .def("setInstallationManager", &IPluginInstaller::setInstallationManager, bpy::arg("manager"))
     ;
 
   bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("current_mod")))
+    .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
     // have proper stubs generation.
     .def("install", +[](IPluginInstallerSimple* p, GuessedValue<QString>& modName, std::shared_ptr<IFileTree>& tree, QString& version, int& nexusID)
@@ -838,6 +842,8 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("current_mod")))
+    .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     // Needs to add both otherwize boost does not understand:    
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported, bpy::arg("archive_name"))
