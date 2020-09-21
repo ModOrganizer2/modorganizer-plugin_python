@@ -7,16 +7,16 @@ environment:
 build:
   parallel: true
 build_script:
-- cmd: >-
+- ps: >-
     git clone --depth=1 https://github.com/ModOrganizer2/modorganizer-umbrella.git c:\projects\modorganizer-umbrella 2> $null
 
-    git checkout $(git show-ref --verify --quiet refs/remotes/origin/%APPVEYOR_REPO_BRANCH% || echo '-b') %APPVEYOR_REPO_BRANCH%
+    git checkout $(git show-ref --verify --quiet refs/remotes/origin/${env:APPVEYOR_REPO_BRANCH} || echo '-b') ${env:APPVEYOR_REPO_BRANCH}
 
     mkdir c:\projects\modorganizer-build -type directory
 
     cd c:\projects\modorganizer-umbrella
 
-    C:\Python37-x64\python.exe unimake.py -d c:\projects\modorganizer-build -s Appveyor_Build=True %APPVEYOR_PROJECT_NAME%
+    C:\Python37-x64\python.exe unimake.py -d c:\projects\modorganizer-build -s Appveyor_Build=True ${env:APPVEYOR_PROJECT_NAME}
 artifacts:
 - path: build\src\proxy\plugin_python.dll
   name: plugin_python_dll
