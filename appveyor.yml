@@ -8,7 +8,7 @@ build:
   parallel: true
 build_script:
 - pwsh: >-
-    $ErrorActionPreference = Stop
+    $ErrorActionPreference = 'Stop'
 
     git clone --depth=1 --no-single-branch https://github.com/ModOrganizer2/modorganizer-umbrella.git c:\projects\modorganizer-umbrella
 
