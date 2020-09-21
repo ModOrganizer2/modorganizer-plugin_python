@@ -556,6 +556,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("pluginSetting", &IModInterface::pluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("default") = QVariant()))
       .def("pluginSettings", &IModInterface::pluginSettings, bpy::arg("plugin_name"))
       .def("setPluginSetting", &IModInterface::setPluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("value")))
+      .def("clearPluginSettings", &IModInterface::clearPluginSettings, bpy::arg("plugin_name"))
 
       ;
 
