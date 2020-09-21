@@ -7,5 +7,6 @@ GILock::GILock()
 
 GILock::~GILock()
 {
+  PyErr_Clear();
   PyGILState_Release(m_State);
 }
