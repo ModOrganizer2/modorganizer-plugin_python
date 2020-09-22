@@ -820,7 +820,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstaller, bpy::bases<IPlugin>, boost::noncopyable>("IPluginInstaller", bpy::no_init)
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("priority", &IPluginInstaller::priority)
-    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("current_mod")))
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("isManualInstaller", &IPluginInstaller::isManualInstaller)
     .def("setParentWidget", &IPluginInstaller::setParentWidget, bpy::arg("parent"))
@@ -828,7 +828,7 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
-    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("current_mod")))
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
     // have proper stubs generation.
@@ -842,7 +842,7 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
-    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("current_mod")))
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     // Needs to add both otherwize boost does not understand:    
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))

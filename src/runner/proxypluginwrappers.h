@@ -137,9 +137,9 @@ using IPluginInstaller::parentWidget; \
 using IPluginInstaller::manager; \
 virtual unsigned int priority() const override; \
 virtual bool isManualInstaller() const override; \
-virtual void onInstallationStart(QString const& archive, MOBase::IModInterface* currentMod) override; \
-void onInstallationStart_Default(QString const& archive, MOBase::IModInterface* currentMod) { \
-  return IPluginInstaller::onInstallationStart(archive, currentMod); } \
+virtual void onInstallationStart(QString const& archive, bool reinstallation, MOBase::IModInterface* currentMod) override; \
+void onInstallationStart_Default(QString const& archive, bool reinstallation, MOBase::IModInterface* currentMod) { \
+  return IPluginInstaller::onInstallationStart(archive, reinstallation, currentMod); } \
 virtual void onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod) override; \
 void onInstallationEnd_Default(EInstallResult result, MOBase::IModInterface* newMod) { \
   return IPluginInstaller::onInstallationEnd(result, newMod); } \
