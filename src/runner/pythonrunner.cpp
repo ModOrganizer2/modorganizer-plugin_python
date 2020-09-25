@@ -539,9 +539,41 @@ BOOST_PYTHON_MODULE(mobase)
     .def("setURL", &IInstallationManager::setURL, bpy::arg("url"))
     ;
 
+  bpy::enum_<EndorsedState>("EndorsedState")
+    .value("ENDORSED_FALSE", EndorsedState::ENDORSED_FALSE)
+    .value("ENDORSED_TRUE", EndorsedState::ENDORSED_TRUE)
+    .value("ENDORSED_UNKNOWN", EndorsedState::ENDORSED_UNKNOWN)
+    .value("ENDORSED_NEVER", EndorsedState::ENDORSED_NEVER)
+    ;
+
+  bpy::enum_<TrackedState>("TrackedState")
+    .value("TRACKED_FALSE", TrackedState::TRACKED_FALSE)
+    .value("TRACKED_TRUE", TrackedState::TRACKED_TRUE)
+    .value("TRACKED_UNKNOWN", TrackedState::TRACKED_UNKNOWN)
+    ;
+
   bpy::class_<IModInterface, boost::noncopyable>("IModInterface", bpy::no_init)
       .def("name", &IModInterface::name)
       .def("absolutePath", &IModInterface::absolutePath)
+
+      .def("comments", &IModInterface::comments)
+      .def("notes", &IModInterface::notes)
+      .def("gameName", &IModInterface::gameName)
+      .def("repository", &IModInterface::repository)
+      .def("nexusId", &IModInterface::nexusId)
+      .def("version", &IModInterface::version)
+      .def("newestVersion", &IModInterface::newestVersion)
+      .def("ignoredVersion", &IModInterface::ignoredVersion)
+      .def("installationFile", &IModInterface::installationFile)
+      .def("converted", &IModInterface::converted)
+      .def("validated", &IModInterface::validated)
+      .def("color", &IModInterface::color)
+      .def("url", &IModInterface::url)
+      .def("primaryCategory", &IModInterface::primaryCategory)
+      .def("categories", &IModInterface::categories)
+      .def("trackedState", &IModInterface::trackedState)
+      .def("endorsedState", &IModInterface::endorsedState)
+
       .def("setVersion", &IModInterface::setVersion, bpy::arg("version"))
       .def("setNewestVersion", &IModInterface::setNewestVersion, bpy::arg("version"))
       .def("setIsEndorsed", &IModInterface::setIsEndorsed, bpy::arg("endorsed"))
@@ -549,13 +581,13 @@ BOOST_PYTHON_MODULE(mobase)
       .def("addNexusCategory", &IModInterface::addNexusCategory, bpy::arg("category_id"))
       .def("addCategory", &IModInterface::addCategory, bpy::arg("name"))
       .def("removeCategory", &IModInterface::removeCategory, bpy::arg("name"))
-      .def("categories", &IModInterface::categories)
       .def("setGameName", &IModInterface::setGameName, bpy::arg("name"))
       .def("setName", &IModInterface::setName, bpy::arg("name"))
       .def("remove", &IModInterface::remove)
       .def("pluginSetting", &IModInterface::pluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("default") = QVariant()))
       .def("pluginSettings", &IModInterface::pluginSettings, bpy::arg("plugin_name"))
       .def("setPluginSetting", &IModInterface::setPluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("value")))
+      .def("clearPluginSettings", &IModInterface::clearPluginSettings, bpy::arg("plugin_name"))
 
       ;
 
@@ -833,12 +865,16 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstaller, bpy::bases<IPlugin>, boost::noncopyable>("IPluginInstaller", bpy::no_init)
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("priority", &IPluginInstaller::priority)
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
+    .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("isManualInstaller", &IPluginInstaller::isManualInstaller)
     .def("setParentWidget", &IPluginInstaller::setParentWidget, bpy::arg("parent"))
     .def("setInstallationManager", &IPluginInstaller::setInstallationManager, bpy::arg("manager"))
     ;
 
   bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
+    .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerSimpleWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerSimpleWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -854,6 +890,8 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
+    .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
+    .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerCustomWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerCustomWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 

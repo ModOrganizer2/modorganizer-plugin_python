@@ -302,6 +302,10 @@ std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 #define COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(class_name) \
 unsigned int class_name::priority() const { return basicWrapperFunctionImplementation<unsigned int>(this, "priority"); } \
 bool class_name::isManualInstaller() const { return basicWrapperFunctionImplementation<bool>(this, "isManualInstaller"); } \
+void class_name::onInstallationStart(QString const& archive, bool reinstallation, MOBase::IModInterface* currentMod) { \
+  basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::onInstallationStart_Default, "onInstallationStart", archive, reinstallation, boost::python::ptr(currentMod)); } \
+void class_name::onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod) { \
+  basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::onInstallationEnd_Default, "onInstallationEnd", result, boost::python::ptr(newMod)); } \
 bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const { return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported", tree); } 
 
 /// end IPluginInstaller macro
