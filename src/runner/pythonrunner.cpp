@@ -134,7 +134,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(const QString&, unsigned int)>();
   utils::register_functor_converter<void(const QString&, int, int)>(); // converter for the onModMoved-callback and onPluginMoved callbacks
   utils::register_functor_converter<void(const std::map<QString, IModList::ModStates>&)>(); // converter for the onModStateChanged-callback (IModList)
-  utils::register_functor_converter<void(const QString&, IPluginList::PluginStates)>(); // converter for the onPluginStateChanged-callback (IPluginList)
+  utils::register_functor_converter<void(const std::map<QString, IPluginList::PluginStates>&)>(); // converter for the onPluginStateChanged-callback (IPluginList)
   utils::register_functor_converter<void(const QString&, const QString&, const QVariant&, const QVariant&)>();
   utils::register_functor_converter<void(QMainWindow*)>();
   utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
@@ -146,6 +146,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   // This one is kept for backward-compatibility while we deprecate onModStateChanged for singl mod.
   utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList).
+  utils::register_functor_converter<void(const QString&, IPluginList::PluginStates)>(); // converter for the onPluginStateChanged-callback (IPluginList).
 
   //
   // Class declarations:
@@ -659,6 +660,18 @@ BOOST_PYTHON_MODULE(mobase)
       .def("origin", &MOBase::IPluginList::origin, bpy::arg("name"))
       .def("onRefreshed", &MOBase::IPluginList::onRefreshed, bpy::arg("callback"))
       .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, bpy::arg("callback"))
+
+      // Kept but deprecated for backward compatibility:
+      .def("onPluginStateChanged", +[](IPluginList* modList, const std::function<void(const QString&, IPluginList::PluginStates)>& fn) {
+        utils::show_deprecation_warning("onPluginStateChanged",
+          "onPluginStateChanged(Callable[[str, IPluginList.PluginStates], None]) is deprecated, "
+          "use onPluginStateChanged(Callable[[Dict[str, IPluginList.PluginStates], None]) instead.");
+        return modList->onPluginStateChanged([fn](auto const& map) {
+          for (const auto& entry : map) {
+            fn(entry.first, entry.second);
+          }
+          });
+          }, bpy::arg("callback"))
       .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged, bpy::arg("callback"))
       .def("pluginNames", &MOBase::IPluginList::pluginNames)
       .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
