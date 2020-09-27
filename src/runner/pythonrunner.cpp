@@ -488,7 +488,7 @@ BOOST_PYTHON_MODULE(mobase)
         bool active = p->invalidationActive(&supported);
         return std::make_tuple(active, supported);
       })
-      .def("iniFilePath", &IProfile::iniFilePath, bpy::arg("inifile"))
+      .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, bpy::arg("inifile"))
       ;
 
   bpy::class_<IModRepositoryBridge, boost::noncopyable>("IModRepositoryBridge", bpy::no_init)
