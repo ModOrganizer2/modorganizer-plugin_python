@@ -750,11 +750,18 @@ BOOST_PYTHON_MODULE(mobase)
       .def("_invalidate", &IPluginDiagnoseWrapper::invalidate)
       ;
 
-  bpy::class_<Mapping>("Mapping")
+  bpy::class_<Mapping>("Mapping", bpy::init<>())
+      .def("__init__", bpy::make_constructor(+[](QString src, QString dst, bool dir, bool crt) -> Mapping* {
+        return new Mapping{ src, dst, dir, crt };
+        }, bpy::default_call_policies(),
+          (bpy::arg("source"), bpy::arg("destination"), bpy::arg("is_directory"), bpy::arg("create_target") = false)))
       .def_readwrite("source", &Mapping::source)
       .def_readwrite("destination", &Mapping::destination)
       .def_readwrite("isDirectory", &Mapping::isDirectory)
       .def_readwrite("createTarget", &Mapping::createTarget)
+      .def("__str__", +[](Mapping * m) {
+        return fmt::format(L"Mapping({}, {}, {}, {})", m->source.toStdWString(), m->destination.toStdWString(), m->isDirectory, m->createTarget);
+      })
       ;
 
   bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
