@@ -131,6 +131,7 @@ BOOST_PYTHON_MODULE(mobase)
   // Functions:
   utils::register_functor_converter<void()>(); // converter for the onRefreshed-callback
   utils::register_functor_converter<void(const QString&)>();
+  utils::register_functor_converter<void(int)>();
   utils::register_functor_converter<void(const QString&, unsigned int)>();
   utils::register_functor_converter<void(const QString&, int, int)>(); // converter for the onModMoved-callback and onPluginMoved callbacks
   utils::register_functor_converter<void(const std::map<QString, IModList::ModStates>&)>(); // converter for the onModStateChanged-callback (IModList)
@@ -528,8 +529,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("startDownloadURLs", &IDownloadManager::startDownloadURLs, bpy::arg("urls"))
       .def("startDownloadNexusFile", &IDownloadManager::startDownloadNexusFile, (bpy::arg("mod_id"), "file_id"))
       .def("downloadPath", &IDownloadManager::downloadPath, bpy::arg("id"))
-
-      Q_DELEGATE(IDownloadManager, QObject, "_object")
+      .def("onDownloadComplete", &IDownloadManager::onDownloadComplete, bpy::arg("callback"))
+      .def("onDownloadPaused", &IDownloadManager::onDownloadPaused, bpy::arg("callback"))
+      .def("onDownloadFailed", &IDownloadManager::onDownloadFailed, bpy::arg("callback"))
+      .def("onDownloadRemoved", &IDownloadManager::onDownloadRemoved, bpy::arg("callback"))
       ;
 
   bpy::class_<IInstallationManager, boost::noncopyable>("IInstallationManager", bpy::no_init)
