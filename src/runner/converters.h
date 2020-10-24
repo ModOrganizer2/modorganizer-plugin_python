@@ -331,14 +331,18 @@ namespace utils {
     };
 
     template <class T, class... Ws>
-    struct wrap_impl<boost::reference_wrapper<T>, Ws... > {
+    struct wrap_impl<boost::reference_wrapper<T>, Ws... > : public wrap_impl<> {
+      using wrap_impl<>::apply;
+
       static auto apply(T t) {
         return boost::ref(t);
       }
     };
 
     template <class T, class... Ws>
-    struct wrap_impl<boost::python::pointer_wrapper<T>, Ws... > {
+    struct wrap_impl<boost::python::pointer_wrapper<T>, Ws... > : public wrap_impl<> {
+      using wrap_impl<>::apply;
+
       static auto apply(T t) {
         return bpy::ptr(t);
       }
