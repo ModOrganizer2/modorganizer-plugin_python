@@ -277,7 +277,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
-      .def("removeMod", &IOrganizer::removeMod, bpy::arg("mod"))
       .def("modDataChanged", &IOrganizer::modDataChanged, bpy::arg("mod"))
       .def("pluginSetting", &IOrganizer::pluginSetting, (bpy::arg("plugin_name"), "key"))
       .def("setPluginSetting", &IOrganizer::setPluginSetting, (bpy::arg("plugin_name"), "key", "value"))
@@ -332,6 +331,11 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
 
       // DEPRECATED:
+      .def("removeMod", +[](IOrganizer* o, IModInterface *mod) {
+          utils::show_deprecation_warning("removeMod",
+            "IOrganizer::removeMod(IModInterface) is deprecated, use IModList::removeMod(IModInterface) instead.");
+          return o->modList()->removeMod(mod);
+      }, bpy::arg("mod"))
       .def("modsSortedByProfilePriority", +[](IOrganizer* o) {
           utils::show_deprecation_warning("modsSortedByProfilePriority",
             "IOrganizer::modsSortedByProfilePriority() is deprecated, use IModList::allModsByProfilePriority() instead.");
@@ -724,6 +728,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
       .def("allModsByProfilePriority", &MOBase::IModList::allModsByProfilePriority, bpy::arg("profile") = nullptr)
+
+      .def("removeMod", &MOBase::IModList::removeMod, bpy::arg("mod"))
 
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
       .def("setActive",
