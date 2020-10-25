@@ -146,6 +146,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
+  utils::register_functor_converter<void(IModInterface *), bpy::pointer_wrapper<IModInterface*>>();
 
   // This one is kept for backward-compatibility while we deprecate onModStateChanged for singl mod.
   utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList).
@@ -341,7 +342,7 @@ BOOST_PYTHON_MODULE(mobase)
         utils::show_deprecation_warning("onModInstalled",
           "IOrganizer::onModInstalled(Callable[[str], None]) is deprecated, "
           "use IModList::onModInstalled(Callable[[IModInterface], None]) instead.");
-        return organizer->onModInstalled(func);
+        return organizer->modList()->onModInstalled([func](MOBase::IModInterface* m) { func(m->name()); });;
       }, bpy::arg("callback"))
 
       ;
