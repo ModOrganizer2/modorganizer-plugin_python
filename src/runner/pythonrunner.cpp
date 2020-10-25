@@ -321,16 +321,29 @@ BOOST_PYTHON_MODULE(mobase)
           bool result = o->waitForApplication((HANDLE)handle, &returnCode);
           return std::make_tuple(result, returnCode);
         }, bpy::arg("handle"))
-      .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes") = true))
+      .def("refresh", &IOrganizer::refresh, (bpy::arg("save_changes") = true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
 
-      .def("onModInstalled", &IOrganizer::onModInstalled, bpy::arg("callback"))
       .def("onAboutToRun", &IOrganizer::onAboutToRun, bpy::arg("callback"))
       .def("onFinishedRun", &IOrganizer::onFinishedRun, bpy::arg("callback"))
       .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized, bpy::arg("callback"))
       .def("onProfileChanged", &IOrganizer::onProfileChanged, bpy::arg("callback"))
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
+
+      // DEPRECATED:
+      .def("refreshModList", +[](IOrganizer* o, bool s) {
+        utils::show_deprecation_warning("refreshModList",
+          "IOrganizer::refreshModList(bool) is deprecated, use IOrganizer::refresh(bool) instead.");
+        o->refresh(s);
+      }, (bpy::arg("save_changes") = true))
+      .def("onModInstalled", +[](IOrganizer* organizer, const std::function<void(QString const&)>& func) {
+        utils::show_deprecation_warning("onModInstalled",
+          "IOrganizer::onModInstalled(Callable[[str], None]) is deprecated, "
+          "use IModList::onModInstalled(Callable[[IModInterface], None]) instead.");
+        return organizer->onModInstalled(func);
+      }, bpy::arg("callback"))
+
       ;
 
   // FileTreeEntry Scope:
@@ -724,6 +737,9 @@ BOOST_PYTHON_MODULE(mobase)
           }
           });
         }, bpy::arg("callback"))
+
+      .def("onModInstalled", &MOBase::IModList::onModInstalled, bpy::arg("callback"))
+      .def("onModRemoved", &MOBase::IModList::onModRemoved, bpy::arg("callback"))
       .def("onModStateChanged", &MOBase::IModList::onModStateChanged, bpy::arg("callback"))
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
