@@ -731,7 +731,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IModList, boost::noncopyable>("IModList", bpy::no_init)
       .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
-      .def("allModsByProfilePriority", &MOBase::IModList::allModsByProfilePriority, bpy::arg("profile") = nullptr)
+      .def("allModsByProfilePriority", &MOBase::IModList::allModsByProfilePriority, bpy::arg("profile") = bpy::ptr((IProfile*)nullptr))
 
       .def("getMod", &MOBase::IModList::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("removeMod", &MOBase::IModList::removeMod, bpy::arg("mod"))
