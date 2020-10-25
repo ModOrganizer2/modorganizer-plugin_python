@@ -324,7 +324,6 @@ BOOST_PYTHON_MODULE(mobase)
         }, bpy::arg("handle"))
       .def("refresh", &IOrganizer::refresh, (bpy::arg("save_changes") = true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
 
       .def("onAboutToRun", &IOrganizer::onAboutToRun, bpy::arg("callback"))
       .def("onFinishedRun", &IOrganizer::onFinishedRun, bpy::arg("callback"))
@@ -333,6 +332,11 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
 
       // DEPRECATED:
+      .def("modsSortedByProfilePriority", +[](IOrganizer* o) {
+          utils::show_deprecation_warning("modsSortedByProfilePriority",
+            "IOrganizer::modsSortedByProfilePriority() is deprecated, use IModList::allModsByProfilePriority() instead.");
+          return o->modList()->allModsByProfilePriority();
+      })
       .def("refreshModList", +[](IOrganizer* o, bool s) {
         utils::show_deprecation_warning("refreshModList",
           "IOrganizer::refreshModList(bool) is deprecated, use IOrganizer::refresh(bool) instead.");
@@ -719,6 +723,8 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IModList, boost::noncopyable>("IModList", bpy::no_init)
       .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
+      .def("allModsByProfilePriority", &MOBase::IModList::allModsByProfilePriority, bpy::arg("profile") = nullptr)
+
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
       .def("setActive",
         static_cast<int(IModList::*)(QStringList const&, bool)>(&MOBase::IModList::setActive), (bpy::arg("names"), "active"))
