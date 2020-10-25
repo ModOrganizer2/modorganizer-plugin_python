@@ -274,7 +274,6 @@ BOOST_PYTHON_MODULE(mobase)
       .def("basePath", &IOrganizer::basePath)
       .def("modsPath", &IOrganizer::modsPath)
       .def("appVersion", &IOrganizer::appVersion)
-      .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("modDataChanged", &IOrganizer::modDataChanged, bpy::arg("mod"))
@@ -331,6 +330,11 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
 
       // DEPRECATED:
+      .def("getMod", +[](IOrganizer* o, QString const& name) {
+          utils::show_deprecation_warning("getMod",
+            "IOrganizer::getMod(str) is deprecated, use IModList::getMod(str) instead.");
+          return o->modList()->getMod(name);
+      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("removeMod", +[](IOrganizer* o, IModInterface *mod) {
           utils::show_deprecation_warning("removeMod",
             "IOrganizer::removeMod(IModInterface) is deprecated, use IModList::removeMod(IModInterface) instead.");
@@ -729,6 +733,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("allMods", &MOBase::IModList::allMods)
       .def("allModsByProfilePriority", &MOBase::IModList::allModsByProfilePriority, bpy::arg("profile") = nullptr)
 
+      .def("getMod", &MOBase::IModList::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("removeMod", &MOBase::IModList::removeMod, bpy::arg("mod"))
 
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
