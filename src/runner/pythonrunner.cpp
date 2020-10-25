@@ -87,8 +87,10 @@ BOOST_PYTHON_MODULE(mobase)
   // Pointers:
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
+  bpy::implicitly_convertible<std::shared_ptr<FileTreeEntry>, std::shared_ptr<const FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
   bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
+  bpy::implicitly_convertible<std::shared_ptr<IFileTree>, std::shared_ptr<const IFileTree>>();
 
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
