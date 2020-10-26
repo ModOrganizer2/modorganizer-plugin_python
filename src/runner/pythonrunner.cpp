@@ -140,6 +140,8 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(const std::map<QString, IPluginList::PluginStates>&)>(); // converter for the onPluginStateChanged-callback (IPluginList)
   utils::register_functor_converter<void(const QString&, const QString&, const QVariant&, const QVariant&)>();
   utils::register_functor_converter<void(QMainWindow*)>();
+  utils::register_functor_converter<void(IProfile*), bpy::pointer_wrapper<IProfile*>>();
+  utils::register_functor_converter<void(IProfile*, const QString&, const QString&), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<bool(const QString&)>();
   utils::register_functor_converter<bool(const QString&, std::shared_ptr<const FileTreeEntry>)>();
@@ -329,6 +331,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onAboutToRun", &IOrganizer::onAboutToRun, bpy::arg("callback"))
       .def("onFinishedRun", &IOrganizer::onFinishedRun, bpy::arg("callback"))
       .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized, bpy::arg("callback"))
+      .def("onProfileCreated", &IOrganizer::onProfileCreated, bpy::arg("callback"))
+      .def("onProfileRenamed", &IOrganizer::onProfileRenamed, bpy::arg("callback"))
+      .def("onProfileRemoved", &IOrganizer::onProfileRemoved, bpy::arg("callback"))
       .def("onProfileChanged", &IOrganizer::onProfileChanged, bpy::arg("callback"))
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
       ;
