@@ -148,6 +148,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
+  utils::register_functor_converter<void(IModInterface *), bpy::pointer_wrapper<IModInterface*>>();
 
   // This one is kept for backward-compatibility while we deprecate onModStateChanged for singl mod.
   utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList).
@@ -275,10 +276,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("basePath", &IOrganizer::basePath)
       .def("modsPath", &IOrganizer::modsPath)
       .def("appVersion", &IOrganizer::appVersion)
-      .def("getMod", &IOrganizer::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
-      .def("removeMod", &IOrganizer::removeMod, bpy::arg("mod"))
       .def("modDataChanged", &IOrganizer::modDataChanged, bpy::arg("mod"))
       .def("pluginSetting", &IOrganizer::pluginSetting, (bpy::arg("plugin_name"), "key"))
       .def("setPluginSetting", &IOrganizer::setPluginSetting, (bpy::arg("plugin_name"), "key", "value"))
@@ -323,11 +322,9 @@ BOOST_PYTHON_MODULE(mobase)
           bool result = o->waitForApplication((HANDLE)handle, &returnCode);
           return std::make_tuple(result, returnCode);
         }, bpy::arg("handle"))
-      .def("refreshModList", &IOrganizer::refreshModList, (bpy::arg("save_changes") = true))
+      .def("refresh", &IOrganizer::refresh, (bpy::arg("save_changes") = true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
-      .def("modsSortedByProfilePriority", &IOrganizer::modsSortedByProfilePriority)
 
-      .def("onModInstalled", &IOrganizer::onModInstalled, bpy::arg("callback"))
       .def("onAboutToRun", &IOrganizer::onAboutToRun, bpy::arg("callback"))
       .def("onFinishedRun", &IOrganizer::onFinishedRun, bpy::arg("callback"))
       .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized, bpy::arg("callback"))
@@ -336,6 +333,35 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onProfileRemoved", &IOrganizer::onProfileRemoved, bpy::arg("callback"))
       .def("onProfileChanged", &IOrganizer::onProfileChanged, bpy::arg("callback"))
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
+
+      // DEPRECATED:
+      .def("getMod", +[](IOrganizer* o, QString const& name) {
+          utils::show_deprecation_warning("getMod",
+            "IOrganizer::getMod(str) is deprecated, use IModList::getMod(str) instead.");
+          return o->modList()->getMod(name);
+      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
+      .def("removeMod", +[](IOrganizer* o, IModInterface *mod) {
+          utils::show_deprecation_warning("removeMod",
+            "IOrganizer::removeMod(IModInterface) is deprecated, use IModList::removeMod(IModInterface) instead.");
+          return o->modList()->removeMod(mod);
+      }, bpy::arg("mod"))
+      .def("modsSortedByProfilePriority", +[](IOrganizer* o) {
+          utils::show_deprecation_warning("modsSortedByProfilePriority",
+            "IOrganizer::modsSortedByProfilePriority() is deprecated, use IModList::allModsByProfilePriority() instead.");
+          return o->modList()->allModsByProfilePriority();
+      })
+      .def("refreshModList", +[](IOrganizer* o, bool s) {
+        utils::show_deprecation_warning("refreshModList",
+          "IOrganizer::refreshModList(bool) is deprecated, use IOrganizer::refresh(bool) instead.");
+        o->refresh(s);
+      }, (bpy::arg("save_changes") = true))
+      .def("onModInstalled", +[](IOrganizer* organizer, const std::function<void(QString const&)>& func) {
+        utils::show_deprecation_warning("onModInstalled",
+          "IOrganizer::onModInstalled(Callable[[str], None]) is deprecated, "
+          "use IModList::onModInstalled(Callable[[IModInterface], None]) instead.");
+        return organizer->modList()->onModInstalled([func](MOBase::IModInterface* m) { func(m->name()); });;
+      }, bpy::arg("callback"))
+
       ;
 
   // FileTreeEntry Scope:
@@ -710,6 +736,11 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IModList, boost::noncopyable>("IModList", bpy::no_init)
       .def("displayName", &MOBase::IModList::displayName, bpy::arg("name"))
       .def("allMods", &MOBase::IModList::allMods)
+      .def("allModsByProfilePriority", &MOBase::IModList::allModsByProfilePriority, bpy::arg("profile") = bpy::ptr((IProfile*)nullptr))
+
+      .def("getMod", &MOBase::IModList::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
+      .def("removeMod", &MOBase::IModList::removeMod, bpy::arg("mod"))
+
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
       .def("setActive",
         static_cast<int(IModList::*)(QStringList const&, bool)>(&MOBase::IModList::setActive), (bpy::arg("names"), "active"))
@@ -729,6 +760,9 @@ BOOST_PYTHON_MODULE(mobase)
           }
           });
         }, bpy::arg("callback"))
+
+      .def("onModInstalled", &MOBase::IModList::onModInstalled, bpy::arg("callback"))
+      .def("onModRemoved", &MOBase::IModList::onModRemoved, bpy::arg("callback"))
       .def("onModStateChanged", &MOBase::IModList::onModStateChanged, bpy::arg("callback"))
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
