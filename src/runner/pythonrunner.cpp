@@ -144,7 +144,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(IProfile*, const QString&, const QString&), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<bool(const QString&)>();
-  utils::register_functor_converter<bool(const QString&, std::shared_ptr<const FileTreeEntry>)>();
+  utils::register_functor_converter<IFileTree::WalkReturn(const QString&, std::shared_ptr<const FileTreeEntry>)>();
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
@@ -610,6 +610,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("categories", &IModInterface::categories)
       .def("trackedState", &IModInterface::trackedState)
       .def("endorsedState", &IModInterface::endorsedState)
+      .def("fileTree", &IModInterface::fileTree)
 
       .def("setVersion", &IModInterface::setVersion, bpy::arg("version"))
       .def("setNewestVersion", &IModInterface::setNewestVersion, bpy::arg("version"))
