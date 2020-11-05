@@ -116,7 +116,9 @@ typedef IPythonRunner* (*CreatePythonRunner_func)(const MOBase::IOrganizer *moIn
 bool ProxyPython::init(IOrganizer *moInfo)
 {
   m_MOInfo = moInfo;
-  if (!m_MOInfo->pluginSetting(name(), "enabled").toBool()) {
+
+  const auto enabled = m_MOInfo->pluginSetting(name(), "enabled");
+  if (!enabled.isNull() && !enabled.toBool()) {
     m_LoadFailure = FAIL_NONE;
     return false;
   }
