@@ -28,16 +28,6 @@ using namespace MOBase;
 
 
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
-void class_name::registered() \
-{ \
-  basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::registered_Default, "registered"); \
-} \
-\
-void class_name::registered_Default() \
-{ \
-  IPlugin::registered(); \
-} \
-\
 bool class_name::init(MOBase::IOrganizer *moInfo) \
 { \
   return basicWrapperFunctionImplementation<bool>(this, "init", boost::python::ptr(moInfo)); \
@@ -138,6 +128,10 @@ MappingType IPluginFileMapperWrapper::mappings() const
 /////////////////////////////////////
 /// IPluginGame Wrapper
 
+void IPluginGameWrapper::detectGame()
+{
+  return basicWrapperFunctionImplementation<void>(this, "detectGame");
+}
 
 QString IPluginGameWrapper::gameName() const
 {
