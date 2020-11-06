@@ -362,6 +362,9 @@ BOOST_PYTHON_MODULE(mobase)
         return organizer->modList()->onModInstalled([func](MOBase::IModInterface* m) { func(m->name()); });;
       }, bpy::arg("callback"))
 
+      .def("getPluginDataPath", &IOrganizer::getPluginDataPath)
+      .staticmethod("getPluginDataPath")
+
       ;
 
   // FileTreeEntry Scope:
