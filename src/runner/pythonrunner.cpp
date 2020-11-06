@@ -1232,7 +1232,7 @@ void PythonRunner::initPath()
   static QStringList paths = {
     QCoreApplication::applicationDirPath() + "/dlls/pythoncore.zip",
     QCoreApplication::applicationDirPath() + "/dlls/pythoncore",
-    m_MOInfo->pluginDataPath()
+    IOrganizer::getPluginDataPath()
   };
 
   Py_SetPath(paths.join(';').toStdWString().c_str());
