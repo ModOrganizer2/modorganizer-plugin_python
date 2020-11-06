@@ -28,6 +28,16 @@ using namespace MOBase;
 
 
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
+void class_name::registered() \
+{ \
+  basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::registered_Default, "registered"); \
+} \
+\
+void class_name::registered_Default() \
+{ \
+  IPlugin::registered(); \
+} \
+\
 bool class_name::init(MOBase::IOrganizer *moInfo) \
 { \
   return basicWrapperFunctionImplementation<bool>(this, "init", boost::python::ptr(moInfo)); \
@@ -306,7 +316,7 @@ void class_name::onInstallationStart(QString const& archive, bool reinstallation
   basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::onInstallationStart_Default, "onInstallationStart", archive, reinstallation, boost::python::ptr(currentMod)); } \
 void class_name::onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod) { \
   basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::onInstallationEnd_Default, "onInstallationEnd", result, boost::python::ptr(newMod)); } \
-bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const { return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported", tree); } 
+bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const { return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported", tree); }
 
 /// end IPluginInstaller macro
 /////////////////////////////////////
@@ -323,7 +333,7 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
 
   using return_type = std::variant<
     IPluginInstaller::EInstallResult,
-    std::shared_ptr<IFileTree>, 
+    std::shared_ptr<IFileTree>,
     std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>> ;
   auto ret = basicWrapperFunctionImplementation<return_type>(this, "install", boost::ref(modName), tree, version, nexusID);
 
@@ -364,7 +374,7 @@ std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
 IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(
   GuessedValue<QString> &modName, QString gameName, const QString &archiveName, const QString &version, int modID)
 {
-  // Note: This requires far more less trouble than the "Simple" installer version since 1) there is no tree 
+  // Note: This requires far more less trouble than the "Simple" installer version since 1) there is no tree
   // and 2) there version and modId cannot be modified:
   return basicWrapperFunctionImplementation<IPluginInstaller::EInstallResult>(
     this, "install", boost::ref(modName), gameName, archiveName, version, modID);

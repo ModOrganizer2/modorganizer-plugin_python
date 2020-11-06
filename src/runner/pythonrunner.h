@@ -22,7 +22,7 @@ public:
 #define PYDLLEXPORT Q_DECL_IMPORT
 #endif // PYTHONRUNNER_LIBRARY
 
-extern "C" PYDLLEXPORT IPythonRunner *CreatePythonRunner(MOBase::IOrganizer *moInfo, const QString &pythonDir);
+extern "C" PYDLLEXPORT IPythonRunner *CreatePythonRunner(const QString &pythonDir);
 
 
 
