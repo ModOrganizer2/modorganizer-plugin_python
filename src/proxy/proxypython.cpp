@@ -110,7 +110,7 @@ ProxyPython::~ProxyPython()
   }
 }
 
-typedef IPythonRunner* (*CreatePythonRunner_func)(const MOBase::IOrganizer *moInfo, const QString &pythonPath);
+typedef IPythonRunner* (*CreatePythonRunner_func)(const QString &pythonPath);
 
 
 bool ProxyPython::init(IOrganizer *moInfo)
@@ -170,7 +170,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
       m_MOInfo->setPersistent(name(), "tryInit", true);
     }
 
-    m_Runner = CreatePythonRunner(moInfo, pythonPath);
+    m_Runner = CreatePythonRunner(pythonPath);
 
     if (m_MOInfo) {
       m_MOInfo->setPersistent(name(), "tryInit", false);

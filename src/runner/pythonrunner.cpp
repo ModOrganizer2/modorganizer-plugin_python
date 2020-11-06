@@ -1035,7 +1035,7 @@ class PythonRunner : public IPythonRunner
 {
 
 public:
-  PythonRunner(const MOBase::IOrganizer* moInfo);
+  PythonRunner();
   bool initPython(const QString& pythonDir);
   QList<QObject*> instantiate(const QString& pluginName);
   bool isPythonInstalled() const;
@@ -1066,13 +1066,12 @@ private:
   // List of python objects representing plugins to keep all the bpy::object "alive"
   // during the execution.
   std::vector<bpy::object> m_PythonObjects;
-  const MOBase::IOrganizer* m_MOInfo;
   wchar_t* m_PythonHome;
 };
 
-IPythonRunner* CreatePythonRunner(MOBase::IOrganizer* moInfo, const QString& pythonDir)
+IPythonRunner* CreatePythonRunner(const QString& pythonDir)
 {
-  PythonRunner* result = new PythonRunner(moInfo);
+  PythonRunner* result = new PythonRunner;
   if (result->initPython(pythonDir)) {
     return result;
   }
@@ -1082,8 +1081,7 @@ IPythonRunner* CreatePythonRunner(MOBase::IOrganizer* moInfo, const QString& pyt
   }
 }
 
-PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
-  : m_MOInfo(moInfo)
+PythonRunner::PythonRunner()
 {
   m_PythonHome = new wchar_t[MAX_PATH + 1];
 }
