@@ -17,8 +17,6 @@
 
 
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS public: \
-virtual void registered() override; \
-void registered_Default(); \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
 virtual QString localizedName() const override; \
@@ -94,6 +92,7 @@ public:
   static constexpr const char* className = "IPluginGameWrapper";
   using boost::python::wrapper<MOBase::IPluginGame>::get_override;
 
+  virtual void detectGame() override;
   virtual QString gameName() const override;
   virtual void initializeProfile(const QDir &directory, ProfileSettings settings) const override;
   virtual QString savegameExtension() const override;

@@ -771,11 +771,10 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
 
-  // Note: registered(), localizedName() and master() have to go in all the plugin wrappers declaration,
+  // Note: localizedName() and master() have to go in all the plugin wrappers declaration,
   // since the default functions are specific to each wrapper, otherwise in turns into an
   // infinite recursion mess.
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
-    .def("registered", &MOBase::IPlugin::registered, &IPluginWrapper::registered_Default)
     .def("init", bpy::pure_virtual(&MOBase::IPlugin::init), bpy::arg("organizer"))
     .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginWrapper::localizedName_Default)
@@ -788,7 +787,6 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
-      .def("registered", &MOBase::IPlugin::registered, &IPluginDiagnoseWrapper::registered_Default)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginDiagnoseWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginDiagnoseWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -815,7 +813,6 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
-      .def("registered", &MOBase::IPlugin::registered, &IPluginFileMapperWrapper::registered_Default)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginFileMapperWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginFileMapperWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
@@ -850,10 +847,10 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
-      .def("registered", &MOBase::IPlugin::registered, &IPluginGameWrapper::registered_Default)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginGameWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginGameWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
+      .def("detectGame", bpy::pure_virtual(&MOBase::IPluginGame::detectGame))
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile), (bpy::arg("directory"), "settings"))
       .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
@@ -948,7 +945,6 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
     .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
-    .def("registered", &MOBase::IPlugin::registered, &IPluginInstallerSimpleWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerSimpleWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerSimpleWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -966,7 +962,6 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
     .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
-    .def("registered", &MOBase::IPlugin::registered, &IPluginInstallerCustomWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerCustomWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerCustomWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -980,7 +975,6 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
-    .def("registered", &MOBase::IPlugin::registered, &IPluginModPageWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginModPageWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginModPageWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -994,7 +988,6 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
-    .def("registered", &MOBase::IPlugin::registered, &IPluginPreviewWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginPreviewWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginPreviewWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -1004,7 +997,6 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
-    .def("registered", &MOBase::IPlugin::registered, &IPluginToolWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginToolWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
