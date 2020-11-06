@@ -109,7 +109,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<std::vector<Mapping>>();
 
   utils::register_set_container<std::set<QString>>();
-  
+
   utils::register_associative_container<QMap<QString, QVariant>>(); // Required for QVariant since this is QVariantMap.
   utils::register_associative_container<QMap<QString, QStringList>>();
   utils::register_associative_container<std::map<QString, IModList::ModStates>>();
@@ -124,8 +124,8 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Variants:
   bpy::register_variant<std::variant<
-    IPluginInstaller::EInstallResult, 
-    std::shared_ptr<IFileTree>, 
+    IPluginInstaller::EInstallResult,
+    std::shared_ptr<IFileTree>,
     std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>>();
   bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t>>();
   bpy::register_variant<std::variant<QString, bool>>();
@@ -144,7 +144,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(IProfile*, const QString&, const QString&), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<bool(const QString&)>();
-  utils::register_functor_converter<bool(const QString&, std::shared_ptr<const FileTreeEntry>)>();
+  utils::register_functor_converter<IFileTree::WalkReturn(const QString&, std::shared_ptr<const FileTreeEntry>)>();
   utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
@@ -220,7 +220,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def_readwrite("description", &PluginSetting::description)
     .def_readwrite("default_value", &PluginSetting::defaultValue);
 
-  bpy::class_<ExecutableInfo>("ExecutableInfo", 
+  bpy::class_<ExecutableInfo>("ExecutableInfo",
     bpy::init<const QString&, const QFileInfo&>((bpy::arg("title"), "binary")))
       .def("withArgument", &ExecutableInfo::withArgument, bpy::return_self<>(), bpy::arg("argument"))
       .def("withWorkingDirectory", &ExecutableInfo::withWorkingDirectory, bpy::return_self<>(), bpy::arg("directory"))
@@ -235,7 +235,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("isCustom", &ExecutableInfo::isCustom)
       ;
 
-  bpy::class_<ExecutableForcedLoadSetting>("ExecutableForcedLoadSetting", 
+  bpy::class_<ExecutableForcedLoadSetting>("ExecutableForcedLoadSetting",
     bpy::init<const QString&, const QString&>((bpy::arg("process"), "library")))
       .def("withForced", &ExecutableForcedLoadSetting::withForced, bpy::return_self<>(), bpy::arg("forced"))
       .def("withEnabled", &ExecutableForcedLoadSetting::withEnabled, bpy::return_self<>(), bpy::arg("enabled"))
@@ -293,9 +293,9 @@ BOOST_PYTHON_MODULE(mobase)
         (bpy::arg("path"), "filter"))
 
       // In C++, it is possible to create a QStringList implicitly from a single QString. This is not possible with the current
-      // converters in python (and I do not think it is a good idea to have it everywhere), but here it is nice to be able to 
+      // converters in python (and I do not think it is a good idea to have it everywhere), but here it is nice to be able to
       // pass a single string, so we add an extra overload.
-      // Important: the order matters, because a Python string can be converted to a QStringList since it is a sequence of 
+      // Important: the order matters, because a Python string can be converted to a QStringList since it is a sequence of
       // single-character strings:
       .def("findFiles", +[](const IOrganizer* o, QString const& p, const QStringList& gf) { return o->findFiles(p, gf); },
         (bpy::arg("path"), "patterns"))
@@ -311,11 +311,11 @@ BOOST_PYTHON_MODULE(mobase)
 
       // Custom implementation for startApplication and waitForApplication because 1) HANDLE (= void*) is not properly
       // converted from/to python, and 2) we need to convert the by-ptr argument to a return-tuple for waitForApplication:
-      .def("startApplication", 
-        +[](IOrganizer* o, const QString& executable, const QStringList& args, const QString& cwd, const QString& profile, 
+      .def("startApplication",
+        +[](IOrganizer* o, const QString& executable, const QStringList& args, const QString& cwd, const QString& profile,
           const QString& forcedCustomOverwrite, bool ignoreCustomOverwrite) {
             return (std::uintptr_t) o->startApplication(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite);
-        }, (bpy::arg("executable"), (bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""), 
+        }, (bpy::arg("executable"), (bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""),
             (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
       .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle) {
           DWORD returnCode;
@@ -362,14 +362,17 @@ BOOST_PYTHON_MODULE(mobase)
         return organizer->modList()->onModInstalled([func](MOBase::IModInterface* m) { func(m->name()); });;
       }, bpy::arg("callback"))
 
+      .def("getPluginDataPath", &IOrganizer::getPluginDataPath)
+      .staticmethod("getPluginDataPath")
+
       ;
 
   // FileTreeEntry Scope:
   auto fileTreeEntryClass = bpy::class_<FileTreeEntry, boost::noncopyable>("FileTreeEntry", bpy::no_init);
   {
-    
+
     bpy::scope scope = fileTreeEntryClass;
-    
+
     bpy::enum_<FileTreeEntry::FileTypes>("FileTypes")
     .value("FILE_OR_DIRECTORY", FileTreeEntry::FILE_OR_DIRECTORY)
     .value("FILE", FileTreeEntry::FILE)
@@ -413,7 +416,7 @@ BOOST_PYTHON_MODULE(mobase)
   // IFileTree scope:
   auto iFileTreeClass = bpy::class_<IFileTree, bpy::bases<FileTreeEntry>, boost::noncopyable>("IFileTree", bpy::no_init);
   {
-    
+
     bpy::scope scope = iFileTreeClass;
 
     bpy::enum_<IFileTree::InsertPolicy>("InsertPolicy")
@@ -463,7 +466,7 @@ BOOST_PYTHON_MODULE(mobase)
           return result;
         }, bpy::arg("path"))
 
-      // Merge needs custom return types depending if the user wants overrides or not. A failure is translated 
+      // Merge needs custom return types depending if the user wants overrides or not. A failure is translated
       // into an exception for easier tracing and handling.
       .def("merge", +[](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites) -> std::variant<IFileTree::OverwritesType, std::size_t> {
             IFileTree::OverwritesType overwrites;
@@ -510,7 +513,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("__repr__", +[](const IFileTree* entry) { return "IFileTree(\"" + entry->name() + "\")"; })
       ;
   }
-  
+
 
   bpy::class_<IProfile, boost::noncopyable>("IProfile", bpy::no_init)
       .def("name", &IProfile::name)
@@ -610,6 +613,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("categories", &IModInterface::categories)
       .def("trackedState", &IModInterface::trackedState)
       .def("endorsedState", &IModInterface::endorsedState)
+      .def("fileTree", &IModInterface::fileTree)
 
       .def("setVersion", &IModInterface::setVersion, bpy::arg("version"))
       .def("setNewestVersion", &IModInterface::setNewestVersion, bpy::arg("version"))
@@ -649,11 +653,11 @@ BOOST_PYTHON_MODULE(mobase)
            bpy::return_self<>(), (bpy::arg("value"), "quality"))
 
       // Methods to simulate the assignment operator:
-      .def("reset", +[](GuessedValue<QString>* gv) { 
+      .def("reset", +[](GuessedValue<QString>* gv) {
         *gv = GuessedValue<QString>(); }, bpy::return_self<>())
-      .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) { 
+      .def("reset", +[](GuessedValue<QString>* gv, const QString& value, EGuessQuality eq) {
         *gv = GuessedValue<QString>(value, eq); }, bpy::return_self<>(), (bpy::arg("value"), "quality"))
-      .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) { 
+      .def("reset", +[](GuessedValue<QString>* gv, const GuessedValue<QString>& other) {
         *gv = other; }, bpy::return_self<>(), bpy::arg("other"))
 
       // Use an intermediate lambda to avoid having to register the std::function conversion:
@@ -767,10 +771,11 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
 
-  // Note: localizedName() and master() have to go in all the plugin wrappers declaration,
+  // Note: registered(), localizedName() and master() have to go in all the plugin wrappers declaration,
   // since the default functions are specific to each wrapper, otherwise in turns into an
   // infinite recursion mess.
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
+    .def("registered", &MOBase::IPlugin::registered, &IPluginWrapper::registered_Default)
     .def("init", bpy::pure_virtual(&MOBase::IPlugin::init), bpy::arg("organizer"))
     .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginWrapper::localizedName_Default)
@@ -783,6 +788,7 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
+      .def("registered", &MOBase::IPlugin::registered, &IPluginDiagnoseWrapper::registered_Default)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginDiagnoseWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginDiagnoseWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -809,6 +815,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
+      .def("registered", &MOBase::IPlugin::registered, &IPluginFileMapperWrapper::registered_Default)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginFileMapperWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginFileMapperWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
@@ -843,6 +850,7 @@ BOOST_PYTHON_MODULE(mobase)
       ;
 
   bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
+      .def("registered", &MOBase::IPlugin::registered, &IPluginGameWrapper::registered_Default)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginGameWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginGameWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -940,6 +948,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstallerSimpleWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerSimple")
     .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
+    .def("registered", &MOBase::IPlugin::registered, &IPluginInstallerSimpleWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerSimpleWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerSimpleWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -957,10 +966,11 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginInstallerCustomWrapper, bpy::bases<IPluginInstaller>, boost::noncopyable>("IPluginInstallerCustom")
     .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
+    .def("registered", &MOBase::IPlugin::registered, &IPluginInstallerCustomWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerCustomWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerCustomWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
-    // Needs to add both otherwize boost does not understand:    
+    // Needs to add both otherwize boost does not understand:
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
     .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported, bpy::arg("archive_name"))
     .def("supportedExtensions", &IPluginInstallerCustom::supportedExtensions)
@@ -970,6 +980,7 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
+    .def("registered", &MOBase::IPlugin::registered, &IPluginModPageWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginModPageWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginModPageWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -983,15 +994,17 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
+    .def("registered", &MOBase::IPlugin::registered, &IPluginPreviewWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginPreviewWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginPreviewWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
     .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
-    .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>(), 
+    .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>(),
       (bpy::arg("filename"), "max_size"))
     ;
 
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
+    .def("registered", &MOBase::IPlugin::registered, &IPluginToolWrapper::registered_Default)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginToolWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
 
@@ -1009,7 +1022,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::def("getProductVersion", &MOBase::getProductVersion, bpy::arg("executable"));
   bpy::def("getIconForExecutable", &MOBase::iconForExecutable, bpy::arg("executable"));
 
-  // Expose MoVariant: MoVariant is a fake object whose only purpose is to be used as a type-hint 
+  // Expose MoVariant: MoVariant is a fake object whose only purpose is to be used as a type-hint
   // on the python side (e.g., def foo(x: mobase.MoVariant)). The real MoVariant is defined in the
   // generated stubs, since it's only relevant when doing type-checking, but this needs to be defined,
   // otherwise MoVariant is not found when actually running plugins through MO2, making them crash.
@@ -1023,7 +1036,7 @@ class PythonRunner : public IPythonRunner
 {
 
 public:
-  PythonRunner(const MOBase::IOrganizer* moInfo);
+  PythonRunner();
   bool initPython(const QString& pythonDir);
   QList<QObject*> instantiate(const QString& pluginName);
   bool isPythonInstalled() const;
@@ -1054,13 +1067,12 @@ private:
   // List of python objects representing plugins to keep all the bpy::object "alive"
   // during the execution.
   std::vector<bpy::object> m_PythonObjects;
-  const MOBase::IOrganizer* m_MOInfo;
   wchar_t* m_PythonHome;
 };
 
-IPythonRunner* CreatePythonRunner(MOBase::IOrganizer* moInfo, const QString& pythonDir)
+IPythonRunner* CreatePythonRunner(const QString& pythonDir)
 {
-  PythonRunner* result = new PythonRunner(moInfo);
+  PythonRunner* result = new PythonRunner;
   if (result->initPython(pythonDir)) {
     return result;
   }
@@ -1070,8 +1082,7 @@ IPythonRunner* CreatePythonRunner(MOBase::IOrganizer* moInfo, const QString& pyt
   }
 }
 
-PythonRunner::PythonRunner(const MOBase::IOrganizer *moInfo)
-  : m_MOInfo(moInfo)
+PythonRunner::PythonRunner()
 {
   m_PythonHome = new wchar_t[MAX_PATH + 1];
 }
@@ -1116,7 +1127,7 @@ BOOST_PYTHON_MODULE(moprivate)
 
       using callback_t = std::function<bool(QString, bool)>;
 
-      FileTree(std::shared_ptr<const IFileTree> parent, QString name, callback_t callback) : 
+      FileTree(std::shared_ptr<const IFileTree> parent, QString name, callback_t callback) :
         FileTreeEntry(parent, name), IFileTree(), m_Callback(callback){ }
 
       std::shared_ptr<FileTreeEntry> addFile(QString name, bool) override {
@@ -1255,8 +1266,8 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
 
   // `pluginName` can either be a python file (single-file plugin or a folder (whole module).
   //
-  // For whole module, we simply add the parent folder to path, then we load the module with a simple 
-  // bpy::import, and we retrieve the associated __dict__ from which we extract either createPlugin or 
+  // For whole module, we simply add the parent folder to path, then we load the module with a simple
+  // bpy::import, and we retrieve the associated __dict__ from which we extract either createPlugin or
   // createPlugins.
   //
   // For single file, we need to use bpy::exec_file, and we will use the context (global variables)
@@ -1356,7 +1367,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     }
 
     return allInterfaceList;
-  } 
+  }
   catch (const bpy::error_already_set&) {
     MOBase::log::error("Failed to import plugin from {}.", pluginName);
     throw pyexcept::PythonError();

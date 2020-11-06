@@ -110,13 +110,14 @@ ProxyPython::~ProxyPython()
   }
 }
 
-typedef IPythonRunner* (*CreatePythonRunner_func)(const MOBase::IOrganizer *moInfo, const QString &pythonPath);
+typedef IPythonRunner* (*CreatePythonRunner_func)(const QString &pythonPath);
 
 
 bool ProxyPython::init(IOrganizer *moInfo)
 {
   m_MOInfo = moInfo;
-  if (!m_MOInfo->pluginSetting(name(), "enabled").toBool()) {
+
+  if (m_MOInfo && !m_MOInfo->pluginSetting(name(), "enabled").toBool()) {
     m_LoadFailure = FAIL_NONE;
     return false;
   }
@@ -127,20 +128,27 @@ bool ProxyPython::init(IOrganizer *moInfo)
     return true;
   }
 
-  QString pythonPath = m_MOInfo->pluginSetting(name(), "python_dir").toString();
+  QString pythonPath;
 
-  if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
-    m_LoadFailure = FAIL_WRONGPYTHONPATH;
-    return true;
+  if (m_MOInfo) {
+    pythonPath = m_MOInfo->pluginSetting(name(), "python_dir").toString();
+
+    if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
+      m_LoadFailure = FAIL_WRONGPYTHONPATH;
+      return true;
+    }
   }
 
-  m_RunnerLib = ::LoadLibraryW(QDir::toNativeSeparators(m_MOInfo->pluginDataPath() + "/pythonRunner.dll").toStdWString().c_str());
+  m_RunnerLib = ::LoadLibraryW(QDir::toNativeSeparators(
+    IOrganizer::getPluginDataPath() + "/pythonRunner.dll").toStdWString().c_str());
+
   if (m_RunnerLib != nullptr) {
     CreatePythonRunner_func CreatePythonRunner = (CreatePythonRunner_func)::GetProcAddress(m_RunnerLib, "CreatePythonRunner");
     if (CreatePythonRunner == nullptr) {
       throw MyException("embedded dll is invalid: " + windowsErrorString(::GetLastError()));
     }
-    if (m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
+
+    if (m_MOInfo && m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
       if (pythonPath.isEmpty()) {
         m_LoadFailure = FAIL_PYTHONDETECTION;
       } else {
@@ -158,9 +166,15 @@ bool ProxyPython::init(IOrganizer *moInfo)
       }
     }
 
-    m_MOInfo->setPersistent(name(), "tryInit", true);
-    m_Runner = CreatePythonRunner(moInfo, pythonPath);
-    m_MOInfo->setPersistent(name(), "tryInit", false);
+    if (m_MOInfo) {
+      m_MOInfo->setPersistent(name(), "tryInit", true);
+    }
+
+    m_Runner = CreatePythonRunner(pythonPath);
+
+    if (m_MOInfo) {
+      m_MOInfo->setPersistent(name(), "tryInit", false);
+    }
 
     if (m_Runner != nullptr) {
       m_LoadFailure = FAIL_NONE;
