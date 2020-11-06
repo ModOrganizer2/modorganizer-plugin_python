@@ -17,6 +17,8 @@
 
 
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS public: \
+virtual void registered() override; \
+void registered_Default(); \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
 virtual QString localizedName() const override; \
@@ -146,7 +148,7 @@ void onInstallationStart_Default(QString const& archive, bool reinstallation, MO
 virtual void onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod) override; \
 void onInstallationEnd_Default(EInstallResult result, MOBase::IModInterface* newMod) { \
   return IPluginInstaller::onInstallationEnd(result, newMod); } \
-virtual bool isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> tree) const override; 
+virtual bool isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> tree) const override;
 
 
 class IPluginInstallerSimpleWrapper : public MOBase::IPluginInstallerSimple, public boost::python::wrapper<MOBase::IPluginInstallerSimple>
