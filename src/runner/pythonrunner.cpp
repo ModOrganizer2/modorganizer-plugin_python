@@ -39,6 +39,7 @@
 #include "tuple_helper.h"
 #include "variant_helper.h"
 #include "converters.h"
+#include "pylogger.h"
 
 using namespace MOBase;
 
@@ -1195,6 +1196,8 @@ bool PythonRunner::initPython(const QString &pythonPath)
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
               "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
+
+    configure_python_logging();
 
     PyEval_SaveThread();
     return true;
