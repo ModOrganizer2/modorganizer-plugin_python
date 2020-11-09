@@ -23,7 +23,7 @@ void emit_function(bpy::object self, bpy::object record) {
   // There are other parameters that could be used, but this is minimal for
   // now (filename, line number, etc.).
   const int level = bpy::extract<int>(record.attr("levelno"));
-  const std::wstring msg = bpy::extract<std::wstring>(record.attr("msg"));
+  const std::wstring msg = bpy::extract<std::wstring>(bpy::str(record.attr("msg")));
 
   switch (level) {
   case PyLogLevel::CRITICAL:
