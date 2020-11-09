@@ -43,7 +43,7 @@ void emit_function(bpy::object self, bpy::object record) {
   }
 };
 
-void configure_python_logging()
+bpy::object configure_python_logging()
 {
   // Most of this is dealing with actual Python objects since it is not possible
   // to derive from logging.Handler in C++ using Boost.Python, and since a lot of
@@ -59,11 +59,13 @@ void configure_python_logging()
   // Create the "MO2Handler" python class:
   auto methods = bpy::dict();
   methods["emit"] = bpy::make_function(emit_function);
-  auto MO2Handler = bpy::call<bpy::object>(type, "MO2Handler", bpy::make_tuple(handler), methods);
+  auto MO2Handler = bpy::call<bpy::object>(type, "LogHandler", bpy::make_tuple(handler), methods);
 
   // Call basicConfig() with a new instance of our handler.
   auto kwargs = bpy::dict();
   kwargs["handlers"] = bpy::make_tuple(MO2Handler());
   kwargs["level"] = 0;
   logging.attr("basicConfig")(*bpy::make_tuple(), **kwargs);
+
+  return MO2Handler;
 }
