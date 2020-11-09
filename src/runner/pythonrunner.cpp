@@ -1197,7 +1197,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
               "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
 
-    mainNamespace["mobase"].attr("LogHandler") = configure_python_logging();
+    configure_python_logging(mainNamespace["mobase"]);
 
     PyEval_SaveThread();
     return true;

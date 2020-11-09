@@ -6,8 +6,8 @@
 /**
  * @brief Configure logging for MO2 python plugin.
  *
- * @return the log handler class.
+ * @param mobase The mobase module.
  */
-boost::python::object configure_python_logging();
+void configure_python_logging(boost::python::object mobase);
 
 #endif

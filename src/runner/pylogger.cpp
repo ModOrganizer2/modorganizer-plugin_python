@@ -43,7 +43,7 @@ void emit_function(bpy::object self, bpy::object record) {
   }
 };
 
-bpy::object configure_python_logging()
+void configure_python_logging(bpy::object mobase)
 {
   // Most of this is dealing with actual Python objects since it is not possible
   // to derive from logging.Handler in C++ using Boost.Python, and since a lot of
@@ -51,7 +51,7 @@ bpy::object configure_python_logging()
 
   // Retrieve the logging module and the Handler class.
   auto logging = bpy::import("logging");
-  auto handler = logging.attr("Handler");
+  auto Handler = logging.attr("Handler");
 
   // This is ugly but that's how it's done in C Python.
   auto type = (PyObject*)&PyType_Type;
@@ -59,13 +59,16 @@ bpy::object configure_python_logging()
   // Create the "MO2Handler" python class:
   auto methods = bpy::dict();
   methods["emit"] = bpy::make_function(emit_function);
-  auto MO2Handler = bpy::call<bpy::object>(type, "LogHandler", bpy::make_tuple(handler), methods);
+  auto MO2Handler = bpy::call<bpy::object>(type, "LogHandler", bpy::make_tuple(Handler), methods);
 
-  // Call basicConfig() with a new instance of our handler.
-  auto kwargs = bpy::dict();
-  kwargs["handlers"] = bpy::make_tuple(MO2Handler());
-  kwargs["level"] = 0;
-  logging.attr("basicConfig")(*bpy::make_tuple(), **kwargs);
+  // Create the default logger:
+  auto handler = MO2Handler();
+  handler.attr("setLevel")(PyLogLevel::DEBUG);
+  auto logger = logging.attr("getLogger")(bpy::object(mobase.attr("__name__")));
+  logger.attr("setLevel")(PyLogLevel::DEBUG);
+  logger.attr("addHandler")(handler);
 
-  return MO2Handler;
+  // Set mobase attributes:
+  mobase.attr("LogHandler") = MO2Handler;
+  mobase.attr("logger") = logger;
 }
