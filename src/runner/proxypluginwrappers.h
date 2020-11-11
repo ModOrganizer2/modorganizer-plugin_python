@@ -17,7 +17,10 @@
 #endif
 
 
-#define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_(include_requirements) public: \
+#define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_(include_requirements) \
+  BOOST_PP_EXPR_IF(include_requirements, \
+  private: mutable boost::python::object m_Requirements; ) \
+public: \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
 virtual QString localizedName() const override; \

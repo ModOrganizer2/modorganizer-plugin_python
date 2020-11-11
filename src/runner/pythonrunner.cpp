@@ -117,6 +117,8 @@ BOOST_PYTHON_MODULE(mobase)
 
   utils::register_associative_container<IFileTree::OverwritesType>();
 
+  utils::register_optional<std::optional<IPluginRequirement::Problem>>();
+
   // Tuple:
   bpy::register_tuple<std::tuple<bool, DWORD>>(); // IOrganizer::waitForApplication
   bpy::register_tuple<std::tuple<bool, bool>>();  // IProfile::invalidationActive
@@ -264,7 +266,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Plugin requirements:
   auto iPluginRequirementClass = bpy::class_<
-    IPluginRequirementWrapper, bpy::bases<>, IPluginRequirement*, boost::noncopyable>("IPluginRequirement", bpy::no_init);
+    IPluginRequirementWrapper, bpy::bases<>, IPluginRequirementWrapper*, boost::noncopyable>("IPluginRequirement");
   {
     bpy::scope scope = iPluginRequirementClass;
 
@@ -274,7 +276,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("longDescription", &IPluginRequirement::Problem::longDescription);
 
     iPluginRequirementClass
-      .def("check", &IPluginRequirement::check)
+      .def("check", bpy::pure_virtual(&IPluginRequirement::check))
       ;
   }
 

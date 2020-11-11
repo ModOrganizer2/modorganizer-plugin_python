@@ -71,7 +71,8 @@ QString class_name::localizedName_Default() const { return IPlugin::localizedNam
 IPlugin* class_name::master_Default() const { return IPlugin::master(); } \
 BOOST_PP_EXPR_IF(include_requirements, \
   QList<IPluginRequirement*> class_name::requirements() const { \
-    return basicWrapperFunctionImplementationWithDefault<QList<IPluginRequirement*>>(this, &class_name::requirements_Default, "requirements"); \
+    return basicWrapperFunctionImplementationWithDefault<QList<IPluginRequirement*>>( \
+    this, &class_name::requirements_Default, m_Requirements, "requirements"); \
   } \
   QList<IPluginRequirement*> class_name::requirements_Default() const { return IPlugin::requirements(); })
 

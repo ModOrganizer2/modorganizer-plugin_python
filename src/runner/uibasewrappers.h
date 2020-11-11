@@ -30,7 +30,8 @@ public:
   using boost::python::wrapper<MOBase::IPluginRequirement>::get_override;
 
   virtual std::optional<Problem> check(MOBase::IOrganizer *o) const override {
-    return basicWrapperFunctionImplementation<std::optional<Problem>>(this, "check", boost::python::ptr(o)); };
+    return basicWrapperFunctionImplementation<std::optional<Problem>>(this, "check", boost::python::ptr(o));
+  };
 };
 
 // This needs to be extendable in Python, so actually needs a wrapper:
