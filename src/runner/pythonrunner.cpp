@@ -94,18 +94,18 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
+  utils::register_sequence_container<std::vector<unsigned int>>();
   utils::register_sequence_container<QList<ExecutableInfo>>();
   utils::register_sequence_container<QList<ExecutableForcedLoadSetting>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
+  utils::register_sequence_container<QList<IPluginRequirement*>>();
   utils::register_sequence_container<QStringList>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
   utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
   utils::register_sequence_container<std::vector<ModDataContent::Content>>();
-
-  utils::register_sequence_container<std::vector<unsigned int>>();
   utils::register_sequence_container<std::vector<Mapping>>();
 
   utils::register_set_container<std::set<QString>>();
@@ -149,6 +149,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
   utils::register_functor_converter<void(IModInterface *), bpy::pointer_wrapper<IModInterface*>>();
+  utils::register_functor_converter<bool(IOrganizer*), bpy::pointer_wrapper<IOrganizer*>>();
 
   // This one is kept for backward-compatibility while we deprecate onModStateChanged for singl mod.
   utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList).
@@ -261,6 +262,38 @@ BOOST_PYTHON_MODULE(mobase)
     Q_DELEGATE(ISaveGameInfoWidget, QWidget, "_widget")
     ;
 
+  // Plugin requirements:
+  bpy::class_<IPluginRequirementWrapper, bpy::bases<>, IPluginRequirement*, boost::noncopyable>("IPluginRequirement", bpy::no_init)
+    .def("problems", &IPluginRequirement::problems)
+    .def("description", &IPluginRequirement::description)
+    ;
+
+  bpy::class_<PluginRequirementFactory, boost::noncopyable>("PluginRequirementFactory")
+    // pluginDependency
+    .def("pluginDependency", +[](QStringList const& pluginNames) {
+      return PluginRequirementFactory::pluginDependency(pluginNames);
+    }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("plugins"))
+    .def("pluginDependency", +[](QString const& pluginName) {
+      return PluginRequirementFactory::pluginDependency(pluginName);
+    }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("plugin"))
+    .staticmethod("pluginDependency")
+    // gameDependency
+    .def("gameDependency", +[](QStringList const& gameNames) {
+    return PluginRequirementFactory::gameDependency(gameNames);
+      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("games"))
+    .def("gameDependency", +[](QString const& gameNames) {
+        return PluginRequirementFactory::gameDependency(gameNames);
+      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("game"))
+    .staticmethod("gameDependency")
+    // diagnose
+    .def("diagnose", &PluginRequirementFactory::diagnose,
+      bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("diagnose"))
+    .staticmethod("diagnose")
+    // basic
+    .def("basic", &PluginRequirementFactory::basic,
+      bpy::return_value_policy<bpy::reference_existing_object>(), (bpy::arg("checker"), "description"))
+    .staticmethod("basic");
+
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
       .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
       .def_readwrite("archive", &IOrganizer::FileInfo::archive)
@@ -279,6 +312,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("createMod", &IOrganizer::createMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("getGame", &IOrganizer::getGame, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("modDataChanged", &IOrganizer::modDataChanged, bpy::arg("mod"))
+      .def("isPluginEnabled", +[](IOrganizer* o, IPlugin* plugin) { return o->isPluginEnabled(plugin); }, bpy::arg("plugin"))
+      .def("isPluginEnabled", +[](IOrganizer* o, QString const& plugin) { return o->isPluginEnabled(plugin); }, bpy::arg("plugin"))
       .def("pluginSetting", &IOrganizer::pluginSetting, (bpy::arg("plugin_name"), "key"))
       .def("setPluginSetting", &IOrganizer::setPluginSetting, (bpy::arg("plugin_name"), "key", "value"))
       .def("persistent", &IOrganizer::persistent, (bpy::arg("plugin_name"), "key", bpy::arg("default") = QVariant()))
@@ -771,7 +806,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
 
-  // Note: localizedName() and master() have to go in all the plugin wrappers declaration,
+  // Note: localizedName(), master() and requirements have to go in all the plugin wrappers declaration,
   // since the default functions are specific to each wrapper, otherwise in turns into an
   // infinite recursion mess.
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
@@ -782,13 +817,14 @@ BOOST_PYTHON_MODULE(mobase)
     .def("author", bpy::pure_virtual(&MOBase::IPlugin::author))
     .def("description", bpy::pure_virtual(&MOBase::IPlugin::description))
     .def("version", bpy::pure_virtual(&MOBase::IPlugin::version))
-    .def("isActive", bpy::pure_virtual(&MOBase::IPlugin::isActive))
+    .def("requirements", &MOBase::IPlugin::requirements, &IPluginWrapper::requirements_Default)
     .def("settings", bpy::pure_virtual(&MOBase::IPlugin::settings))
     ;
 
   bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginDiagnoseWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginDiagnoseWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("requirements", &MOBase::IPlugin::requirements, &IPluginDiagnoseWrapper::requirements_Default)
 
       .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
       .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription), bpy::arg("key"))
@@ -815,6 +851,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginFileMapperWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginFileMapperWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+      .def("requirements", &MOBase::IPlugin::requirements, &IPluginFileMapperWrapper::requirements_Default)
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
       ;
 
@@ -947,6 +984,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerSimpleWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerSimpleWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("requirements", &MOBase::IPlugin::requirements, &IPluginInstallerSimpleWrapper::requirements_Default)
 
     // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
     // have proper stubs generation.
@@ -964,6 +1002,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerCustomWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerCustomWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("requirements", &MOBase::IPlugin::requirements, &IPluginInstallerCustomWrapper::requirements_Default)
 
     // Needs to add both otherwize boost does not understand:
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
@@ -977,6 +1016,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginModPageWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginModPageWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("requirements", &MOBase::IPlugin::requirements, &IPluginModPageWrapper::requirements_Default)
 
     .def("displayName", bpy::pure_virtual(&IPluginModPage::displayName))
     .def("icon", bpy::pure_virtual(&IPluginModPage::icon))
@@ -990,6 +1030,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginPreviewWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginPreviewWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("requirements", &MOBase::IPlugin::requirements, &IPluginPreviewWrapper::requirements_Default)
 
     .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
     .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>(),
@@ -999,6 +1040,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::class_<IPluginToolWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginTool")
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginToolWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default, bpy::return_value_policy<bpy::reference_existing_object>())
+    .def("requirements", &MOBase::IPlugin::requirements, &IPluginToolWrapper::requirements_Default)
 
     .def("displayName", bpy::pure_virtual(&IPluginTool::displayName))
     .def("tooltip", bpy::pure_virtual(&IPluginTool::tooltip))

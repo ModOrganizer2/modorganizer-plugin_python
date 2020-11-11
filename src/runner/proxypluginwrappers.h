@@ -2,6 +2,7 @@
 #define PROXYPLUGINWRAPPERS_H
 
 
+#include <iplugin.h>
 #include <iplugindiagnose.h>
 #include <ipluginfilemapper.h>
 #include <iplugingame.h>
@@ -16,7 +17,7 @@
 #endif
 
 
-#define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS public: \
+#define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_(include_requirements) public: \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
 virtual QString localizedName() const override; \
@@ -24,10 +25,14 @@ virtual IPlugin* master() const override; \
 virtual QString author() const override; \
 virtual QString description() const override; \
 virtual MOBase::VersionInfo version() const override; \
-virtual bool isActive() const override; \
 virtual QList<MOBase::PluginSetting> settings() const override; \
 QString localizedName_Default() const; \
-IPlugin* master_Default() const;
+IPlugin* master_Default() const; \
+BOOST_PP_EXPR_IF(include_requirements, \
+  virtual QList<MOBase::IPluginRequirement*> requirements() const override; \
+  QList<MOBase::IPluginRequirement*> requirements_Default() const;)
+
+#define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_(1)
 
 // Even though the base interface is not a QObject, this has to be because we have no way to pass Mod Organizer a plugin that implements multiple interfaces.
 // QObject must be the first base class because moc assumes the first base class is a QObject
@@ -126,7 +131,7 @@ public:
   virtual QString gameVersion() const override;
   virtual QString getLauncherName() const override;
 
-  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS
+  COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_(0)
 
 protected:
   // Apparently, Python developers interpret an underscore in a function name as it being protected

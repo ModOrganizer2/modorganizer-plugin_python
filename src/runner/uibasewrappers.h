@@ -16,12 +16,25 @@
 #include <ipluginlist.h>
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
+#include <pluginrequirements.h>
 
 #include "error.h"
 #include "gilock.h"
 #include "pythonwrapperutilities.h"
 
-// This needs to be extendable in Python, so actually needs a wrapper (everything else probably doesn't):
+// This can be extended in C++, so why not in Python:
+class IPluginRequirementWrapper : public MOBase::IPluginRequirement, public boost::python::wrapper<MOBase::IPluginRequirement>
+{
+public:
+  static constexpr const char* className = "IPluginRequirement";
+  using boost::python::wrapper<MOBase::IPluginRequirement>::get_override;
+
+  virtual std::vector<unsigned int> problems(MOBase::IOrganizer *o) const override {
+    return basicWrapperFunctionImplementation<std::vector<unsigned int>>(this, "problems", boost::python::ptr(o)); };
+  virtual QString description(unsigned int id) const override { return basicWrapperFunctionImplementation<QString>(this, "getCreationTime", id); };
+};
+
+// This needs to be extendable in Python, so actually needs a wrapper:
 class ISaveGameWrapper : public MOBase::ISaveGame, public boost::python::wrapper<MOBase::ISaveGame>
 {
 public:
