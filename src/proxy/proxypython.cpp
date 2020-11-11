@@ -204,7 +204,7 @@ QString ProxyPython::localizedName() const
 
 QString ProxyPython::author() const
 {
-  return "Tannin & Holt59";
+  return "AnyOldName3, Holt59, Silarn, Tannin";
 }
 
 QString ProxyPython::description() const
