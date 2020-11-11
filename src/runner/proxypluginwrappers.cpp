@@ -43,9 +43,9 @@ QString class_name::localizedName() const \
   return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::localizedName_Default, "localizedName"); \
 } \
  \
-IPlugin* class_name::master() const \
+QString class_name::master() const \
 { \
-  return basicWrapperFunctionImplementationWithDefault<IPlugin*>(this, &class_name::master_Default, "master"); \
+  return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::master_Default, "master"); \
 } \
  \
 QString class_name::author() const \
@@ -68,7 +68,7 @@ QList<MOBase::PluginSetting> class_name::settings() const \
   return basicWrapperFunctionImplementation<QList<MOBase::PluginSetting>>(this, "settings"); \
 } \
 QString class_name::localizedName_Default() const { return IPlugin::localizedName(); } \
-IPlugin* class_name::master_Default() const { return IPlugin::master(); } \
+QString class_name::master_Default() const { return IPlugin::master(); } \
 BOOST_PP_EXPR_IF(include_requirements, \
   QList<IPluginRequirement*> class_name::requirements() const { \
     return basicWrapperFunctionImplementationWithDefault<QList<IPluginRequirement*>>( \

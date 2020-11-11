@@ -24,13 +24,13 @@ public: \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
 virtual QString localizedName() const override; \
-virtual IPlugin* master() const override; \
+virtual QString master() const override; \
 virtual QString author() const override; \
 virtual QString description() const override; \
 virtual MOBase::VersionInfo version() const override; \
 virtual QList<MOBase::PluginSetting> settings() const override; \
 QString localizedName_Default() const; \
-IPlugin* master_Default() const; \
+QString master_Default() const; \
 BOOST_PP_EXPR_IF(include_requirements, \
   virtual QList<MOBase::IPluginRequirement*> requirements() const override; \
   QList<MOBase::IPluginRequirement*> requirements_Default() const;)
