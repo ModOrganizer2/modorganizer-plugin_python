@@ -263,10 +263,20 @@ BOOST_PYTHON_MODULE(mobase)
     ;
 
   // Plugin requirements:
-  bpy::class_<IPluginRequirementWrapper, bpy::bases<>, IPluginRequirement*, boost::noncopyable>("IPluginRequirement", bpy::no_init)
-    .def("problems", &IPluginRequirement::problems)
-    .def("description", &IPluginRequirement::description)
-    ;
+  auto iPluginRequirementClass = bpy::class_<
+    IPluginRequirementWrapper, bpy::bases<>, IPluginRequirement*, boost::noncopyable>("IPluginRequirement", bpy::no_init);
+  {
+    bpy::scope scope = iPluginRequirementClass;
+
+    bpy::class_<IPluginRequirement::Problem>("Problem",
+      bpy::init<QString, QString>((bpy::arg("short_description"), bpy::arg("long_description") = "")))
+      .def("shortDescription", &IPluginRequirement::Problem::shortDescription)
+      .def("longDescription", &IPluginRequirement::Problem::longDescription);
+
+    iPluginRequirementClass
+      .def("check", &IPluginRequirement::check)
+      ;
+  }
 
   bpy::class_<PluginRequirementFactory, boost::noncopyable>("PluginRequirementFactory")
     // pluginDependency

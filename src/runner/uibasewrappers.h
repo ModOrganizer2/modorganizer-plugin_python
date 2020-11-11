@@ -29,9 +29,8 @@ public:
   static constexpr const char* className = "IPluginRequirement";
   using boost::python::wrapper<MOBase::IPluginRequirement>::get_override;
 
-  virtual std::vector<unsigned int> problems(MOBase::IOrganizer *o) const override {
-    return basicWrapperFunctionImplementation<std::vector<unsigned int>>(this, "problems", boost::python::ptr(o)); };
-  virtual QString description(unsigned int id) const override { return basicWrapperFunctionImplementation<QString>(this, "getCreationTime", id); };
+  virtual std::optional<Problem> check(MOBase::IOrganizer *o) const override {
+    return basicWrapperFunctionImplementation<std::optional<Problem>>(this, "check", boost::python::ptr(o)); };
 };
 
 // This needs to be extendable in Python, so actually needs a wrapper:
