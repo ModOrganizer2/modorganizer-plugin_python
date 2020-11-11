@@ -26,8 +26,9 @@ namespace boost
 
 using namespace MOBase;
 
-
-#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_(class_name, include_requirements) \
+// See COMMON_I_PLUGIN_WRAPPER_DECLARATIONS__IMPL in proxypluginwrappers.h for explanation on
+// the "include_requirements".
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, include_requirements) \
 bool class_name::init(MOBase::IOrganizer *moInfo) \
 { \
   return basicWrapperFunctionImplementation<bool>(this, "init", boost::python::ptr(moInfo)); \
@@ -76,7 +77,7 @@ BOOST_PP_EXPR_IF(include_requirements, \
   } \
   QList<IPluginRequirement*> class_name::requirements_Default() const { return IPlugin::requirements(); })
 
-#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_(class_name, 1)
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, 1)
 
 /// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
 /////////////////////////////
@@ -296,7 +297,7 @@ QString IPluginGameWrapper::getLauncherName() const
   return basicWrapperFunctionImplementation<QString>(this, "getLauncherName");
 }
 
-COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_(IPluginGameWrapper, 0)
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(IPluginGameWrapper, 0)
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
