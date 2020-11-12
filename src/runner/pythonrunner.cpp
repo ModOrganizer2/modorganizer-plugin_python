@@ -152,6 +152,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
   utils::register_functor_converter<void(IModInterface *), bpy::pointer_wrapper<IModInterface*>>();
   utils::register_functor_converter<bool(IOrganizer*), bpy::pointer_wrapper<IOrganizer*>>();
+  utils::register_functor_converter<void(const IPlugin*), bpy::pointer_wrapper<const IPlugin*>>();
 
   // This one is kept for backward-compatibility while we deprecate onModStateChanged for singl mod.
   utils::register_functor_converter<void(const QString&, IModList::ModStates)>(); // converter for the onModStateChanged-callback (IModList).
@@ -379,7 +380,20 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onProfileRenamed", &IOrganizer::onProfileRenamed, bpy::arg("callback"))
       .def("onProfileRemoved", &IOrganizer::onProfileRemoved, bpy::arg("callback"))
       .def("onProfileChanged", &IOrganizer::onProfileChanged, bpy::arg("callback"))
+
       .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged, bpy::arg("callback"))
+      .def("onPluginEnabled", +[](IOrganizer* o, std::function<void(const IPlugin*)> const& func) {
+          o->onPluginEnabled(func);
+        }, bpy::arg("callback"))
+      .def("onPluginEnabled", +[](IOrganizer* o, QString const& name, std::function<void()> const& func) {
+          o->onPluginEnabled(name, func);
+        }, (bpy::arg("name"), bpy::arg("callback")))
+      .def("onPluginDisabled", +[](IOrganizer* o, std::function<void(const IPlugin*)> const& func) {
+          o->onPluginDisabled(func);
+        }, bpy::arg("callback"))
+      .def("onPluginDisabled", +[](IOrganizer* o, QString const& name, std::function<void()> const& func) {
+          o->onPluginDisabled(name, func);
+        }, (bpy::arg("name"), bpy::arg("callback")))
 
       // DEPRECATED:
       .def("getMod", +[](IOrganizer* o, QString const& name) {
