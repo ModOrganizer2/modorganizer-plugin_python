@@ -1222,8 +1222,8 @@ bool handled_exec_file(bpy::str filename, bpy::object globals = bpy::object(), b
 void PythonRunner::initPath()
 {
   static QStringList paths = {
-    QCoreApplication::applicationDirPath() + "/pythoncore.zip",
-    QCoreApplication::applicationDirPath() + "/pythoncore",
+    QCoreApplication::applicationDirPath() + "/dlls/pythoncore.zip",
+    QCoreApplication::applicationDirPath() + "/dlls/pythoncore",
     IOrganizer::getPluginDataPath()
   };
 
