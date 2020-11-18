@@ -1254,15 +1254,19 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
     PySys_SetArgv(0, (wchar_t**)&argBuffer);
 
+    const auto dlls = QCoreApplication::applicationDirPath().toStdString() + "/dlls";
+
     bpy::object mainModule = bpy::import("__main__");
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
     mainNamespace["moprivate"] = bpy::import("moprivate");
     mainNamespace["mobase"] = bpy::import("mobase");
     bpy::import("site");
-    bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
+    bpy::exec(("import os\n"
+              "sys.stdout = moprivate.PrintWrapper()\n"
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
-              "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
+              "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n"
+              "os.add_dll_directory('" + dlls + "')").c_str(),
                         mainNamespace);
 
     configure_python_logging(mainNamespace["mobase"]);
