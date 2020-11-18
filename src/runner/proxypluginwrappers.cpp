@@ -150,22 +150,9 @@ void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettin
 
 std::vector<std::shared_ptr<const MOBase::ISaveGame>> IPluginGameWrapper::listSaves(QDir folder) const
 {
-  boost::python::object saves;
-  auto cppSaves = basicWrapperFunctionImplementation<std::vector<std::shared_ptr<const MOBase::ISaveGame>> >(this, saves, "listSaves", folder);
-
-  {
-    GILock lock;
-
-    for (std::size_t i = 0; i < cppSaves.size(); ++i) {
-      if (auto* p = dynamic_cast<const ISaveGameWrapper*>(cppSaves[i].get())) {
-        p->m_PySave = saves[i];
-      }
-    }
-
-    saves = {};
-  }
-
-  return cppSaves;
+  // Why do I not need to hold python references here? Is it because those are wrapped
+  // in shared_ptr?
+  return basicWrapperFunctionImplementation<std::vector<std::shared_ptr<const MOBase::ISaveGame>>>(this, "listSaves", folder);
 }
 
 bool IPluginGameWrapper::isInstalled() const
