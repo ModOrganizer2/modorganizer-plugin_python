@@ -1264,7 +1264,7 @@ bool PythonRunner::initPython(const QString &pythonPath)
     bpy::import("site");
     bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
-              "sys.excepthook = sys.__excepthook__\n",
+              "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
 
     // add dlls directory
