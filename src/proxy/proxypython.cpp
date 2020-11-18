@@ -117,7 +117,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
 {
   m_MOInfo = moInfo;
 
-  if (m_MOInfo && !m_MOInfo->pluginSetting(name(), "enabled").toBool()) {
+  if (m_MOInfo && !m_MOInfo->isPluginEnabled(this)) {
     m_LoadFailure = FAIL_NONE;
     return false;
   }
@@ -197,9 +197,14 @@ QString ProxyPython::name() const
   return "Python Proxy";
 }
 
+QString ProxyPython::localizedName() const
+{
+  return tr("Python Proxy");
+}
+
 QString ProxyPython::author() const
 {
-  return "Tannin";
+  return "AnyOldName3, Holt59, Silarn, Tannin";
 }
 
 QString ProxyPython::description() const
@@ -210,11 +215,6 @@ QString ProxyPython::description() const
 VersionInfo ProxyPython::version() const
 {
   return VersionInfo(2, 1, 0, VersionInfo::RELEASE_FINAL);
-}
-
-bool ProxyPython::isActive() const
-{
-  return m_LoadFailure == FAIL_NOTINIT;
 }
 
 QList<PluginSetting> ProxyPython::settings() const

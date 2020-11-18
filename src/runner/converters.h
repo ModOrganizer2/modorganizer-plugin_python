@@ -26,7 +26,7 @@ namespace utils {
     struct QString_to_python_str
     {
       static PyObject* convert(const QString& str) {
-        // It's safer to explicitly convert to unicode as if we don't, this can return 
+        // It's safer to explicitly convert to unicode as if we don't, this can return
         // either str or unicode without it being easy to know which to expect
         bpy::object pyStr = bpy::object(qUtf8Printable(str));
         if (SIPBytes_Check(pyStr.ptr()))
@@ -368,7 +368,7 @@ namespace utils {
   template <typename R, typename... Args, typename... Wrappers>
   struct Functor_converter<R(Args...), Wrappers... >
   {
-  
+
     template <class T>
     static decltype(auto) wrap(T&& t) {
       return details::wrap_impl<Wrappers... >::apply(std::forward<T>(t));
@@ -483,8 +483,8 @@ namespace utils {
     using namespace QString_converter;
     bpy::to_python_converter<QString, QString_to_python_str>();
     bpy::converter::registry::push_back(
-      &QString_from_python_str::convertible, 
-      &QString_from_python_str::construct, 
+      &QString_from_python_str::convertible,
+      &QString_from_python_str::construct,
       bpy::type_id<QString>());
   }
 
@@ -492,8 +492,8 @@ namespace utils {
     using namespace QVariant_converter;
     bpy::to_python_converter<QVariant, QVariant_to_python_obj>();
     bpy::converter::registry::push_back(
-      &QVariant_from_python_obj::convertible, 
-      &QVariant_from_python_obj::construct, 
+      &QVariant_from_python_obj::convertible,
+      &QVariant_from_python_obj::construct,
       bpy::type_id<QVariant>());
   }
 
@@ -528,8 +528,8 @@ namespace utils {
   inline void register_functor_converter() {
     using Converter = Functor_converter<Fn, Wrappers... >;
     bpy::converter::registry::push_back(
-      &Converter::convertible, 
-      &Converter::construct, 
+      &Converter::convertible,
+      &Converter::construct,
       bpy::type_id<std::function<Fn>>());
   }
 

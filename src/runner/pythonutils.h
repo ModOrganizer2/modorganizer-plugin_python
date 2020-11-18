@@ -91,19 +91,19 @@ namespace utils {
     using value_type = typename Container::value_type;
 
     static void* convertible(PyObject* objPtr) {
-      if (PySequence_Check(objPtr)) return objPtr;
+      // Check that the object can be iterated or is a sequence. There is no "clean"
+      // way checking that an object is iterable apparently (PyIter_Check checks that
+      // an object is an iterator, which is very different).
+      if (objPtr->ob_type->tp_iter != 0 || PySequence_Check(objPtr)) return objPtr;
       return nullptr;
     }
 
     static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
       void* storage = ((bpy::converter::rvalue_from_python_storage<Container>*)data)->storage.bytes;
       Container* result = new (storage) Container();
-      bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
-      int length = bpy::len(source);
-      for (int i = 0; i < length; ++i) {
-        result->push_back(bpy::extract<value_type>(source[i]));
-      }
-
+      bpy::object source(bpy::handle<>(bpy::borrowed(objPtr)));
+      bpy::stl_input_iterator<value_type> begin(source), end;
+      std::copy(begin, end, std::back_inserter(*result));
       data->convertible = storage;
     }
   };
@@ -132,7 +132,8 @@ namespace utils {
     using value_type = typename Container::value_type;
 
     static void* convertible(PyObject* objPtr) {
-      if (PySequence_Check(objPtr)) return objPtr;
+      // See container_from_python.
+      if (objPtr->ob_type->tp_iter != 0 && PySequence_Check(objPtr)) return objPtr;
       return nullptr;
     }
 
@@ -140,14 +141,54 @@ namespace utils {
       void* storage = ((bpy::converter::rvalue_from_python_storage<Container>*)data)->storage.bytes;
       Container* result = new (storage) Container();
       bpy::list source(bpy::handle<>(bpy::borrowed(objPtr)));
-      int length = bpy::len(source);
-      for (int i = 0; i < length; ++i) {
-        result->insert(bpy::extract<value_type>(source[i]));
+      bpy::stl_input_iterator<value_type> begin(source), end;
+      std::copy(begin, end, std::inserter(*result, result->begin()));
+      data->convertible = storage;
+    }
+  };
+
+
+  template <class Optional>
+  struct optional_to_python {
+    static PyObject* convert(const Optional& optional) {
+      if (optional) {
+        return bpy::incref(bpy::object(*optional).ptr());
+      }
+      else {
+        return bpy::incref(Py_None);
+      }
+    }
+  };
+
+
+  template <class Optional>
+  struct optional_from_python {
+
+    using value_type = typename Optional::value_type;
+
+    static void* convertible(PyObject* objPtr) {
+
+      if (objPtr == Py_None) {
+        return objPtr;
+      }
+
+      bpy::object source(bpy::handle<>(bpy::borrowed(objPtr)));
+      return bpy::extract<value_type>(source).check() ? objPtr : nullptr;
+    }
+
+    static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
+      void* storage = ((bpy::converter::rvalue_from_python_storage<Optional>*)data)->storage.bytes;
+      Optional* result = new (storage) Optional();
+
+      bpy::object source(bpy::handle<>(bpy::borrowed(objPtr)));
+      if (!source.is_none()) {
+        *result = bpy::extract<value_type>(source)();
       }
 
       data->convertible = storage;
     }
   };
+
 
   /**
    * @brief Register from and to python converters for (at least) map, unordered_map and QMap.
@@ -195,6 +236,20 @@ namespace utils {
       &container_from_python_list<Container>::convertible
       , &container_from_python_list<Container>::construct
       , bpy::type_id<Container>());
+  };
+
+  /**
+   * @brief Register from and to python converters for optional.
+   *
+   * @tparam T The optional type (std::optional<X> or boost::optional<X>).
+   */
+  template <class Optional>
+  void register_optional() {
+    bpy::to_python_converter<Optional, optional_to_python<Optional>>();
+    bpy::converter::registry::push_back(
+      &optional_from_python<Optional>::convertible
+      , &optional_from_python<Optional>::construct
+      , bpy::type_id<Optional>());
   };
 
 

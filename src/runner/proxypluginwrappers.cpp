@@ -26,8 +26,9 @@ namespace boost
 
 using namespace MOBase;
 
-
-#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) \
+// See COMMON_I_PLUGIN_WRAPPER_DECLARATIONS__IMPL in proxypluginwrappers.h for explanation on
+// the "include_requirements".
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, include_requirements) \
 bool class_name::init(MOBase::IOrganizer *moInfo) \
 { \
   return basicWrapperFunctionImplementation<bool>(this, "init", boost::python::ptr(moInfo)); \
@@ -43,9 +44,9 @@ QString class_name::localizedName() const \
   return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::localizedName_Default, "localizedName"); \
 } \
  \
-IPlugin* class_name::master() const \
+QString class_name::master() const \
 { \
-  return basicWrapperFunctionImplementationWithDefault<IPlugin*>(this, &class_name::master_Default, "master"); \
+  return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::master_Default, "master"); \
 } \
  \
 QString class_name::author() const \
@@ -63,17 +64,20 @@ MOBase::VersionInfo class_name::version() const \
   return basicWrapperFunctionImplementation<MOBase::VersionInfo>(this, "version"); \
 } \
  \
-bool class_name::isActive() const \
-{ \
-  return basicWrapperFunctionImplementation<bool>(this, "isActive"); \
-} \
- \
 QList<MOBase::PluginSetting> class_name::settings() const \
 { \
   return basicWrapperFunctionImplementation<QList<MOBase::PluginSetting>>(this, "settings"); \
 } \
 QString class_name::localizedName_Default() const { return IPlugin::localizedName(); } \
-IPlugin* class_name::master_Default() const { return IPlugin::master(); }
+QString class_name::master_Default() const { return IPlugin::master(); } \
+BOOST_PP_EXPR_IF(include_requirements, \
+  QList<IPluginRequirement*> class_name::requirements() const { \
+    return basicWrapperFunctionImplementationWithDefault<QList<IPluginRequirement*>>( \
+    this, &class_name::requirements_Default, m_Requirements, "requirements"); \
+  } \
+  QList<IPluginRequirement*> class_name::requirements_Default() const { return IPlugin::requirements(); })
+
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, 1)
 
 /// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
 /////////////////////////////
@@ -293,7 +297,7 @@ QString IPluginGameWrapper::getLauncherName() const
   return basicWrapperFunctionImplementation<QString>(this, "getLauncherName");
 }
 
-COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginGameWrapper)
+COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(IPluginGameWrapper, 0)
 
 std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
 {
