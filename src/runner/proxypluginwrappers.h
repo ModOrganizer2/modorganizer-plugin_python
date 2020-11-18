@@ -104,8 +104,7 @@ public:
   virtual void detectGame() override;
   virtual QString gameName() const override;
   virtual void initializeProfile(const QDir &directory, ProfileSettings settings) const override;
-  virtual QString savegameExtension() const override;
-  virtual QString savegameSEExtension() const override;
+  virtual std::vector<std::shared_ptr<const MOBase::ISaveGame>> listSaves(QDir folder) const override;
   virtual bool isInstalled() const override;
   virtual QIcon gameIcon() const override;
   virtual QDir gameDirectory() const override;

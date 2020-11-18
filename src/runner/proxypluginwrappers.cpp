@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include "pythonwrapperutilities.h"
+#include "uibasewrappers.h"
 
 #include <variant>
 #include <tuple>
@@ -147,14 +148,24 @@ void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettin
   basicWrapperFunctionImplementation<void>(this, "initializeProfile", directory, settings);
 }
 
-QString IPluginGameWrapper::savegameExtension() const
+std::vector<std::shared_ptr<const MOBase::ISaveGame>> IPluginGameWrapper::listSaves(QDir folder) const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "savegameExtension");
-}
+  boost::python::object saves;
+  auto cppSaves = basicWrapperFunctionImplementation<std::vector<std::shared_ptr<const MOBase::ISaveGame>> >(this, saves, "listSaves", folder);
 
-QString IPluginGameWrapper::savegameSEExtension() const
-{
-  return basicWrapperFunctionImplementation<QString>(this, "savegameSEExtension");
+  {
+    GILock lock;
+
+    for (std::size_t i = 0; i < cppSaves.size(); ++i) {
+      if (auto* p = dynamic_cast<const ISaveGameWrapper*>(cppSaves[i].get())) {
+        p->m_PySave = saves[i];
+      }
+    }
+
+    saves = {};
+  }
+
+  return cppSaves;
 }
 
 bool IPluginGameWrapper::isInstalled() const

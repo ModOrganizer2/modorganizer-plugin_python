@@ -126,15 +126,9 @@ std::vector<int> ModDataContentWrapper::getContentsFor(std::shared_ptr<const MOB
 /////////////////////////////
 /// SaveGameInfo Wrapper
 
-
-MOBase::ISaveGame const * SaveGameInfoWrapper::getSaveGameInfo(QString const & file) const
+SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(MOBase::ISaveGame const& save) const
 {
-  return basicWrapperFunctionImplementation<MOBase::ISaveGame*>(this, m_SaveGames[file], "getSaveGameInfo", file);
-}
-
-SaveGameInfoWrapper::MissingAssets SaveGameInfoWrapper::getMissingAssets(QString const & file) const
-{
-  return basicWrapperFunctionImplementation<SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", file);
+  return basicWrapperFunctionImplementation<SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets", boost::ref(save));
 }
 
 MOBase::ISaveGameInfoWidget* SaveGameInfoWrapper::getSaveGameWidget(QWidget* parent) const
@@ -142,10 +136,6 @@ MOBase::ISaveGameInfoWidget* SaveGameInfoWrapper::getSaveGameWidget(QWidget* par
   return basicWrapperFunctionImplementation<MOBase::ISaveGameInfoWidget*>(this, m_SaveGameWidget, "getSaveGameWidget", parent);
 }
 
-bool SaveGameInfoWrapper::hasScriptExtenderSave(QString const & file) const
-{
-  return basicWrapperFunctionImplementation<bool>(this, "hasScriptExtenderSave", file);
-}
 /// end SaveGameInfo Wrapper
 /////////////////////////////
 /// ScriptExtender Wrapper
@@ -316,7 +306,7 @@ void registerGameFeaturesPythonConverters()
       .def("getContentsFor", bpy::pure_virtual(&ModDataContent::getContentsFor), bpy::arg("filetree"))
       ;
 
-    bpy::class_<ModDataContent::Content>("Content", 
+    bpy::class_<ModDataContent::Content>("Content",
       bpy::init<int, QString, QString, bpy::optional<bool>>((bpy::arg("id"), "name", "icon", bpy::arg("filter_only") = false)))
       .add_property("id", &ModDataContent::Content::id)
       .add_property("name", &ModDataContent::Content::name)
@@ -327,12 +317,9 @@ void registerGameFeaturesPythonConverters()
   }
 
   bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
-      .def("getSaveGameInfo", bpy::pure_virtual(&SaveGameInfo::getSaveGameInfo), bpy::return_value_policy<bpy::manage_new_object>(),
-        bpy::arg("filepath"))
-      .def("getMissingAssets", bpy::pure_virtual(&SaveGameInfo::getMissingAssets), bpy::arg("filepath"))
-      .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>(), 
+      .def("getMissingAssets", bpy::pure_virtual(&SaveGameInfo::getMissingAssets), bpy::arg("save"))
+      .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget), bpy::return_value_policy<bpy::manage_new_object>(),
         bpy::arg("parent"), "[optional]")
-      .def("hasScriptExtenderSave", bpy::pure_virtual(&SaveGameInfo::hasScriptExtenderSave), bpy::arg("filepath"))
       ;
 
   bpy::class_<ScriptExtenderWrapper, boost::noncopyable>("ScriptExtender")

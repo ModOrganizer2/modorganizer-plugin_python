@@ -41,11 +41,17 @@ public:
   static constexpr const char* className = "ISaveGameWrapper";
   using boost::python::wrapper<MOBase::ISaveGame>::get_override;
 
-  virtual QString getFilename() const override { return basicWrapperFunctionImplementation<QString>(this, "getFilename"); };
+  virtual QString getFilepath() const override { return basicWrapperFunctionImplementation<QString>(this, "getFilepath"); };
   virtual QDateTime getCreationTime() const override { return basicWrapperFunctionImplementation<QDateTime>(this, "getCreationTime"); };
+  virtual QString getName() const override { return basicWrapperFunctionImplementation<QString>(this, "getName"); };
   virtual QString getSaveGroupIdentifier() const override { return basicWrapperFunctionImplementation<QString>(this, "getSaveGroupIdentifier"); };
   virtual QStringList allFiles() const override { return basicWrapperFunctionImplementation<QStringList>(this, "allFiles"); };
-  virtual bool hasScriptExtenderFile() const override { return basicWrapperFunctionImplementation<bool>(this, "hasScriptExtenderFile"); };
+
+protected:
+
+  friend class IPluginGameWrapper;
+  mutable boost::python::object m_PySave;
+
 };
 
 // This needs a wrapper but currently I have no idea how to expose this properly to python:
@@ -58,7 +64,7 @@ public:
   // Bring the constructor:
   using ISaveGameInfoWidget::ISaveGameInfoWidget;
 
-  virtual void setSave(QString const& save) override { basicWrapperFunctionImplementation<void>(this, "setSave", save); };
+  virtual void setSave(MOBase::ISaveGame const& save) override { basicWrapperFunctionImplementation<void>(this, "setSave", boost::ref(save)); };
 };
 
 #endif // UIBASEWRAPPERS_H

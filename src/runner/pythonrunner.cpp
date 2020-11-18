@@ -92,6 +92,9 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
   bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
   bpy::implicitly_convertible<std::shared_ptr<IFileTree>, std::shared_ptr<const IFileTree>>();
+  bpy::register_ptr_to_python<std::shared_ptr<ISaveGame>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const ISaveGame>>();
+  bpy::implicitly_convertible<std::shared_ptr<ISaveGame>, std::shared_ptr<const ISaveGame>>();
 
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
@@ -105,7 +108,8 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
-  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const FileTreeEntry>>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const ISaveGame>>>();
   utils::register_sequence_container<std::vector<ModDataContent::Content>>();
   utils::register_sequence_container<std::vector<Mapping>>();
 
@@ -250,12 +254,12 @@ BOOST_PYTHON_MODULE(mobase)
       .def("process", &ExecutableForcedLoadSetting::process)
       ;
 
-  bpy::class_<ISaveGameWrapper, bpy::bases<>, ISaveGameWrapper*, boost::noncopyable>("ISaveGame")
-      .def("getFilename", bpy::pure_virtual(&ISaveGame::getFilename))
+  bpy::class_<ISaveGameWrapper, bpy::bases<>, std::shared_ptr<ISaveGameWrapper>, boost::noncopyable>("ISaveGame")
+      .def("getFilepath", bpy::pure_virtual(&ISaveGame::getFilepath))
       .def("getCreationTime", bpy::pure_virtual(&ISaveGame::getCreationTime))
+      .def("getName", bpy::pure_virtual(&ISaveGame::getName))
       .def("getSaveGroupIdentifier", bpy::pure_virtual(&ISaveGame::getSaveGroupIdentifier))
       .def("allFiles", bpy::pure_virtual(&ISaveGame::allFiles))
-      .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
       ;
 
   // See Q_DELEGATE for more details.
@@ -917,8 +921,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("detectGame", bpy::pure_virtual(&MOBase::IPluginGame::detectGame))
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile), (bpy::arg("directory"), "settings"))
-      .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
-      .def("savegameSEExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameSEExtension))
+      .def("listSaves", bpy::pure_virtual(&MOBase::IPluginGame::listSaves), bpy::arg("folder"))
       .def("isInstalled", bpy::pure_virtual(&MOBase::IPluginGame::isInstalled))
       .def("gameIcon", bpy::pure_virtual(&MOBase::IPluginGame::gameIcon))
       .def("gameDirectory", bpy::pure_virtual(&MOBase::IPluginGame::gameDirectory))
