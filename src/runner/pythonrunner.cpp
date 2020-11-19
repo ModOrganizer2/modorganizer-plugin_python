@@ -87,16 +87,18 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_qflags_converter<IModList::ModStates>();
 
   // Pointers:
-  utils::shared_ptr_from_python<std::shared_ptr<const ISaveGame>>();
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
   bpy::implicitly_convertible<std::shared_ptr<FileTreeEntry>, std::shared_ptr<const FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<IFileTree>>();
   bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
   bpy::implicitly_convertible<std::shared_ptr<IFileTree>, std::shared_ptr<const IFileTree>>();
-  bpy::register_ptr_to_python<std::shared_ptr<ISaveGame>>();
+
+  utils::shared_ptr_from_python<std::shared_ptr<const ISaveGame>>();
   bpy::register_ptr_to_python<std::shared_ptr<const ISaveGame>>();
-  bpy::implicitly_convertible<std::shared_ptr<ISaveGame>, std::shared_ptr<const ISaveGame>>();
+
+  utils::shared_ptr_from_python<std::shared_ptr<const IPluginRequirement>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const IPluginRequirement>>();
 
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
@@ -105,13 +107,13 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<ExecutableForcedLoadSetting>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
-  utils::register_sequence_container<QList<IPluginRequirement*>>();
   utils::register_sequence_container<QStringList>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
   utils::register_sequence_container<std::vector<std::shared_ptr<const FileTreeEntry>>>();
   utils::register_sequence_container<std::vector<std::shared_ptr<const ISaveGame>>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const IPluginRequirement>>>();
   utils::register_sequence_container<std::vector<ModDataContent::Content>>();
   utils::register_sequence_container<std::vector<Mapping>>();
 
@@ -274,7 +276,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Plugin requirements:
   auto iPluginRequirementClass = bpy::class_<
-    IPluginRequirementWrapper, bpy::bases<>, IPluginRequirementWrapper*, boost::noncopyable>("IPluginRequirement");
+    IPluginRequirementWrapper, bpy::bases<>, boost::noncopyable>("IPluginRequirement");
   {
     bpy::scope scope = iPluginRequirementClass;
 
@@ -292,26 +294,24 @@ BOOST_PYTHON_MODULE(mobase)
     // pluginDependency
     .def("pluginDependency", +[](QStringList const& pluginNames) {
       return PluginRequirementFactory::pluginDependency(pluginNames);
-    }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("plugins"))
+    }, bpy::arg("plugins"))
     .def("pluginDependency", +[](QString const& pluginName) {
       return PluginRequirementFactory::pluginDependency(pluginName);
-    }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("plugin"))
+    }, bpy::arg("plugin"))
     .staticmethod("pluginDependency")
     // gameDependency
     .def("gameDependency", +[](QStringList const& gameNames) {
     return PluginRequirementFactory::gameDependency(gameNames);
-      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("games"))
+      }, bpy::arg("games"))
     .def("gameDependency", +[](QString const& gameNames) {
         return PluginRequirementFactory::gameDependency(gameNames);
-      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("game"))
+      }, bpy::arg("game"))
     .staticmethod("gameDependency")
     // diagnose
-    .def("diagnose", &PluginRequirementFactory::diagnose,
-      bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("diagnose"))
+    .def("diagnose", &PluginRequirementFactory::diagnose, bpy::arg("diagnose"))
     .staticmethod("diagnose")
     // basic
-    .def("basic", &PluginRequirementFactory::basic,
-      bpy::return_value_policy<bpy::reference_existing_object>(), (bpy::arg("checker"), "description"))
+    .def("basic", &PluginRequirementFactory::basic, (bpy::arg("checker"), "description"))
     .staticmethod("basic");
 
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())

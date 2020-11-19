@@ -46,6 +46,6 @@ add_filter(NAME src/utils GROUPS
 add_filter(NAME src/wrappers GROUPS
 	gamefeatureswrappers
 	proxypluginwrappers
-	pythonwrappersutilities
+	pythonwrapperutilities
 	uibasewrappers
 )

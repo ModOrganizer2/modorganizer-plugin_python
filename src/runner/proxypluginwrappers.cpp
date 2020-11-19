@@ -72,11 +72,11 @@ QList<MOBase::PluginSetting> class_name::settings() const \
 QString class_name::localizedName_Default() const { return IPlugin::localizedName(); } \
 QString class_name::master_Default() const { return IPlugin::master(); } \
 BOOST_PP_EXPR_IF(include_requirements, \
-  QList<IPluginRequirement*> class_name::requirements() const { \
-    return basicWrapperFunctionImplementationWithDefault<QList<IPluginRequirement*>>( \
-    this, &class_name::requirements_Default, m_Requirements, "requirements"); \
+  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> class_name::requirements() const { \
+    return basicWrapperFunctionImplementationWithDefault<std::vector<std::shared_ptr<const MOBase::IPluginRequirement>>>( \
+      this, &class_name::requirements_Default, "requirements"); \
   } \
-  QList<IPluginRequirement*> class_name::requirements_Default() const { return IPlugin::requirements(); })
+  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> class_name::requirements_Default() const { return IPlugin::requirements(); })
 
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, 1)
 
