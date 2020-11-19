@@ -39,6 +39,7 @@
 #include "tuple_helper.h"
 #include "variant_helper.h"
 #include "converters.h"
+#include "shared_ptr_converter.h"
 #include "pylogger.h"
 
 using namespace MOBase;
@@ -86,6 +87,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_qflags_converter<IModList::ModStates>();
 
   // Pointers:
+  utils::shared_ptr_from_python<std::shared_ptr<const ISaveGame>>();
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
   bpy::implicitly_convertible<std::shared_ptr<FileTreeEntry>, std::shared_ptr<const FileTreeEntry>>();
@@ -254,7 +256,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("process", &ExecutableForcedLoadSetting::process)
       ;
 
-  bpy::class_<ISaveGameWrapper, bpy::bases<>, std::shared_ptr<ISaveGameWrapper>, boost::noncopyable>("ISaveGame")
+  bpy::class_<ISaveGameWrapper, bpy::bases<>, boost::noncopyable>("ISaveGame")
       .def("getFilepath", bpy::pure_virtual(&ISaveGame::getFilepath))
       .def("getCreationTime", bpy::pure_virtual(&ISaveGame::getCreationTime))
       .def("getName", bpy::pure_virtual(&ISaveGame::getName))
@@ -1101,6 +1103,8 @@ class PythonRunner : public IPythonRunner
 
 public:
   PythonRunner();
+  ~PythonRunner();
+
   bool initPython(const QString& pythonDir);
   QList<QObject*> instantiate(const QString& pluginName);
   bool isPythonInstalled() const;
@@ -1149,6 +1153,12 @@ IPythonRunner* CreatePythonRunner(const QString& pythonDir)
 PythonRunner::PythonRunner()
 {
   m_PythonHome = new wchar_t[MAX_PATH + 1];
+}
+
+PythonRunner::~PythonRunner() {
+  // We need the GIL lock when destroying Python objects.
+  GILock lock;
+  m_PythonObjects.clear();
 }
 
 static const char *argv0 = "ModOrganizer.exe";

@@ -50,8 +50,6 @@ public:
 protected:
 
   friend class IPluginGameWrapper;
-  mutable boost::python::object m_PySave;
-
 };
 
 // This needs a wrapper but currently I have no idea how to expose this properly to python:
