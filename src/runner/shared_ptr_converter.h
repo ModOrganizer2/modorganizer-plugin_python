@@ -19,6 +19,8 @@ namespace utils {
   // Note that this is only useful for Python -> C++ conversion, and without this, Boost
   // will automatically wrapped the pointer. The C++ -> Python conversion is handled
   // separately by boost::python::register_ptr_to_python.
+  //
+  // This is an open Boost.Python problem: https://github.com/boostorg/python/pull/11
 
   template <class SharedPtr>
   struct shared_ptr_from_python;
