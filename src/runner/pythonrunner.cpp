@@ -712,7 +712,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def(bpy::init<>())
-      .def(bpy::init<QString const&, EGuessQuality>((bpy::arg("value"), "quality")))
+      .def(bpy::init<QString const&, EGuessQuality>((bpy::arg("value"), bpy::arg("quality") = EGuessQuality::GUESS_USER)))
       .def("update",
            static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&)>(&GuessedValue<QString>::update),
            bpy::return_self<>(), bpy::arg("value"))
