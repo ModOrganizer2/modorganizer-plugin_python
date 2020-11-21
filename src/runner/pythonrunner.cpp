@@ -286,7 +286,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("longDescription", &IPluginRequirement::Problem::longDescription);
 
     iPluginRequirementClass
-      .def("check", bpy::pure_virtual(&IPluginRequirement::check))
+      .def("check", bpy::pure_virtual(&IPluginRequirement::check), bpy::arg("organizer"))
       ;
   }
 
