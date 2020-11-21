@@ -160,9 +160,9 @@ QString ScriptExtenderWrapper::loaderPath() const
   return basicWrapperFunctionImplementation<QString>(this, "loaderPath");
 }
 
-QStringList ScriptExtenderWrapper::saveGameAttachmentExtensions() const
+QString ScriptExtenderWrapper::savegameExtension() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "saveGameAttachmentExtensions");
+  return basicWrapperFunctionImplementation<QString>(this, "savegameExtension");
 }
 
 bool ScriptExtenderWrapper::isInstalled() const
@@ -327,7 +327,7 @@ void registerGameFeaturesPythonConverters()
       .def("PluginPath", bpy::pure_virtual(&ScriptExtender::PluginPath))
       .def("loaderName", bpy::pure_virtual(&ScriptExtender::loaderName))
       .def("loaderPath", bpy::pure_virtual(&ScriptExtender::loaderPath))
-      .def("saveGameAttachmentExtensions", bpy::pure_virtual(&ScriptExtender::saveGameAttachmentExtensions))
+      .def("savegameExtension", bpy::pure_virtual(&ScriptExtender::savegameExtension))
       .def("isInstalled", bpy::pure_virtual(&ScriptExtender::isInstalled))
       .def("getExtenderVersion", bpy::pure_virtual(&ScriptExtender::getExtenderVersion))
       .def("getArch", bpy::pure_virtual(&ScriptExtender::getArch))

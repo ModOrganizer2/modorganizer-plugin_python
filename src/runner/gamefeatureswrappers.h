@@ -125,7 +125,7 @@ public:
   virtual QString PluginPath() const override;
   virtual QString loaderName() const override;
   virtual QString loaderPath() const override;
-  virtual QStringList saveGameAttachmentExtensions() const override;
+  virtual QString savegameExtension() const override;
   virtual bool isInstalled() const override;
   virtual QString getExtenderVersion() const override;
   virtual WORD getArch() const  override;
