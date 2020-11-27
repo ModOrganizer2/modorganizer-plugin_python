@@ -1254,10 +1254,8 @@ bool PythonRunner::initPython(const QString &pythonPath)
 
     PySys_SetArgv(0, (wchar_t**)&argBuffer);
 
-    auto os = bpy::import("os");
-    auto mainModule = bpy::import("__main__");
-    auto mainNamespace = mainModule.attr("__dict__");
-    mainNamespace["os"] = os;
+    bpy::object mainModule = bpy::import("__main__");
+    bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
     mainNamespace["moprivate"] = bpy::import("moprivate");
     mainNamespace["mobase"] = bpy::import("mobase");
@@ -1266,10 +1264,6 @@ bool PythonRunner::initPython(const QString &pythonPath)
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
               "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
-
-    // add dlls directory
-    const auto dlls = QCoreApplication::applicationDirPath().toStdString() + "/dlls";
-    os.attr("add_dll_directory")(dlls);
 
     configure_python_logging(mainNamespace["mobase"]);
 
