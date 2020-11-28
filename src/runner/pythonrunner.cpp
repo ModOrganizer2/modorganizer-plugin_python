@@ -372,11 +372,11 @@ BOOST_PYTHON_MODULE(mobase)
             return (std::uintptr_t) o->startApplication(executable, args, cwd, profile, forcedCustomOverwrite, ignoreCustomOverwrite);
         }, (bpy::arg("executable"), (bpy::arg("args") = QStringList()), (bpy::arg("cwd") = ""), (bpy::arg("profile") = ""),
             (bpy::arg("forcedCustomOverwrite") = ""), (bpy::arg("ignoreCustomOverwrite") = false)), bpy::return_value_policy<bpy::return_by_value>())
-      .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle) {
+      .def("waitForApplication", +[](IOrganizer *o, std::uintptr_t handle, bool refresh) {
           DWORD returnCode;
-          bool result = o->waitForApplication((HANDLE)handle, &returnCode);
+          bool result = o->waitForApplication((HANDLE)handle, refresh, &returnCode);
           return std::make_tuple(result, returnCode);
-        }, bpy::arg("handle"))
+        }, (bpy::arg("handle"), bpy::arg("refresh")))
       .def("refresh", &IOrganizer::refresh, (bpy::arg("save_changes") = true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
 
