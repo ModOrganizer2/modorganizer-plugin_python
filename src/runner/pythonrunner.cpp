@@ -376,7 +376,7 @@ BOOST_PYTHON_MODULE(mobase)
           DWORD returnCode;
           bool result = o->waitForApplication((HANDLE)handle, refresh, &returnCode);
           return std::make_tuple(result, returnCode);
-        }, (bpy::arg("handle"), bpy::arg("refresh")))
+        }, (bpy::arg("handle"), bpy::arg("refresh") = true))
       .def("refresh", &IOrganizer::refresh, (bpy::arg("save_changes") = true))
       .def("managedGame", &IOrganizer::managedGame, bpy::return_value_policy<bpy::reference_existing_object>())
 
