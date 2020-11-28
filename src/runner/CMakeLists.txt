@@ -23,3 +23,29 @@ endif()
 
 requires_project(game_features)
 requires_library(python)
+
+add_filter(NAME src/converters GROUPS
+	converters
+	pythonutils
+	shared_ptr_converter
+	tuple_helper
+	variant_helper
+)
+
+add_filter(NAME src/runner GROUPS
+	pythonrunner
+	pylogger
+)
+
+add_filter(NAME src/utils GROUPS
+	error
+	gilock
+	sipapiaccess
+)
+
+add_filter(NAME src/wrappers GROUPS
+	gamefeatureswrappers
+	proxypluginwrappers
+	pythonwrapperutilities
+	uibasewrappers
+)

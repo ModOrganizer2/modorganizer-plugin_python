@@ -19,8 +19,6 @@
 // The wrapper for IPluginGame cannot override requirements() since it's final,
 // so we need to be able to exclude the declarations.
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_IMPL(include_requirements) \
-  BOOST_PP_EXPR_IF(include_requirements, \
-  private: mutable boost::python::object m_Requirements; ) \
 public: \
 virtual bool init(MOBase::IOrganizer *moInfo) override; \
 virtual QString name() const override; \
@@ -33,8 +31,8 @@ virtual QList<MOBase::PluginSetting> settings() const override; \
 QString localizedName_Default() const; \
 QString master_Default() const; \
 BOOST_PP_EXPR_IF(include_requirements, \
-  virtual QList<MOBase::IPluginRequirement*> requirements() const override; \
-  QList<MOBase::IPluginRequirement*> requirements_Default() const;)
+  virtual std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements() const override; \
+  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements_Default() const;)
 
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_IMPL(1)
 
@@ -104,8 +102,7 @@ public:
   virtual void detectGame() override;
   virtual QString gameName() const override;
   virtual void initializeProfile(const QDir &directory, ProfileSettings settings) const override;
-  virtual QString savegameExtension() const override;
-  virtual QString savegameSEExtension() const override;
+  virtual std::vector<std::shared_ptr<const MOBase::ISaveGame>> listSaves(QDir folder) const override;
   virtual bool isInstalled() const override;
   virtual QIcon gameIcon() const override;
   virtual QDir gameDirectory() const override;

@@ -39,6 +39,7 @@
 #include "tuple_helper.h"
 #include "variant_helper.h"
 #include "converters.h"
+#include "shared_ptr_converter.h"
 #include "pylogger.h"
 
 using namespace MOBase;
@@ -93,6 +94,12 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_ptr_to_python<std::shared_ptr<const IFileTree>>();
   bpy::implicitly_convertible<std::shared_ptr<IFileTree>, std::shared_ptr<const IFileTree>>();
 
+  utils::shared_ptr_from_python<std::shared_ptr<const ISaveGame>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const ISaveGame>>();
+
+  utils::shared_ptr_from_python<std::shared_ptr<const IPluginRequirement>>();
+  bpy::register_ptr_to_python<std::shared_ptr<const IPluginRequirement>>();
+
   // Containers:
   utils::register_sequence_container<std::vector<int>>();
   utils::register_sequence_container<std::vector<unsigned int>>();
@@ -100,12 +107,13 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QList<ExecutableForcedLoadSetting>>();
   utils::register_sequence_container<QList<PluginSetting>>();
   utils::register_sequence_container<QList<ModRepositoryFileInfo>>();
-  utils::register_sequence_container<QList<IPluginRequirement*>>();
   utils::register_sequence_container<QStringList>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
-  utils::register_sequence_container<std::vector<std::shared_ptr<const MOBase::FileTreeEntry>>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const FileTreeEntry>>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const ISaveGame>>>();
+  utils::register_sequence_container<std::vector<std::shared_ptr<const IPluginRequirement>>>();
   utils::register_sequence_container<std::vector<ModDataContent::Content>>();
   utils::register_sequence_container<std::vector<Mapping>>();
 
@@ -250,12 +258,12 @@ BOOST_PYTHON_MODULE(mobase)
       .def("process", &ExecutableForcedLoadSetting::process)
       ;
 
-  bpy::class_<ISaveGameWrapper, bpy::bases<>, ISaveGameWrapper*, boost::noncopyable>("ISaveGame")
-      .def("getFilename", bpy::pure_virtual(&ISaveGame::getFilename))
+  bpy::class_<ISaveGameWrapper, bpy::bases<>, boost::noncopyable>("ISaveGame")
+      .def("getFilepath", bpy::pure_virtual(&ISaveGame::getFilepath))
       .def("getCreationTime", bpy::pure_virtual(&ISaveGame::getCreationTime))
+      .def("getName", bpy::pure_virtual(&ISaveGame::getName))
       .def("getSaveGroupIdentifier", bpy::pure_virtual(&ISaveGame::getSaveGroupIdentifier))
       .def("allFiles", bpy::pure_virtual(&ISaveGame::allFiles))
-      .def("hasScriptExtenderFile", bpy::pure_virtual(&ISaveGame::hasScriptExtenderFile))
       ;
 
   // See Q_DELEGATE for more details.
@@ -268,7 +276,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   // Plugin requirements:
   auto iPluginRequirementClass = bpy::class_<
-    IPluginRequirementWrapper, bpy::bases<>, IPluginRequirementWrapper*, boost::noncopyable>("IPluginRequirement");
+    IPluginRequirementWrapper, bpy::bases<>, boost::noncopyable>("IPluginRequirement");
   {
     bpy::scope scope = iPluginRequirementClass;
 
@@ -278,7 +286,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("longDescription", &IPluginRequirement::Problem::longDescription);
 
     iPluginRequirementClass
-      .def("check", bpy::pure_virtual(&IPluginRequirement::check))
+      .def("check", bpy::pure_virtual(&IPluginRequirement::check), bpy::arg("organizer"))
       ;
   }
 
@@ -286,26 +294,24 @@ BOOST_PYTHON_MODULE(mobase)
     // pluginDependency
     .def("pluginDependency", +[](QStringList const& pluginNames) {
       return PluginRequirementFactory::pluginDependency(pluginNames);
-    }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("plugins"))
+    }, bpy::arg("plugins"))
     .def("pluginDependency", +[](QString const& pluginName) {
       return PluginRequirementFactory::pluginDependency(pluginName);
-    }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("plugin"))
+    }, bpy::arg("plugin"))
     .staticmethod("pluginDependency")
     // gameDependency
     .def("gameDependency", +[](QStringList const& gameNames) {
     return PluginRequirementFactory::gameDependency(gameNames);
-      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("games"))
+      }, bpy::arg("games"))
     .def("gameDependency", +[](QString const& gameNames) {
         return PluginRequirementFactory::gameDependency(gameNames);
-      }, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("game"))
+      }, bpy::arg("game"))
     .staticmethod("gameDependency")
     // diagnose
-    .def("diagnose", &PluginRequirementFactory::diagnose,
-      bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("diagnose"))
+    .def("diagnose", &PluginRequirementFactory::diagnose, bpy::arg("diagnose"))
     .staticmethod("diagnose")
     // basic
-    .def("basic", &PluginRequirementFactory::basic,
-      bpy::return_value_policy<bpy::reference_existing_object>(), (bpy::arg("checker"), "description"))
+    .def("basic", &PluginRequirementFactory::basic, (bpy::arg("checker"), "description"))
     .staticmethod("basic");
 
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
@@ -706,7 +712,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<MOBase::GuessedValue<QString>, boost::noncopyable>("GuessedString")
       .def(bpy::init<>())
-      .def(bpy::init<QString const&, EGuessQuality>((bpy::arg("value"), "quality")))
+      .def(bpy::init<QString const&, EGuessQuality>((bpy::arg("value"), bpy::arg("quality") = EGuessQuality::GUESS_USER)))
       .def("update",
            static_cast<GuessedValue<QString>& (GuessedValue<QString>::*)(const QString&)>(&GuessedValue<QString>::update),
            bpy::return_self<>(), bpy::arg("value"))
@@ -840,7 +846,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("init", bpy::pure_virtual(&MOBase::IPlugin::init), bpy::arg("organizer"))
     .def("name", bpy::pure_virtual(&MOBase::IPlugin::name))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginWrapper::localizedName_Default)
-    .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+    .def("master", &MOBase::IPlugin::master, &IPluginWrapper::master_Default)
     .def("author", bpy::pure_virtual(&MOBase::IPlugin::author))
     .def("description", bpy::pure_virtual(&MOBase::IPlugin::description))
     .def("version", bpy::pure_virtual(&MOBase::IPlugin::version))
@@ -850,7 +856,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginDiagnoseWrapper::localizedName_Default)
-      .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+      .def("master", &MOBase::IPlugin::master, &IPluginDiagnoseWrapper::master_Default)
       .def("requirements", &MOBase::IPlugin::requirements, &IPluginDiagnoseWrapper::requirements_Default)
 
       .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
@@ -877,7 +883,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginFileMapperWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginFileMapper")
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginFileMapperWrapper::localizedName_Default)
-      .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+      .def("master", &MOBase::IPlugin::master, &IPluginFileMapperWrapper::master_Default)
       .def("requirements", &MOBase::IPlugin::requirements, &IPluginFileMapperWrapper::requirements_Default)
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
       ;
@@ -912,13 +918,12 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginGameWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginGame")
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginGameWrapper::localizedName_Default)
-      .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+      .def("master", &MOBase::IPlugin::master, &IPluginGameWrapper::master_Default)
 
       .def("detectGame", bpy::pure_virtual(&MOBase::IPluginGame::detectGame))
       .def("gameName", bpy::pure_virtual(&MOBase::IPluginGame::gameName))
       .def("initializeProfile", bpy::pure_virtual(&MOBase::IPluginGame::initializeProfile), (bpy::arg("directory"), "settings"))
-      .def("savegameExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameExtension))
-      .def("savegameSEExtension", bpy::pure_virtual(&MOBase::IPluginGame::savegameSEExtension))
+      .def("listSaves", bpy::pure_virtual(&MOBase::IPluginGame::listSaves), bpy::arg("folder"))
       .def("isInstalled", bpy::pure_virtual(&MOBase::IPluginGame::isInstalled))
       .def("gameIcon", bpy::pure_virtual(&MOBase::IPluginGame::gameIcon))
       .def("gameDirectory", bpy::pure_virtual(&MOBase::IPluginGame::gameDirectory))
@@ -1010,7 +1015,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerSimpleWrapper::localizedName_Default)
-    .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+    .def("master", &MOBase::IPlugin::master, &IPluginInstallerSimpleWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginInstallerSimpleWrapper::requirements_Default)
 
     // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
@@ -1028,7 +1033,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("onInstallationStart", &IPluginInstaller::onInstallationStart, (bpy::arg("archive"), bpy::arg("reinstallation"), bpy::arg("current_mod")))
     .def("onInstallationEnd", &IPluginInstaller::onInstallationEnd, (bpy::arg("result"), bpy::arg("new_mod")))
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerCustomWrapper::localizedName_Default)
-    .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+    .def("master", &MOBase::IPlugin::master, &IPluginInstallerCustomWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginInstallerCustomWrapper::requirements_Default)
 
     // Needs to add both otherwize boost does not understand:
@@ -1042,7 +1047,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginModPageWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginModPage")
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginModPageWrapper::localizedName_Default)
-    .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+    .def("master", &MOBase::IPlugin::master, &IPluginModPageWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginModPageWrapper::requirements_Default)
 
     .def("displayName", bpy::pure_virtual(&IPluginModPage::displayName))
@@ -1056,7 +1061,7 @@ BOOST_PYTHON_MODULE(mobase)
 
   bpy::class_<IPluginPreviewWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginPreview")
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginPreviewWrapper::localizedName_Default)
-    .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
+    .def("master", &MOBase::IPlugin::master, &IPluginPreviewWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginPreviewWrapper::requirements_Default)
 
     .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
@@ -1098,6 +1103,8 @@ class PythonRunner : public IPythonRunner
 
 public:
   PythonRunner();
+  ~PythonRunner();
+
   bool initPython(const QString& pythonDir);
   QList<QObject*> instantiate(const QString& pluginName);
   bool isPythonInstalled() const;
@@ -1146,6 +1153,12 @@ IPythonRunner* CreatePythonRunner(const QString& pythonDir)
 PythonRunner::PythonRunner()
 {
   m_PythonHome = new wchar_t[MAX_PATH + 1];
+}
+
+PythonRunner::~PythonRunner() {
+  // We need the GIL lock when destroying Python objects.
+  GILock lock;
+  m_PythonObjects.clear();
 }
 
 static const char *argv0 = "ModOrganizer.exe";

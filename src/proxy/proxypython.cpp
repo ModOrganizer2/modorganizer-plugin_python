@@ -104,6 +104,8 @@ ProxyPython::ProxyPython()
 
 ProxyPython::~ProxyPython()
 {
+  delete m_Runner;
+
   if (!m_TempRunnerFile.isEmpty()) {
     ::FreeLibrary(m_RunnerLib);
     QFile(m_TempRunnerFile).remove();

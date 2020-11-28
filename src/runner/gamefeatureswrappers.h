@@ -106,10 +106,8 @@ public:
   static constexpr const char* className = "SaveGameInfoWrapper";
   using boost::python::wrapper<SaveGameInfo>::get_override;
 
-  virtual MOBase::ISaveGame const *getSaveGameInfo(QString const &file) const override;
-  virtual MissingAssets getMissingAssets(QString const &file) const override;
+  virtual MissingAssets getMissingAssets(MOBase::ISaveGame const& save) const override;
   virtual MOBase::ISaveGameInfoWidget *getSaveGameWidget(QWidget *parent = 0) const override;
-  virtual bool hasScriptExtenderSave(QString const &file) const override;
 
 private:
   // We need to keep the python objects alive:
@@ -127,7 +125,7 @@ public:
   virtual QString PluginPath() const override;
   virtual QString loaderName() const override;
   virtual QString loaderPath() const override;
-  virtual QStringList saveGameAttachmentExtensions() const override;
+  virtual QString savegameExtension() const override;
   virtual bool isInstalled() const override;
   virtual QString getExtenderVersion() const override;
   virtual WORD getArch() const  override;
