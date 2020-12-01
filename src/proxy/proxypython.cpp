@@ -227,7 +227,7 @@ QList<PluginSetting> ProxyPython::settings() const
   return result;
 }
 
-QStringList ProxyPython::pluginList(const QString &pluginPath) const
+QStringList ProxyPython::pluginList(const QDir& pluginPath) const
 {
   QDir dir(pluginPath);
   dir.setFilter(dir.filter() | QDir::NoDotAndDotDot);
@@ -240,29 +240,32 @@ QStringList ProxyPython::pluginList(const QString &pluginPath) const
     QString name = iter.next();
     QFileInfo info = iter.fileInfo();
 
+
     if (info.isFile() && name.endsWith(".py")) {
       result.append(name);
     }
     else if (info.isDir() && QDir(info.absoluteFilePath()).exists("__init__.py")) {
       result.append(name);
-      // result.append(info.baseName());
     }
   }
 
   return result;
 }
 
-
-QList<QObject*> ProxyPython::instantiate(const QString &pluginName)
+QList<QObject*> ProxyPython::load(const QString& identifier)
 {
-  if (m_Runner != nullptr) {
-    QList<QObject*> result = m_Runner->instantiate(pluginName);
-    return result;
-  } else {
-    return QList<QObject*>();
+  if (!m_Runner) {
+    return {};
   }
+  return m_Runner->load(identifier);
 }
 
+void ProxyPython::unload(const QString& identifier)
+{
+  if (m_Runner) {
+    return m_Runner->unload(identifier);
+  }
+}
 
 std::vector<unsigned int> ProxyPython::activeProblems() const
 {

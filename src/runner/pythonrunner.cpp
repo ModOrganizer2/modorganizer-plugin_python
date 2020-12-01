@@ -1106,7 +1106,10 @@ public:
   ~PythonRunner();
 
   bool initPython(const QString& pythonDir);
-  QList<QObject*> instantiate(const QString& pluginName);
+
+  QList<QObject*> load(const QString& identifier);
+  void unload(const QString& identifier);
+
   bool isPythonInstalled() const;
   bool isPythonVersionSupported() const;
 
@@ -1132,9 +1135,10 @@ private:
 
 private:
 
-  // List of python objects representing plugins to keep all the bpy::object "alive"
-  // during the execution.
-  std::vector<bpy::object> m_PythonObjects;
+  // For each "identifier" (python file or python module folder), contains the list list
+  // of python objects representing to keep "alive" during the execution.
+  std::unordered_map<QString, std::vector<bpy::object>> m_PythonObjects;
+
   wchar_t* m_PythonHome;
 };
 
@@ -1158,6 +1162,15 @@ PythonRunner::PythonRunner()
 PythonRunner::~PythonRunner() {
   // We need the GIL lock when destroying Python objects.
   GILock lock;
+
+  // Boost.Python does not handle cyclic garbace collection, so we need to release
+  // everything hold by the objects before deleting the objects themselves:
+  for (auto& [name, objects] : m_PythonObjects) {
+    for (auto& obj : objects) {
+      obj.attr("__dict__").attr("clear")();
+    }
+  }
+
   m_PythonObjects.clear();
 }
 
@@ -1336,7 +1349,7 @@ void PythonRunner::appendIfInstance(bpy::object const& obj, QList<QObject*> &int
   }
 }
 
-QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
+QList<QObject*> PythonRunner::load(const QString& identifier)
 {
   GILock lock;
 
@@ -1354,25 +1367,25 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     // Dictionary that will contain createPlugin() or createPlugins().
     bpy::dict moduleDict;
 
-    if (pluginName.endsWith(".py")) {
+    if (identifier.endsWith(".py")) {
       bpy::object mainModule = bpy::import("__main__");
       bpy::dict moduleNamespace = bpy::extract<bpy::dict>(mainModule.attr("__dict__"))();
 
-      std::string temp = ToString(pluginName);
+      std::string temp = ToString(identifier);
       if (!handled_exec_file(temp.c_str(), moduleNamespace)) {
         moduleDict = moduleNamespace;
       }
     }
     else {
       // Retrieve the module name:
-      QStringList parts = pluginName.split("/");
+      QStringList parts = identifier.split("/");
       std::string moduleName = ToString(parts.takeLast());
       ensureFolderInPath(parts.join("/"));
       moduleDict = bpy::dict(bpy::import(moduleName.c_str()).attr("__dict__"));
     }
 
     if (bpy::len(moduleDict) == 0) {
-      MOBase::log::error("Failed to import plugin from {}.", pluginName);
+      MOBase::log::error("Failed to import plugin from {}.", identifier);
       throw pyexcept::PythonError();
     }
 
@@ -1388,7 +1401,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     else if (moduleDict.has_key("createPlugins")) {
       bpy::object pyPlugins = moduleDict["createPlugins"]();
       if (!PySequence_Check(pyPlugins.ptr())) {
-        MOBase::log::error("Plugin {}: createPlugins must return a list.", pluginName);
+        MOBase::log::error("Plugin {}: createPlugins must return a list.", identifier);
       }
       else {
         bpy::list pyList(pyPlugins);
@@ -1402,7 +1415,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
       bpy::delitem(moduleDict, bpy::str("createPlugins"));
     }
     else {
-      MOBase::log::error("Plugin {}: missing a createPlugin(s) function.", pluginName);
+      MOBase::log::error("Plugin {}: missing a createPlugin(s) function.", identifier);
     }
 
     // If we have no plugins, there was an issue, and we already logged the problem:
@@ -1415,7 +1428,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     for (bpy::object pluginObj : plugins) {
 
       // Add the plugin to keep it alive:
-      m_PythonObjects.push_back(pluginObj);
+      m_PythonObjects[identifier].push_back(pluginObj);
 
       QList<QObject*> interfaceList;
 
@@ -1435,7 +1448,7 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
       }
 
       if (interfaceList.isEmpty()) {
-        MOBase::log::error("Plugin {}: no plugin interface implemented.", pluginName);
+        MOBase::log::error("Plugin {}: no plugin interface implemented.", identifier);
       }
 
       // Append the plugins to the main list:
@@ -1445,8 +1458,50 @@ QList<QObject*> PythonRunner::instantiate(const QString &pluginName)
     return allInterfaceList;
   }
   catch (const bpy::error_already_set&) {
-    MOBase::log::error("Failed to import plugin from {}.", pluginName);
+    MOBase::log::error("Failed to import plugin from {}.", identifier);
     throw pyexcept::PythonError();
+  }
+}
+
+void PythonRunner::unload(const QString& identifier)
+{
+  auto it = m_PythonObjects.find(identifier);
+  if (it != m_PythonObjects.end()) {
+
+    GILock lock;
+
+    // We need to remove modules from the plugin from sys.module. At this point,
+    // the identifier is the full path to the module.
+    if (!identifier.endsWith(".py")) {
+      QDir folder(identifier);
+
+      bpy::object sys = bpy::import("sys");
+      bpy::dict modules = bpy::extract<bpy::dict>(sys.attr("modules"));
+      bpy::list keys = modules.keys();
+      for (std::size_t i = 0; i < bpy::len(keys); ++i) {
+        bpy::object mod = modules[keys[i]];
+        if (PyObject_HasAttrString(mod.ptr(), "__path__")) {
+          QString mpath = bpy::extract<QString>(mod.attr("__path__")[0]);
+
+          if (!folder.relativeFilePath(mpath).startsWith("..")) {
+            // If the path is under identifier, we need to unload it.
+            log::debug("Unloading module {} from {} for {}.", bpy::extract<QString>(keys[i])(), mpath, identifier);
+            bpy::delitem(modules, keys[i]);
+          }
+        }
+      }
+    }
+
+    // Boost.Python does not handle cyclic garbace collection, so we need to release
+    // everything hold by the objects before deleting the objects themselves (done when
+    // erasing from m_PythonObjects).
+    for (auto& obj : it->second) {
+      obj.attr("__dict__").attr("clear")();
+    }
+
+    log::debug("Deleting {} python objects for {}.", it->second.size(), identifier);
+    m_PythonObjects.erase(it);
+
   }
 }
 
