@@ -48,8 +48,9 @@ public:
   virtual MOBase::VersionInfo version() const;
   virtual QList<MOBase::PluginSetting> settings() const;
 
-  QStringList pluginList(const QString &pluginPath) const;
-  QList<QObject*> instantiate(const QString &pluginName);
+  QStringList pluginList(const QDir& pluginPath) const;
+  QList<QObject*> load(const QString& identifier);
+  void unload(const QString& identifier);
 
   /**
    * @return the parent widget for newly created dialogs

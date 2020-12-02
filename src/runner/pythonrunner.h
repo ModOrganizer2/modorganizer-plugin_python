@@ -10,7 +10,10 @@
 
 class IPythonRunner {
 public:
-  virtual QList<QObject*> instantiate(const QString &pluginName) = 0;
+
+  virtual QList<QObject*> load(const QString& identifier) = 0;
+  virtual void unload(const QString& identifier) = 0;
+
   virtual bool isPythonInstalled() const = 0;
   virtual bool isPythonVersionSupported() const = 0;
 
