@@ -1135,8 +1135,8 @@ private:
 
 private:
 
-  // For each "identifier" (python file or python module folder), contains the list list
-  // of python objects representing to keep "alive" during the execution.
+  // For each "identifier" (python file or python module folder), contains the list
+  // of python objects to keep "alive" during the execution.
   std::unordered_map<QString, std::vector<bpy::object>> m_PythonObjects;
 
   wchar_t* m_PythonHome;
@@ -1470,11 +1470,14 @@ void PythonRunner::unload(const QString& identifier)
 
     GILock lock;
 
-    // We need to remove modules from the plugin from sys.module. At this point,
-    // the identifier is the full path to the module.
     if (!identifier.endsWith(".py")) {
+
+      // At this point, the identifier is the full path to the module.
       QDir folder(identifier);
 
+      // We want to "unload" (remove from sys.modules) modules that come
+      // from this plugin (whose __path__ points under this module, including
+      // the module of the plugin itself).
       bpy::object sys = bpy::import("sys");
       bpy::dict modules = bpy::extract<bpy::dict>(sys.attr("modules"));
       bpy::list keys = modules.keys();
