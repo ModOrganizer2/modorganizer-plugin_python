@@ -50,17 +50,17 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
 
   HRSRC hResource = FindResourceW(mod, MAKEINTRESOURCE(resourceID), L"BINARY");
   if (hResource == nullptr) {
-    throw MOException("embedded dll not available: " + windowsErrorString(::GetLastError()));
+    throw Exception("embedded dll not available: " + windowsErrorString(::GetLastError()));
   }
 
   HGLOBAL hFileResource = LoadResource(mod, hResource);
   if (hFileResource == nullptr) {
-    throw MOException("failed to load embedded dll resource: " + windowsErrorString(::GetLastError()));
+    throw Exception("failed to load embedded dll resource: " + windowsErrorString(::GetLastError()));
   }
 
   LPVOID lpFile = LockResource(hFileResource);
   if (lpFile == nullptr) {
-    throw MOException(QString("failed to lock resource: %1").arg(windowsErrorString(::GetLastError())));
+    throw Exception(QString("failed to lock resource: %1").arg(windowsErrorString(::GetLastError())));
   }
 
   DWORD dwSize = SizeofResource(mod, hResource);
@@ -73,16 +73,16 @@ QString ExtractResource(WORD resourceID, const QString &szFilename)
       // dll exists and is opened by another instance of MO, shouldn't be outdated then...
       return outFile;
     } else {
-      throw MOException(QString("failed to open python runner: %1").arg(windowsErrorString(::GetLastError())));
+      throw Exception(QString("failed to open python runner: %1").arg(windowsErrorString(::GetLastError())));
     }
   }
   HANDLE hFileMap = CreateFileMapping(hFile, nullptr, PAGE_READWRITE, 0, dwSize, nullptr);
   if (hFileMap == NULL) {
-    throw MOException(QString("failed to map python runner: %1").arg(windowsErrorString(::GetLastError())));
+    throw Exception(QString("failed to map python runner: %1").arg(windowsErrorString(::GetLastError())));
   }
   LPVOID lpAddress = MapViewOfFile(hFileMap, FILE_MAP_WRITE, 0, 0, 0);
   if (lpAddress == nullptr) {
-    throw MOException(QString("failed to map view of file: %1").arg(windowsErrorString(::GetLastError())));
+    throw Exception(QString("failed to map view of file: %1").arg(windowsErrorString(::GetLastError())));
   }
 
   CopyMemory(lpAddress, lpFile, dwSize);
@@ -147,7 +147,7 @@ bool ProxyPython::init(IOrganizer *moInfo)
   if (m_RunnerLib != nullptr) {
     CreatePythonRunner_func CreatePythonRunner = (CreatePythonRunner_func)::GetProcAddress(m_RunnerLib, "CreatePythonRunner");
     if (CreatePythonRunner == nullptr) {
-      throw MOException("embedded dll is invalid: " + windowsErrorString(::GetLastError()));
+      throw Exception("embedded dll is invalid: " + windowsErrorString(::GetLastError()));
     }
 
     if (m_MOInfo && m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
@@ -315,7 +315,7 @@ QString ProxyPython::shortDescription(unsigned int key) const
       return tr("ModOrganizer path contains a semicolon");
     } break;
     default:
-      throw MOException(tr("invalid problem key %1").arg(key));
+      throw Exception(tr("invalid problem key %1").arg(key));
   }
 }
 
@@ -354,7 +354,7 @@ QString ProxyPython::fullDescription(unsigned int key) const
                 "The only solution I can offer is to remove the semicolon / move MO to a path without a semicolon.").arg(QCoreApplication::applicationDirPath());
     } break;
     default:
-      throw MOException(QString("invalid problem key %1").arg(key));
+      throw Exception(QString("invalid problem key %1").arg(key));
   }
 }
 
