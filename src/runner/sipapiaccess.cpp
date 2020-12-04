@@ -28,7 +28,7 @@ const sipAPIDef* sipAPIAccess::sipAPI()
                 exception = QString::fromStdString(returned());
             }
             PyErr_Restore(type, value, traceback);
-            throw MOBase::MyException(QString("Failed to load PyQt5: %1").arg(exception));
+            throw MOBase::MOException(QString("Failed to load PyQt5: %1").arg(exception));
         }
 
         sipApi = (const sipAPIDef*)PyCapsule_Import("PyQt5.sip._C_API", 0);
@@ -51,7 +51,7 @@ const sipAPIDef* sipAPIAccess::sipAPI()
                 }
                 PyErr_Restore(type, value, traceback);
             }
-            throw MOBase::MyException(QString("Failed to load SIP API: %1").arg(exception));
+            throw MOBase::MOException(QString("Failed to load SIP API: %1").arg(exception));
         }
     #else
         PyObject* sip_module;

@@ -31,10 +31,10 @@ namespace pyexcept {
    * @brief Exception to throw when a python implementation does not implement
    *     a pure virtual function.
    */
-  class MissingImplementation : public MOBase::MyException {
+  class MissingImplementation : public MOBase::MOException {
   public:
     MissingImplementation(std::string const& className, std::string const& methodName) :
-      MyException(QString::fromStdString(
+      MOException(QString::fromStdString(
         fmt::format("Python class implementing \"{}\" has no implementation of method \"{}\".",
           className, methodName))) { }
 
@@ -43,21 +43,21 @@ namespace pyexcept {
   /**
    * @brief Exception to throw when a python error occurs.
    */
-  class PythonError : public MOBase::MyException {
+  class PythonError : public MOBase::MOException {
   public:
 
     /**
      * @brief Create a new PythonError, fetching the error message from python. If the message
      *     cannot be retrieved, `defaultErrorMessage()` is used instead.
      */
-    PythonError() : MyException(getPythonErrorMessage()) { }
+    PythonError() : MOException(getPythonErrorMessage()) { }
 
     /**
      * @brief Create a new PythonError with the given message.
      *
      * @param message Message for the exception.
      */
-    PythonError(QString message) : MyException(message) { }
+    PythonError(QString message) : MOException(message) { }
 
   protected:
 
@@ -91,7 +91,7 @@ namespace pyexcept {
    * @brief Exception to throw when an unknown error occured. This is typically thrown
    *     from a catch(...) block.
    */
-  class UnknownException : public MOBase::MyException {
+  class UnknownException : public MOBase::MOException {
   public:
 
     /**
@@ -99,14 +99,14 @@ namespace pyexcept {
      *
      * @see defaultErrorMessage
      */
-    UnknownException() : MyException(defaultErrorMessage()) { }
+    UnknownException() : MOException(defaultErrorMessage()) { }
 
     /**
      * @brief Create a new UnknownException with the given message.
      *
      * @param message Message for the exception.
      */
-    UnknownException(QString message) : MyException(message) { }
+    UnknownException(QString message) : MOException(message) { }
 
   protected:
 
