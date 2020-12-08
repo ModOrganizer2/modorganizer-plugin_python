@@ -35,6 +35,7 @@ add_filter(NAME src/converters GROUPS
 add_filter(NAME src/runner GROUPS
 	pythonrunner
 	pylogger
+	widgets
 )
 
 add_filter(NAME src/utils GROUPS

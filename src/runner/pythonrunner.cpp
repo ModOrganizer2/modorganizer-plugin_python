@@ -15,6 +15,7 @@
 #include <iplugintool.h>
 #include <iprofile.h>
 #include <log.h>
+#include <report.h>
 
 #include "uibasewrappers.h"
 #include "proxypluginwrappers.h"
@@ -41,6 +42,7 @@
 #include "converters.h"
 #include "shared_ptr_converter.h"
 #include "pylogger.h"
+#include "widgets.h"
 
 using namespace MOBase;
 
@@ -86,6 +88,10 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_qflags_converter<IPluginGame::ProfileSettings>();
   utils::register_qflags_converter<IModList::ModStates>();
 
+  // Enums:
+  utils::register_enum_converter<QMessageBox::StandardButton>();
+  utils::register_enum_converter<QMessageBox::Icon>();
+
   // Pointers:
   bpy::register_ptr_to_python<std::shared_ptr<FileTreeEntry>>();
   bpy::register_ptr_to_python<std::shared_ptr<const FileTreeEntry>>();
@@ -116,6 +122,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<std::vector<std::shared_ptr<const IPluginRequirement>>>();
   utils::register_sequence_container<std::vector<ModDataContent::Content>>();
   utils::register_sequence_container<std::vector<Mapping>>();
+  utils::register_sequence_container<std::vector<TaskDialogButton>>();
 
   utils::register_set_container<std::set<QString>>();
 
@@ -132,6 +139,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_tuple<std::tuple<bool, DWORD>>(); // IOrganizer::waitForApplication
   bpy::register_tuple<std::tuple<bool, bool>>();  // IProfile::invalidationActive
   bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>();
+  bpy::register_tuple<std::tuple<QString, QString>>();
 
   // Variants:
   bpy::register_variant<std::variant<
@@ -140,6 +148,7 @@ BOOST_PYTHON_MODULE(mobase)
     std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>>();
   bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t>>();
   bpy::register_variant<std::variant<QString, bool>>();
+  bpy::register_variant<std::variant<QString, std::tuple<QString, QString>>>();
 
   // Functions:
   utils::register_functor_converter<void()>(); // converter for the onRefreshed-callback
@@ -1087,6 +1096,13 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::def("getFileVersion", &MOBase::getFileVersion, bpy::arg("filepath"));
   bpy::def("getProductVersion", &MOBase::getProductVersion, bpy::arg("executable"));
   bpy::def("getIconForExecutable", &MOBase::iconForExecutable, bpy::arg("executable"));
+
+  bpy::object widgets(bpy::borrowed(PyImport_AddModule("mobase.widgets")));
+  bpy::scope().attr("widgets") = widgets;
+  {
+    bpy::scope w_ = widgets;
+    register_widgets();
+  }
 
   // Expose MoVariant: MoVariant is a fake object whose only purpose is to be used as a type-hint
   // on the python side (e.g., def foo(x: mobase.MoVariant)). The real MoVariant is defined in the
