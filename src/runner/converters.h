@@ -66,6 +66,37 @@ namespace utils {
 
   }
 
+  namespace Enum_converter {
+
+    /**
+     *
+     */
+    template <typename Enum>
+    struct Enum_to_int
+    {
+      static PyObject* convert(const Enum& flags) {
+        return bpy::incref(bpy::object(static_cast<int>(flags)).ptr());
+      }
+    };
+
+    template <typename Enum>
+    struct Enum_from_python_obj
+    {
+
+      static void* convertible(PyObject* objPtr) {
+        return SIPLong_Check(objPtr) ? objPtr : nullptr;
+      }
+
+      static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
+        int intVersion = (int)SIPLong_AsLong(objPtr);
+        void* storage = ((bpy::converter::rvalue_from_python_storage<Enum>*)data)->storage.bytes;
+        new (storage) Enum(static_cast<Enum>(intVersion));
+        data->convertible = storage;
+      }
+    };
+
+  }
+
   namespace QFlags_converter {
 
     /**
@@ -506,6 +537,16 @@ namespace utils {
       &QFlags_from_python_obj<T>::convertible,
       &QFlags_from_python_obj<T>::construct,
       bpy::type_id<Flags>());
+  }
+
+  template <class Enum>
+  inline void register_enum_converter() {
+    using namespace Enum_converter;
+    bpy::to_python_converter<Enum, Enum_to_int<Enum>>();
+    bpy::converter::registry::push_back(
+      &Enum_from_python_obj<Enum>::convertible,
+      &Enum_from_python_obj<Enum>::construct,
+      bpy::type_id<Enum>());
   }
 
   template <class QClass>
