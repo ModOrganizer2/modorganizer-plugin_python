@@ -116,6 +116,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_sequence_container<QStringList>();
   utils::register_sequence_container<QList<QString>>();
   utils::register_sequence_container<QList<QFileInfo>>();
+  utils::register_sequence_container<QList<IOrganizer::FileInfo>>();
   utils::register_sequence_container<QList<QVariant>>(); // Required for QVariant since this is QVariantList.
   utils::register_sequence_container<std::vector<std::shared_ptr<const FileTreeEntry>>>();
   utils::register_sequence_container<std::vector<std::shared_ptr<const ISaveGame>>>();
@@ -165,7 +166,7 @@ BOOST_PYTHON_MODULE(mobase)
   utils::register_functor_converter<void(IProfile*, IProfile*), bpy::pointer_wrapper<IProfile*>>();
   utils::register_functor_converter<bool(const QString&)>();
   utils::register_functor_converter<IFileTree::WalkReturn(const QString&, std::shared_ptr<const FileTreeEntry>)>();
-  utils::register_functor_converter<bool(const IOrganizer::FileInfo&)>();
+  utils::register_functor_converter<bool(const IOrganizer::FileInfo&), boost::reference_wrapper<const IOrganizer::FileInfo&>>();
   utils::register_functor_converter<bool(std::shared_ptr<FileTreeEntry> const&)>();
   utils::register_functor_converter<std::variant<QString, bool>(QString const&)>();
   utils::register_functor_converter<void(IModInterface *), bpy::pointer_wrapper<IModInterface*>>();
