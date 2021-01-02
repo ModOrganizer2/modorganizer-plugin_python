@@ -705,9 +705,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("addCategory", &IModInterface::addCategory, bpy::arg("name"))
       .def("removeCategory", &IModInterface::removeCategory, bpy::arg("name"))
       .def("setGameName", &IModInterface::setGameName, bpy::arg("name"))
-      .def("setName", &IModInterface::setName, bpy::arg("name"))
       .def("setUrl", &IModInterface::setUrl, bpy::arg("url"))
-      .def("remove", &IModInterface::remove)
       .def("pluginSetting", &IModInterface::pluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("default") = QVariant()))
       .def("pluginSettings", &IModInterface::pluginSettings, bpy::arg("plugin_name"))
       .def("setPluginSetting", &IModInterface::setPluginSetting, (bpy::arg("plugin_name"), "key", bpy::arg("value")))
@@ -826,6 +824,7 @@ BOOST_PYTHON_MODULE(mobase)
 
       .def("getMod", &MOBase::IModList::getMod, bpy::return_value_policy<bpy::reference_existing_object>(), bpy::arg("name"))
       .def("removeMod", &MOBase::IModList::removeMod, bpy::arg("mod"))
+      .def("renameMod", &MOBase::IModList::renameMod, bpy::return_value_policy<bpy::reference_existing_object>(), (bpy::arg("mod"), bpy::arg("name")))
 
       .def("state", &MOBase::IModList::state, bpy::arg("name"))
       .def("setActive",
