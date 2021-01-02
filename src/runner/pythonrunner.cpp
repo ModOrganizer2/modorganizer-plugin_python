@@ -139,6 +139,7 @@ BOOST_PYTHON_MODULE(mobase)
   // Tuple:
   bpy::register_tuple<std::tuple<bool, DWORD>>(); // IOrganizer::waitForApplication
   bpy::register_tuple<std::tuple<bool, bool>>();  // IProfile::invalidationActive
+  bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, QString, int>>();
   bpy::register_tuple<std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>();
   bpy::register_tuple<std::tuple<QString, QString>>();
 
@@ -150,6 +151,7 @@ BOOST_PYTHON_MODULE(mobase)
   bpy::register_variant<std::variant<IFileTree::OverwritesType, std::size_t>>();
   bpy::register_variant<std::variant<QString, bool>>();
   bpy::register_variant<std::variant<QString, std::tuple<QString, QString>>>();
+  bpy::register_variant<std::variant<QString, GuessedValue<QString>>>();
 
   // Functions:
   utils::register_functor_converter<void()>(); // converter for the onRefreshed-callback
@@ -654,7 +656,20 @@ BOOST_PYTHON_MODULE(mobase)
     .def("extractFile", &IInstallationManager::extractFile, (bpy::arg("entry"), bpy::arg("silent") = false))
     .def("extractFiles", &IInstallationManager::extractFiles, (bpy::arg("entries"), bpy::arg("silent") = false))
     .def("createFile", &IInstallationManager::createFile, bpy::arg("entry"))
-    .def("installArchive", &IInstallationManager::installArchive, (bpy::arg("mod_name"), "archive", "mod_id"))
+
+    // accept both QString and GuessedValue<QString> since the conversion is not automatic in Python, and
+    // return a tuple to get back the mod name and the mod ID
+    .def("installArchive", +[](IInstallationManager* m, std::variant<QString, GuessedValue<QString>> modName, QString archive, int modId) {
+      GuessedValue<QString> tmp;
+      if (auto* p = std::get_if<QString>(&modName)) {
+        tmp = *p;
+      }
+      else {
+        tmp = std::get<GuessedValue<QString>>(modName);
+      }
+      auto result = m->installArchive(tmp, archive, modId);
+      return std::make_tuple(result, static_cast<QString>(tmp), modId);
+    }, (bpy::arg("mod_name"), "archive", bpy::arg("mod_id") = 0))
     ;
 
   bpy::enum_<EndorsedState>("EndorsedState")
