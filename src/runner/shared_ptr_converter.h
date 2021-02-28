@@ -96,6 +96,30 @@ namespace utils {
     }
   };
 
+  // release the bpy::object associated with the deleter of the given shared_ptr,
+  // if the given shared_ptr has a Boost.Python deleter
+  //
+  // this should only be used when returning from Python objects that have been created
+  // on the C++ side, e.g. if IFileTree.createOrphanTree() from Python and then return
+  // the tree
+  //
+  // for reason yet to be known, Boost.Python had a custom deleter in this case that tries
+  // to delete the bpy::object and fails, so we have to release the object manually
+  //
+  template <class SharedPtr>
+  SharedPtr clean_shared_ptr(SharedPtr&& ptr) {
+    if (auto* d = get_deleter<boost::python::converter::shared_ptr_deleter>(ptr); d != nullptr) {
+      // we cannot do a proper reset() here, even with the GIL lock, for unknown reason,
+      // so we only release
+      //
+      // this might create lost references to Python object but this should not happen
+      // too often so hopefully it's not a big issue
+      //
+      d->owner.release();
+    }
+    return ptr;
+  }
+
 }
 
 #endif
