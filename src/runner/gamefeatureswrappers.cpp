@@ -9,6 +9,7 @@
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
 
+#include "shared_ptr_converter.h"
 #include "ifiletree.h"
 #include "pythonwrapperutilities.h"
 
@@ -108,7 +109,9 @@ ModDataChecker::CheckReturn ModDataCheckerWrapper::dataLooksValid(std::shared_pt
 }
 
 std::shared_ptr<MOBase::IFileTree> ModDataCheckerWrapper::fix(std::shared_ptr<MOBase::IFileTree> fileTree) const {
-  return basicWrapperFunctionImplementationWithDefault<std::shared_ptr<MOBase::IFileTree>>(this, [](auto&&... args) { return nullptr; }, "fix", fileTree);
+  return utils::clean_shared_ptr(
+    basicWrapperFunctionImplementationWithDefault<std::shared_ptr<MOBase::IFileTree>>(
+      this, [](auto&&... args) { return nullptr; }, "fix", fileTree));
 }
 
 /// end ModDataChecker Wrapper

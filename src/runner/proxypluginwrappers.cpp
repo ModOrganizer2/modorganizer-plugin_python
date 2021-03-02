@@ -4,6 +4,7 @@
 #include <QUrl>
 #include <QWidget>
 
+#include "shared_ptr_converter.h"
 #include "pythonwrapperutilities.h"
 #include "uibasewrappers.h"
 
@@ -330,10 +331,10 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
   using return_type = std::variant<
     IPluginInstaller::EInstallResult,
     std::shared_ptr<IFileTree>,
-    std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>> ;
+    std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>;
   auto ret = basicWrapperFunctionImplementation<return_type>(this, "install", boost::ref(modName), tree, version, nexusID);
 
-  return std::visit([&](auto const& t) {
+  auto result = std::visit([&](auto const& t) {
     using type = std::decay_t<decltype(t)>;
     if constexpr (std::is_same_v<type, IPluginInstaller::EInstallResult>) {
       return t;
@@ -349,6 +350,9 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
       return std::get<0>(t);
     }
   }, ret);
+
+  tree = utils::clean_shared_ptr(tree);
+  return result;
 }
 
 /// end IPluginInstallerSimple Wrapper
