@@ -16,7 +16,7 @@
 #include <boost/python.hpp>
 #endif
 
-// The wrapper for IPluginGame cannot override requirements() since it's final,
+// The wrapper for IPluginGame cannot override requirements or enabledByDefault since they're final,
 // so we need to be able to exclude the declarations.
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_IMPL(include_requirements) \
 public: \
@@ -32,7 +32,9 @@ QString localizedName_Default() const; \
 QString master_Default() const; \
 BOOST_PP_EXPR_IF(include_requirements, \
   virtual std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements() const override; \
-  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements_Default() const;)
+  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements_Default() const; \
+  virtual bool enabledByDefault() const override; \
+  bool enabledByDefault_Default() const;)
 
 #define COMMON_I_PLUGIN_WRAPPER_DECLARATIONS COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_IMPL(1)
 

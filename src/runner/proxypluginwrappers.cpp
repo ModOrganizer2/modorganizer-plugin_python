@@ -76,7 +76,12 @@ BOOST_PP_EXPR_IF(include_requirements, \
     return basicWrapperFunctionImplementationWithDefault<std::vector<std::shared_ptr<const MOBase::IPluginRequirement>>>( \
       this, &class_name::requirements_Default, "requirements"); \
   } \
-  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> class_name::requirements_Default() const { return IPlugin::requirements(); })
+  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> class_name::requirements_Default() const { return IPlugin::requirements(); } \
+  bool class_name::enabledByDefault() const \
+  { \
+      return basicWrapperFunctionImplementationWithDefault<bool>(this, &class_name::enabledByDefault_Default, "enabledByDefault"); \
+  } \
+  bool class_name::enabledByDefault_Default() const { return IPlugin::enabledByDefault(); })
 
 #define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, 1)
 
