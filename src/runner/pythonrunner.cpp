@@ -867,7 +867,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("onModMoved", &MOBase::IModList::onModMoved, bpy::arg("callback"))
       ;
 
-  // Note: localizedName(), master() and requirements have to go in all the plugin wrappers declaration,
+  // Note: localizedName, master, requirements and enabledByDefault have to go in all the plugin wrappers declaration,
   // since the default functions are specific to each wrapper, otherwise in turns into an
   // infinite recursion mess.
   bpy::class_<IPluginWrapper, boost::noncopyable>("IPlugin")
@@ -880,12 +880,14 @@ BOOST_PYTHON_MODULE(mobase)
     .def("version", bpy::pure_virtual(&MOBase::IPlugin::version))
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginWrapper::requirements_Default)
     .def("settings", bpy::pure_virtual(&MOBase::IPlugin::settings))
+    .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginWrapper::enabledByDefault_Default)
     ;
 
   bpy::class_<IPluginDiagnoseWrapper, bpy::bases<IPlugin>, boost::noncopyable>("IPluginDiagnose")
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginDiagnoseWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginDiagnoseWrapper::master_Default)
       .def("requirements", &MOBase::IPlugin::requirements, &IPluginDiagnoseWrapper::requirements_Default)
+      .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginDiagnoseWrapper::enabledByDefault_Default)
 
       .def("activeProblems", bpy::pure_virtual(&MOBase::IPluginDiagnose::activeProblems))
       .def("shortDescription", bpy::pure_virtual(&MOBase::IPluginDiagnose::shortDescription), bpy::arg("key"))
@@ -913,6 +915,8 @@ BOOST_PYTHON_MODULE(mobase)
       .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginFileMapperWrapper::localizedName_Default)
       .def("master", &MOBase::IPlugin::master, &IPluginFileMapperWrapper::master_Default)
       .def("requirements", &MOBase::IPlugin::requirements, &IPluginFileMapperWrapper::requirements_Default)
+      .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginFileMapperWrapper::enabledByDefault_Default)
+
       .def("mappings", bpy::pure_virtual(&MOBase::IPluginFileMapper::mappings))
       ;
 
@@ -1045,6 +1049,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerSimpleWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerSimpleWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginInstallerSimpleWrapper::requirements_Default)
+    .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginInstallerSimpleWrapper::enabledByDefault_Default)
 
     // Note: Keeping the variant here even if we always return a tuple to be consistent with the wrapper and
     // have proper stubs generation.
@@ -1063,6 +1068,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginInstallerCustomWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginInstallerCustomWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginInstallerCustomWrapper::requirements_Default)
+    .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginInstallerCustomWrapper::enabledByDefault_Default)
 
     // Needs to add both otherwize boost does not understand:
     .def("isArchiveSupported", &IPluginInstaller::isArchiveSupported, bpy::arg("tree"))
@@ -1077,6 +1083,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginModPageWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginModPageWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginModPageWrapper::requirements_Default)
+    .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginModPageWrapper::enabledByDefault_Default)
 
     .def("displayName", bpy::pure_virtual(&IPluginModPage::displayName))
     .def("icon", bpy::pure_virtual(&IPluginModPage::icon))
@@ -1091,6 +1098,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginPreviewWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginPreviewWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginPreviewWrapper::requirements_Default)
+    .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginPreviewWrapper::enabledByDefault_Default)
 
     .def("supportedExtensions", bpy::pure_virtual(&IPluginPreview::supportedExtensions))
     .def("genFilePreview", bpy::pure_virtual(&IPluginPreview::genFilePreview), bpy::return_value_policy<bpy::return_by_value>(),
@@ -1101,6 +1109,7 @@ BOOST_PYTHON_MODULE(mobase)
     .def("localizedName", &MOBase::IPlugin::localizedName, &IPluginToolWrapper::localizedName_Default)
     .def("master", &MOBase::IPlugin::master, &IPluginToolWrapper::master_Default)
     .def("requirements", &MOBase::IPlugin::requirements, &IPluginToolWrapper::requirements_Default)
+    .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault, &IPluginToolWrapper::enabledByDefault_Default)
 
     .def("displayName", bpy::pure_virtual(&IPluginTool::displayName))
     .def("tooltip", bpy::pure_virtual(&IPluginTool::tooltip))
