@@ -1328,13 +1328,14 @@ bool PythonRunner::initPython(const QString &pythonPath)
     bpy::object mainNamespace = mainModule.attr("__dict__");
     mainNamespace["sys"] = bpy::import("sys");
     mainNamespace["moprivate"] = bpy::import("moprivate");
-    mainNamespace["mobase"] = bpy::import("mobase");
     bpy::import("site");
     bpy::exec("sys.stdout = moprivate.PrintWrapper()\n"
               "sys.stderr = moprivate.ErrWrapper.instance()\n"
               "sys.excepthook = lambda x, y, z: sys.__excepthook__(x, y, z)\n",
                         mainNamespace);
 
+
+    mainNamespace["mobase"] = bpy::import("mobase");
     configure_python_logging(mainNamespace["mobase"]);
 
     PyEval_SaveThread();
