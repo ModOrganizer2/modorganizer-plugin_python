@@ -216,7 +216,7 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-  return VersionInfo(2, 1, 0, VersionInfo::RELEASE_FINAL);
+  return VersionInfo(2, 2, 0, VersionInfo::RELEASE_FINAL);
 }
 
 QList<PluginSetting> ProxyPython::settings() const
