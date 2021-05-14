@@ -327,9 +327,15 @@ BOOST_PYTHON_MODULE(mobase)
     .staticmethod("basic");
 
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
-      .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
-      .def_readwrite("archive", &IOrganizer::FileInfo::archive)
-      .def_readwrite("origins", &IOrganizer::FileInfo::origins)
+    .add_property("filePath",
+      +[](const IOrganizer::FileInfo& info) { return info.filePath; },
+      +[](IOrganizer::FileInfo& info, QString value) { info.filePath = value; })
+    .add_property("archive",
+      +[](const IOrganizer::FileInfo& info) { return info.archive; },
+      +[](IOrganizer::FileInfo& info, QString value) { info.archive = value; })
+    .add_property("origins",
+      +[](const IOrganizer::FileInfo& info) { return info.origins; },
+      +[](IOrganizer::FileInfo& info, QStringList value) { info.origins = value; })
     ;
 
   bpy::class_<IOrganizer, boost::noncopyable>("IOrganizer", bpy::no_init)
