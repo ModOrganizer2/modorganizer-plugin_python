@@ -371,6 +371,9 @@ BOOST_PYTHON_MODULE(mobase)
 
       .def("getFileOrigins", &IOrganizer::getFileOrigins, bpy::arg("filename"))
       .def("findFileInfos", &IOrganizer::findFileInfos, (bpy::arg("path"), "filter"))
+
+      .def("virtualFileTree", &IOrganizer::virtualFileTree)
+
       .def("downloadManager", &IOrganizer::downloadManager, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("pluginList", &IOrganizer::pluginList, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", &IOrganizer::modList, bpy::return_value_policy<bpy::reference_existing_object>())
