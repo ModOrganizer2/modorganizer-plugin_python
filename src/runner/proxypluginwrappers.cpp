@@ -303,9 +303,9 @@ QString IPluginGameWrapper::getLauncherName() const
 
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(IPluginGameWrapper, 0)
 
-std::map<std::type_index, boost::any> IPluginGameWrapper::featureList() const
+std::map<std::type_index, std::any> IPluginGameWrapper::featureList() const
 {
-  return basicWrapperFunctionImplementation<std::map<std::type_index, boost::any>>(this, "_featureList");
+  return basicWrapperFunctionImplementation<std::map<std::type_index, std::any>>(this, "_featureList");
 }
 /// end IPluginGame Wrapper
 /////////////////////////////////////

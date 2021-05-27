@@ -1,7 +1,6 @@
 #include "gamefeatureswrappers.h"
 
-#include <boost/any.hpp>
-
+#include <any>
 #include <typeindex>
 
 #include <ipluginlist.h>
@@ -213,7 +212,7 @@ QStringList UnmanagedModsWrapper::secondaryFiles(const QString & modName) const
 
 game_features_map_from_python::game_features_map_from_python()
 {
-  boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<std::map<std::type_index, boost::any>>());
+  boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<std::map<std::type_index, std::any>>());
 }
 
 void * game_features_map_from_python::convertible(PyObject * objPtr)
@@ -222,15 +221,15 @@ void * game_features_map_from_python::convertible(PyObject * objPtr)
 }
 
 template<typename T>
-void insertGameFeature(std::map<std::type_index, boost::any>& map, const boost::python::object& pyObject)
+void insertGameFeature(std::map<std::type_index, std::any>& map, const boost::python::object& pyObject)
 {
   map[std::type_index(typeid(T))] = boost::python::extract<T*>(pyObject)();
 }
 
 void game_features_map_from_python::construct(PyObject * objPtr, boost::python::converter::rvalue_from_python_stage1_data * data)
 {
-  void *storage = ((boost::python::converter::rvalue_from_python_storage<std::map<std::type_index, boost::any>>*)data)->storage.bytes;
-  std::map<std::type_index, boost::any> *result = new (storage) std::map<std::type_index, boost::any>();
+  void *storage = ((boost::python::converter::rvalue_from_python_storage<std::map<std::type_index, std::any>>*)data)->storage.bytes;
+  std::map<std::type_index, std::any> *result = new (storage) std::map<std::type_index, std::any>();
   boost::python::dict source(boost::python::handle<>(boost::python::borrowed(objPtr)));
   boost::python::list keys = source.keys();
   int len = boost::python::len(keys);

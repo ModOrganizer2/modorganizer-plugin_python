@@ -14,6 +14,7 @@
 
 #ifndef Q_MOC_RUN
 #include <boost/python.hpp>
+#include <boost/preprocessor/control/expr_if.hpp>
 #endif
 
 // The wrapper for IPluginGame cannot override requirements or enabledByDefault since they're final,
@@ -138,7 +139,7 @@ public:
 
 protected:
   // Apparently, Python developers interpret an underscore in a function name as it being protected
-  virtual std::map<std::type_index, boost::any> featureList() const override;
+  virtual std::map<std::type_index, std::any> featureList() const override;
 
   // Thankfully, the default implementation of the templated 'T *feature()' function should allow us to get away without overriding it.
 };
