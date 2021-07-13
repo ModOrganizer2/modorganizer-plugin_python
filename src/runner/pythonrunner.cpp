@@ -327,9 +327,15 @@ BOOST_PYTHON_MODULE(mobase)
     .staticmethod("basic");
 
   bpy::class_<IOrganizer::FileInfo>("FileInfo", bpy::init<>())
-      .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)
-      .def_readwrite("archive", &IOrganizer::FileInfo::archive)
-      .def_readwrite("origins", &IOrganizer::FileInfo::origins)
+    .add_property("filePath",
+      +[](const IOrganizer::FileInfo& info) { return info.filePath; },
+      +[](IOrganizer::FileInfo& info, QString value) { info.filePath = value; })
+    .add_property("archive",
+      +[](const IOrganizer::FileInfo& info) { return info.archive; },
+      +[](IOrganizer::FileInfo& info, QString value) { info.archive = value; })
+    .add_property("origins",
+      +[](const IOrganizer::FileInfo& info) { return info.origins; },
+      +[](IOrganizer::FileInfo& info, QStringList value) { info.origins = value; })
     ;
 
   bpy::class_<IOrganizer, boost::noncopyable>("IOrganizer", bpy::no_init)
@@ -371,6 +377,9 @@ BOOST_PYTHON_MODULE(mobase)
 
       .def("getFileOrigins", &IOrganizer::getFileOrigins, bpy::arg("filename"))
       .def("findFileInfos", &IOrganizer::findFileInfos, (bpy::arg("path"), "filter"))
+
+      .def("virtualFileTree", &IOrganizer::virtualFileTree)
+
       .def("downloadManager", &IOrganizer::downloadManager, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("pluginList", &IOrganizer::pluginList, bpy::return_value_policy<bpy::reference_existing_object>())
       .def("modList", &IOrganizer::modList, bpy::return_value_policy<bpy::reference_existing_object>())
