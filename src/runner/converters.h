@@ -29,7 +29,7 @@ namespace utils {
         // It's safer to explicitly convert to unicode as if we don't, this can return
         // either str or unicode without it being easy to know which to expect
         bpy::object pyStr = bpy::object(qUtf8Printable(str));
-        if (SIPBytes_Check(pyStr.ptr()))
+        if (PyBytes_Check(pyStr.ptr()))
           pyStr = pyStr.attr("decode")("utf-8");
         return bpy::incref(pyStr.ptr());
       }
@@ -39,7 +39,7 @@ namespace utils {
     {
 
       static void* convertible(PyObject* objPtr) {
-        return SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
+        return PyBytes_Check(objPtr) || PyUnicode_Check(objPtr) ? objPtr : nullptr;
       }
 
       static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
@@ -47,7 +47,7 @@ namespace utils {
         PyObject* strPtr = PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
 
         // Extract the character data from the python string
-        const char* value = SIPBytes_AsString(strPtr);
+        const char* value = PyBytes_AsString(strPtr);
         assert(value != nullptr);
 
         // allocate storage
@@ -84,11 +84,11 @@ namespace utils {
     {
 
       static void* convertible(PyObject* objPtr) {
-        return SIPLong_Check(objPtr) ? objPtr : nullptr;
+        return PyLong_Check(objPtr) ? objPtr : nullptr;
       }
 
       static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
-        int intVersion = (int)SIPLong_AsLong(objPtr);
+        int intVersion = (int)PyLong_AsLong(objPtr);
         void* storage = ((bpy::converter::rvalue_from_python_storage<Enum>*)data)->storage.bytes;
         new (storage) Enum(static_cast<Enum>(intVersion));
         data->convertible = storage;
@@ -115,11 +115,11 @@ namespace utils {
     {
 
       static void* convertible(PyObject* objPtr) {
-        return SIPLong_Check(objPtr) ? objPtr : nullptr;
+        return PyLong_Check(objPtr) ? objPtr : nullptr;
       }
 
       static void construct(PyObject* objPtr, bpy::converter::rvalue_from_python_stage1_data* data) {
-        int intVersion = (int)SIPLong_AsLong(objPtr);
+        int intVersion = (int)PyLong_AsLong(objPtr);
         T tVersion = (T)intVersion;
         void* storage = ((bpy::converter::rvalue_from_python_storage<QFlags<T>>*)data)->storage.bytes;
         new (storage) QFlags<T>(tVersion);
@@ -137,7 +137,7 @@ namespace utils {
       static PyObject* convert(const QVariant& var) {
         switch (var.type()) {
         case QVariant::Invalid: return bpy::incref(Py_None);
-        case QVariant::Int: return SIPLong_FromLong(var.toInt());
+        case QVariant::Int: return PyLong_FromLong(var.toInt());
         case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
         case QVariant::Bool: return PyBool_FromLong(var.toBool());
         case QVariant::String: return bpy::incref(bpy::object(var.toString()).ptr());
@@ -162,7 +162,7 @@ namespace utils {
     {
 
       static void* convertible(PyObject* objPtr) {
-        if (!SIPBytes_Check(objPtr) && !PyUnicode_Check(objPtr) && !PyLong_Check(objPtr) &&
+        if (!PyBytes_Check(objPtr) && !PyUnicode_Check(objPtr) && !PyLong_Check(objPtr) &&
           !PyBool_Check(objPtr) && !PyList_Check(objPtr) && !PyDict_Check(objPtr) &&
           objPtr != Py_None) {
           return nullptr;
@@ -199,7 +199,7 @@ namespace utils {
         else if (PyDict_Check(objPtr)) {
           constructVariant(bpy::extract<QVariantMap>(objPtr)(), data);
         }
-        else if (SIPBytes_Check(objPtr) || PyUnicode_Check(objPtr)) {
+        else if (PyBytes_Check(objPtr) || PyUnicode_Check(objPtr)) {
           constructVariant(bpy::extract<QString>(objPtr)(), data);
         }
         // PyBools will also return true for SIPLong_Check but not the other way around, so the order
@@ -207,7 +207,7 @@ namespace utils {
         else if (PyBool_Check(objPtr)) {
           constructVariant(bpy::extract<bool>(objPtr)(), data);
         }
-        else if (SIPLong_Check(objPtr)) {
+        else if (PyLong_Check(objPtr)) {
           // QVariant doesn't have long. It has int or long long. Given that on m/s,
           // long is 32 bits for 32- and 64- bit code...
           constructVariant(bpy::extract<int>(objPtr)(), data);
