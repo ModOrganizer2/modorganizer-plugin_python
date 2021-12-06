@@ -42,7 +42,7 @@ CONFIG(debug, debug|release) {
   msvc:QMAKE_LFLAGS += /DEBUG
 }
 
-INCLUDEPATH += "$${BOOSTPATH}" "$${PYTHONPATH}/include" "$${PYTHONPATH}/Lib/site-packages/PyQt5/include" ../uibase
+INCLUDEPATH += "$${BOOSTPATH}" "$${PYTHONPATH}/include" "$${PYTHONPATH}/Lib/site-packages/PyQt6/include" ../uibase
 LIBS += -L"$${PYTHONPATH}/libs" -L"$${BOOSTPATH}/stage/lib"
 LIBS += -lpython27
 LIBS += -luibase
