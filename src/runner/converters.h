@@ -135,19 +135,19 @@ namespace utils {
     struct QVariant_to_python_obj
     {
       static PyObject* convert(const QVariant& var) {
-        switch (var.type()) {
-        case QVariant::Invalid: return bpy::incref(Py_None);
-        case QVariant::Int: return PyLong_FromLong(var.toInt());
-        case QVariant::UInt: return PyLong_FromUnsignedLong(var.toUInt());
-        case QVariant::Bool: return PyBool_FromLong(var.toBool());
-        case QVariant::String: return bpy::incref(bpy::object(var.toString()).ptr());
+        switch (var.typeId()) {
+        case QMetaType::Type::UnknownType: return bpy::incref(Py_None);
+        case QMetaType::Type::Int: return PyLong_FromLong(var.toInt());
+        case QMetaType::Type::UInt: return PyLong_FromUnsignedLong(var.toUInt());
+        case QMetaType::Type::Bool: return PyBool_FromLong(var.toBool());
+        case QMetaType::Type::QString: return bpy::incref(bpy::object(var.toString()).ptr());
         // We need to check for StringList here because these are not considered List
         // since List is QList<QVariant> will StringList is QList<QString>:
-        case QVariant::StringList: return bpy::incref(bpy::object(var.toStringList()).ptr());
-        case QVariant::List: {
+        case QMetaType::Type::QStringList: return bpy::incref(bpy::object(var.toStringList()).ptr());
+        case QMetaType::Type::QVariantList: {
           return bpy::incref(bpy::object(var.toList()).ptr());
         } break;
-        case QVariant::Map: {
+        case QMetaType::Type::QVariantMap: {
           return bpy::incref(bpy::object(var.toMap()).ptr());
         } break;
         default: {
