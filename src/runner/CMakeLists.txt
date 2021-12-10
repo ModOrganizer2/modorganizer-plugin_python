@@ -5,7 +5,7 @@ set(project_type plugin)
 set(enable_warnings OFF)
 set(enable_bigobj ON)
 set(install_dir bin/plugins/data)
-set(create_translations ON)
+set(create_translations OFF)
 
 add_compile_definitions(
 	QT_NO_KEYWORDS

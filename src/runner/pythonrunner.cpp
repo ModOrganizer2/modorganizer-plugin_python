@@ -1570,6 +1570,6 @@ bool PythonRunner::isPythonInstalled() const
 bool PythonRunner::isPythonVersionSupported() const
 {
   const char *version = Py_GetVersion();
-  return strstr(version, "3.8") == version;
+  return strstr(version, "3.10") == version;
 }
 

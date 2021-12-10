@@ -330,11 +330,10 @@ QString ProxyPython::fullDescription(unsigned int key) const
                 "This is only required to use some extended functionality in MO, you do not need Python to play the game.").arg(s_DownloadPythonURL);
     } break;
     case PROBLEM_PYTHONWRONGVERSION: {
-      return tr("Your installed python version has a different version than 2.7. "
-                "Some MO plugins may not work.<br>"
-                "If you have multiple versions of python installed you may have to configure the path to 2.7 (32 bit) "
-                "in the settings dialog.<br>"
-                "This is only required to use some extended functionality in MO, you do not need Python to play the game.");
+      return tr("The loaded version of python does not match the expected 3.10.<br>"
+                "This may cause some or all python plugins to stop working.<br>"
+                "The expected python libraries should come bundled with MO2,<br>"
+                "you may want to perform a clean install of the application.");
     } break;
     case PROBLEM_WRONGPYTHONPATH: {
       return tr("Please set python_dir in Settings->Plugins->ProxyPython to the path of your python 2.7 (32 bit) installation.");
