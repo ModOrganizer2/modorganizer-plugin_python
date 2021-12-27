@@ -993,6 +993,7 @@ BOOST_PYTHON_MODULE(mobase)
       .def("looksValid", bpy::pure_virtual(&MOBase::IPluginGame::looksValid), bpy::arg("directory"))
       .def("gameVersion", bpy::pure_virtual(&MOBase::IPluginGame::gameVersion))
       .def("getLauncherName", bpy::pure_virtual(&MOBase::IPluginGame::getLauncherName))
+      .def("getSupportURL", bpy::pure_virtual(&MOBase::IPluginGame::getSupportURL))
 
       .def("featureList", +[](MOBase::IPluginGame* p) {
         // Constructing a dict from class name to actual object:
