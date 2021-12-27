@@ -134,6 +134,7 @@ public:
   virtual bool looksValid(QDir const &dir) const override;
   virtual QString gameVersion() const override;
   virtual QString getLauncherName() const override;
+  virtual QString getSupportURL() const override;
 
   COMMON_I_PLUGIN_WRAPPER_DECLARATIONS_IMPL(0)
 

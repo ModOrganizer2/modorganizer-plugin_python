@@ -301,6 +301,11 @@ QString IPluginGameWrapper::getLauncherName() const
   return basicWrapperFunctionImplementation<QString>(this, "getLauncherName");
 }
 
+QString IPluginGameWrapper::getSupportURL() const
+{
+    return basicWrapperFunctionImplementation<QString>(this, "getSupportURL");
+}
+
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(IPluginGameWrapper, 0)
 
 std::map<std::type_index, std::any> IPluginGameWrapper::featureList() const
