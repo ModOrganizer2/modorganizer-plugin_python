@@ -664,7 +664,9 @@ BOOST_PYTHON_MODULE(mobase)
     .def("getSupportedExtensions", &IInstallationManager::getSupportedExtensions)
     .def("extractFile", &IInstallationManager::extractFile, (bpy::arg("entry"), bpy::arg("silent") = false))
     .def("extractFiles", &IInstallationManager::extractFiles, (bpy::arg("entries"), bpy::arg("silent") = false))
-    .def("createFile", &IInstallationManager::createFile, bpy::arg("entry"))
+    .def("createFile", +[](IInstallationManager* m, std::shared_ptr<const MOBase::FileTreeEntry> entry) {
+        return m->createFile(utils::clean_shared_ptr(entry));
+      }, bpy::arg("entry"))
 
     // accept both QString and GuessedValue<QString> since the conversion is not automatic in Python, and
     // return a tuple to get back the mod name and the mod ID
