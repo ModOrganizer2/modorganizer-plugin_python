@@ -1160,12 +1160,12 @@ public:
   PythonRunner();
   ~PythonRunner();
 
-  bool initPython(const QString& pythonDir);
+  bool initPython();
 
   QList<QObject*> load(const QString& identifier);
   void unload(const QString& identifier);
 
-  bool isPythonInstalled() const;
+  bool isPythonInitialized() const;
   bool isPythonVersionSupported() const;
 
 private:
@@ -1197,14 +1197,13 @@ private:
   wchar_t* m_PythonHome;
 };
 
-IPythonRunner* CreatePythonRunner(const QString& pythonDir)
+IPythonRunner* CreatePythonRunner()
 {
-  PythonRunner* result = new PythonRunner;
-  if (result->initPython(pythonDir)) {
-    return result;
+  std::unique_ptr<PythonRunner> result = std::make_unique<PythonRunner>();
+  if (result->initPython()) {
+    return result.release();
   }
   else {
-    delete result;
     return nullptr;
   }
 }
@@ -1302,19 +1301,11 @@ BOOST_PYTHON_MODULE(moprivate)
   }, bpy::arg("callback") = bpy::object{});
 }
 
-bool PythonRunner::initPython(const QString &pythonPath)
+bool PythonRunner::initPython()
 {
   if (Py_IsInitialized())
     return true;
   try {
-    if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
-      return false;
-    }
-    pythonPath.toWCharArray(m_PythonHome);
-    if (!pythonPath.isEmpty()) {
-      Py_SetPythonHome(m_PythonHome);
-    }
-
     wchar_t argBuffer[MAX_PATH];
     const size_t cSize = strlen(argv0) + 1;
     mbstowcs(argBuffer, argv0, MAX_PATH);
@@ -1564,15 +1555,7 @@ void PythonRunner::unload(const QString& identifier)
   }
 }
 
-bool PythonRunner::isPythonInstalled() const
+bool PythonRunner::isPythonInitialized() const
 {
   return Py_IsInitialized() != 0;
 }
-
-
-bool PythonRunner::isPythonVersionSupported() const
-{
-  const char *version = Py_GetVersion();
-  return strstr(version, "3.8") == version;
-}
-
