@@ -14,8 +14,7 @@ public:
   virtual QList<QObject*> load(const QString& identifier) = 0;
   virtual void unload(const QString& identifier) = 0;
 
-  virtual bool isPythonInstalled() const = 0;
-  virtual bool isPythonVersionSupported() const = 0;
+  virtual bool isPythonInitialized() const = 0;
 
   virtual ~IPythonRunner() { }
 };
@@ -27,7 +26,7 @@ public:
 #define PYDLLEXPORT Q_DECL_IMPORT
 #endif // PYTHONRUNNER_LIBRARY
 
-extern "C" PYDLLEXPORT IPythonRunner *CreatePythonRunner(const QString &pythonDir);
+extern "C" PYDLLEXPORT IPythonRunner *CreatePythonRunner();
 
 
 

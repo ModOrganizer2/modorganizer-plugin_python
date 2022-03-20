@@ -20,11 +20,14 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef PROXYPYTHON_H
 #define PROXYPYTHON_H
 
+#include <map>
+#include <memory>
+
+#include <Windows.h>
 
 #include <ipluginproxy.h>
 #include <iplugindiagnose.h>
-#include <map>
-#include <Windows.h>
+
 #include <pythonrunner.h>
 
 
@@ -38,59 +41,42 @@ class ProxyPython : public QObject, public MOBase::IPluginProxy, public MOBase::
 
 public:
   ProxyPython();
-  ~ProxyPython();
 
   virtual bool init(MOBase::IOrganizer *moInfo);
-  virtual QString name() const;
-  virtual QString localizedName() const;
-  virtual QString author() const;
-  virtual QString description() const;
-  virtual MOBase::VersionInfo version() const;
-  virtual QList<MOBase::PluginSetting> settings() const;
+  virtual QString name() const override;
+  virtual QString localizedName() const override;
+  virtual QString author() const override;
+  virtual QString description() const override;
+  virtual MOBase::VersionInfo version() const override;
+  virtual QList<MOBase::PluginSetting> settings() const override;
 
-  QStringList pluginList(const QDir& pluginPath) const;
-  QList<QObject*> load(const QString& identifier);
-  void unload(const QString& identifier);
-
-  /**
-   * @return the parent widget for newly created dialogs
-   * @note needs to be public so it can be exposed to plugins
-   */
-  virtual QWidget *getParentWidget() { return parentWidget(); }
+  QStringList pluginList(const QDir& pluginPath) const override;
+  QList<QObject*> load(const QString& identifier) override;
+  void unload(const QString& identifier) override;
 
 public: // IPluginDiagnose
 
-  virtual std::vector<unsigned int> activeProblems() const;
-  virtual QString shortDescription(unsigned int key) const;
-  virtual QString fullDescription(unsigned int key) const;
-  virtual bool hasGuidedFix(unsigned int key) const;
-  virtual void startGuidedFix(unsigned int key) const;
+  virtual std::vector<unsigned int> activeProblems() const override;
+  virtual QString shortDescription(unsigned int key) const override;
+  virtual QString fullDescription(unsigned int key) const override;
+  virtual bool hasGuidedFix(unsigned int key) const override;
+  virtual void startGuidedFix(unsigned int key) const override;
 
 private:
 
-  static const unsigned int PROBLEM_PYTHONMISSING = 1;
-  static const unsigned int PROBLEM_PYTHONWRONGVERSION = 2;
-  static const unsigned int PROBLEM_WRONGPYTHONPATH = 3;
-  static const unsigned int PROBLEM_INITFAIL = 4;
-  static const unsigned int PROBLEM_PYTHONDETECTION = 5;
-  static const unsigned int PROBLEM_SEMICOLON = 6;
-  static const char *s_DownloadPythonURL;
-
   MOBase::IOrganizer *m_MOInfo;
-  QString m_TempRunnerFile;
   HMODULE m_RunnerLib;
-  IPythonRunner *m_Runner;
+  std::unique_ptr<IPythonRunner> m_Runner;
 
-  enum {
-    FAIL_NONE,
-    FAIL_SEMICOLON,
-    FAIL_NOTINIT,
-    FAIL_MISSINGDEPENDENCIES,
-    FAIL_INITFAIL,
-    FAIL_WRONGPYTHONPATH,
-    FAIL_PYTHONDETECTION,
-    FAIL_OTHER
-  } m_LoadFailure;
+  enum class FailureType : unsigned int {
+    NONE = 0,
+    SEMICOLON = 1,
+    DLL_NOT_FOUND = 2,
+    INVALID_DLL = 3,
+    INITIALIZATION = 4
+  };
+
+  FailureType m_LoadFailure;
 
 };
 
