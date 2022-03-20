@@ -802,9 +802,9 @@ BOOST_PYTHON_MODULE(mobase)
       .def("priority", &MOBase::IPluginList::priority, bpy::arg("name"))
       .def("setPriority", &MOBase::IPluginList::setPriority, (bpy::arg("name"), "priority"))
       .def("loadOrder", &MOBase::IPluginList::loadOrder, bpy::arg("name"))
-      .def("isMasterFile", &MOBase::IPluginList::isMasterFile, bpy::arg("name"))
+      .def("hasMasterExtension", &MOBase::IPluginList::hasMasterExtension, bpy::arg("name"))
+      .def("hasLightExtension", &MOBase::IPluginList::hasLightExtension, bpy::arg("name"))
       .def("isMasterFlagged", &MOBase::IPluginList::isMasterFlagged, bpy::arg("name"))
-      .def("isLightFile", &MOBase::IPluginList::isLightFile, bpy::arg("name"))
       .def("isLightFlagged", &MOBase::IPluginList::isLightFlagged, bpy::arg("name"))
       .def("masters", &MOBase::IPluginList::masters, bpy::arg("name"))
       .def("origin", &MOBase::IPluginList::origin, bpy::arg("name"))
@@ -818,15 +818,15 @@ BOOST_PYTHON_MODULE(mobase)
       // DEPRECATED
       .def("isMaster", &MOBase::IPluginList::isMaster, bpy::arg("name"))
       .def("onPluginStateChanged", +[](IPluginList* modList, const std::function<void(const QString&, IPluginList::PluginStates)>& fn) {
-      utils::show_deprecation_warning("onPluginStateChanged",
+        utils::show_deprecation_warning("onPluginStateChanged",
           "onPluginStateChanged(Callable[[str, IPluginList.PluginStates], None]) is deprecated, "
           "use onPluginStateChanged(Callable[[Dict[str, IPluginList.PluginStates], None]) instead.");
-      return modList->onPluginStateChanged([fn](auto const& map) {
+        return modList->onPluginStateChanged([fn](auto const& map) {
           for (const auto& entry : map) {
-              fn(entry.first, entry.second);
+            fn(entry.first, entry.second);
           }
-          });
-          }, bpy::arg("callback"))
+        });
+      }, bpy::arg("callback"))
       ;
 
   bpy::enum_<IModList::ModState>("ModState")
