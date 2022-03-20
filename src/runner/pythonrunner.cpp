@@ -802,13 +802,21 @@ BOOST_PYTHON_MODULE(mobase)
       .def("priority", &MOBase::IPluginList::priority, bpy::arg("name"))
       .def("setPriority", &MOBase::IPluginList::setPriority, (bpy::arg("name"), "priority"))
       .def("loadOrder", &MOBase::IPluginList::loadOrder, bpy::arg("name"))
-      .def("isMaster", &MOBase::IPluginList::isMaster, bpy::arg("name"))
+      .def("hasMasterExtension", &MOBase::IPluginList::hasMasterExtension, bpy::arg("name"))
+      .def("hasLightExtension", &MOBase::IPluginList::hasLightExtension, bpy::arg("name"))
+      .def("isMasterFlagged", &MOBase::IPluginList::isMasterFlagged, bpy::arg("name"))
+      .def("isLightFlagged", &MOBase::IPluginList::isLightFlagged, bpy::arg("name"))
       .def("masters", &MOBase::IPluginList::masters, bpy::arg("name"))
       .def("origin", &MOBase::IPluginList::origin, bpy::arg("name"))
       .def("onRefreshed", &MOBase::IPluginList::onRefreshed, bpy::arg("callback"))
       .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, bpy::arg("callback"))
+      .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged, bpy::arg("callback"))
+      .def("pluginNames", &MOBase::IPluginList::pluginNames)
+      .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
+      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, bpy::arg("loadorder"))
 
-      // Kept but deprecated for backward compatibility:
+      // DEPRECATED
+      .def("isMaster", &MOBase::IPluginList::isMaster, bpy::arg("name"))
       .def("onPluginStateChanged", +[](IPluginList* modList, const std::function<void(const QString&, IPluginList::PluginStates)>& fn) {
         utils::show_deprecation_warning("onPluginStateChanged",
           "onPluginStateChanged(Callable[[str, IPluginList.PluginStates], None]) is deprecated, "
@@ -817,12 +825,8 @@ BOOST_PYTHON_MODULE(mobase)
           for (const auto& entry : map) {
             fn(entry.first, entry.second);
           }
-          });
-          }, bpy::arg("callback"))
-      .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged, bpy::arg("callback"))
-      .def("pluginNames", &MOBase::IPluginList::pluginNames)
-      .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
-      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, bpy::arg("loadorder"))
+        });
+      }, bpy::arg("callback"))
       ;
 
   bpy::enum_<IModList::ModState>("ModState")
