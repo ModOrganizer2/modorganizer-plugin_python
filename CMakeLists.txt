@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(plugin_python)
-set(project_type plugin)
-set(enable_warnings OFF)
-set(create_translations OFF)
-
 if(DEFINED DEPENDENCIES_DIR)
-	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/project.cmake)
+	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/mo2.cmake)
 else()
-	include(../cmake_common/project.cmake)
+	include(${CMAKE_CURRENT_LIST_DIR}/cmake_common/mo2.cmake)
 endif()
-add_subdirectory(src/proxy)
 
+project(plugin_python)
+
+# order matters!
 add_subdirectory(src/runner)
+add_subdirectory(src/proxy)

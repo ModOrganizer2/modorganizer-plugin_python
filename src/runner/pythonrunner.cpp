@@ -37,6 +37,9 @@
 #include <boost/mp11.hpp>
 #endif
 
+#include <fmt/format.h>
+#include <fmt/xchar.h>
+
 #include "tuple_helper.h"
 #include "variant_helper.h"
 #include "converters.h"
