@@ -663,7 +663,9 @@ BOOST_PYTHON_MODULE(mobase)
     .def("getSupportedExtensions", &IInstallationManager::getSupportedExtensions)
     .def("extractFile", &IInstallationManager::extractFile, (bpy::arg("entry"), bpy::arg("silent") = false))
     .def("extractFiles", &IInstallationManager::extractFiles, (bpy::arg("entries"), bpy::arg("silent") = false))
-    .def("createFile", &IInstallationManager::createFile, bpy::arg("entry"))
+    .def("createFile", +[](IInstallationManager* m, std::shared_ptr<const MOBase::FileTreeEntry> entry) {
+        return m->createFile(utils::clean_shared_ptr(entry));
+      }, bpy::arg("entry"))
 
     // accept both QString and GuessedValue<QString> since the conversion is not automatic in Python, and
     // return a tuple to get back the mod name and the mod ID
@@ -799,13 +801,21 @@ BOOST_PYTHON_MODULE(mobase)
       .def("priority", &MOBase::IPluginList::priority, bpy::arg("name"))
       .def("setPriority", &MOBase::IPluginList::setPriority, (bpy::arg("name"), "priority"))
       .def("loadOrder", &MOBase::IPluginList::loadOrder, bpy::arg("name"))
-      .def("isMaster", &MOBase::IPluginList::isMaster, bpy::arg("name"))
+      .def("hasMasterExtension", &MOBase::IPluginList::hasMasterExtension, bpy::arg("name"))
+      .def("hasLightExtension", &MOBase::IPluginList::hasLightExtension, bpy::arg("name"))
+      .def("isMasterFlagged", &MOBase::IPluginList::isMasterFlagged, bpy::arg("name"))
+      .def("isLightFlagged", &MOBase::IPluginList::isLightFlagged, bpy::arg("name"))
       .def("masters", &MOBase::IPluginList::masters, bpy::arg("name"))
       .def("origin", &MOBase::IPluginList::origin, bpy::arg("name"))
       .def("onRefreshed", &MOBase::IPluginList::onRefreshed, bpy::arg("callback"))
       .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, bpy::arg("callback"))
+      .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged, bpy::arg("callback"))
+      .def("pluginNames", &MOBase::IPluginList::pluginNames)
+      .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
+      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, bpy::arg("loadorder"))
 
-      // Kept but deprecated for backward compatibility:
+      // DEPRECATED
+      .def("isMaster", &MOBase::IPluginList::isMaster, bpy::arg("name"))
       .def("onPluginStateChanged", +[](IPluginList* modList, const std::function<void(const QString&, IPluginList::PluginStates)>& fn) {
         utils::show_deprecation_warning("onPluginStateChanged",
           "onPluginStateChanged(Callable[[str, IPluginList.PluginStates], None]) is deprecated, "
@@ -814,12 +824,8 @@ BOOST_PYTHON_MODULE(mobase)
           for (const auto& entry : map) {
             fn(entry.first, entry.second);
           }
-          });
-          }, bpy::arg("callback"))
-      .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged, bpy::arg("callback"))
-      .def("pluginNames", &MOBase::IPluginList::pluginNames)
-      .def("setState", &MOBase::IPluginList::setState, (bpy::arg("name"), "state"))
-      .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, bpy::arg("loadorder"))
+        });
+      }, bpy::arg("callback"))
       ;
 
   bpy::enum_<IModList::ModState>("ModState")
@@ -1157,12 +1163,12 @@ public:
   PythonRunner();
   ~PythonRunner();
 
-  bool initPython(const QString& pythonDir);
+  bool initPython();
 
   QList<QObject*> load(const QString& identifier);
   void unload(const QString& identifier);
 
-  bool isPythonInstalled() const;
+  bool isPythonInitialized() const;
   bool isPythonVersionSupported() const;
 
 private:
@@ -1194,14 +1200,13 @@ private:
   wchar_t* m_PythonHome;
 };
 
-IPythonRunner* CreatePythonRunner(const QString& pythonDir)
+IPythonRunner* CreatePythonRunner()
 {
-  PythonRunner* result = new PythonRunner;
-  if (result->initPython(pythonDir)) {
-    return result;
+  std::unique_ptr<PythonRunner> result = std::make_unique<PythonRunner>();
+  if (result->initPython()) {
+    return result.release();
   }
   else {
-    delete result;
     return nullptr;
   }
 }
@@ -1299,19 +1304,11 @@ BOOST_PYTHON_MODULE(moprivate)
   }, bpy::arg("callback") = bpy::object{});
 }
 
-bool PythonRunner::initPython(const QString &pythonPath)
+bool PythonRunner::initPython()
 {
   if (Py_IsInitialized())
     return true;
   try {
-    if (!pythonPath.isEmpty() && !QFile::exists(pythonPath + "/python.exe")) {
-      return false;
-    }
-    pythonPath.toWCharArray(m_PythonHome);
-    if (!pythonPath.isEmpty()) {
-      Py_SetPythonHome(m_PythonHome);
-    }
-
     wchar_t argBuffer[MAX_PATH];
     const size_t cSize = strlen(argv0) + 1;
     mbstowcs(argBuffer, argv0, MAX_PATH);
@@ -1561,15 +1558,7 @@ void PythonRunner::unload(const QString& identifier)
   }
 }
 
-bool PythonRunner::isPythonInstalled() const
+bool PythonRunner::isPythonInitialized() const
 {
   return Py_IsInitialized() != 0;
 }
-
-
-bool PythonRunner::isPythonVersionSupported() const
-{
-  const char *version = Py_GetVersion();
-  return strstr(version, "3.10") == version;
-}
-
