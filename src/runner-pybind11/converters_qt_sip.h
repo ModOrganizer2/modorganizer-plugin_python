@@ -1,9 +1,29 @@
 #ifndef PYTHON_CONVERTERS_QT_SIP_HPP
 #define PYTHON_CONVERTERS_QT_SIP_HPP
 
-#include "sipapiaccess.h"
+#include <pybind11/pybind11.h>
+
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
+#include <QIcon>
+#include <QMainWindow>
+#include <QObject>
+#include <QPixmap>
+#include <QSize>
+#include <QUrl>
+#include <QWidget>
+
+#include <sip.h>
 
 namespace mo2::details {
+
+  /**
+   * @brief Retrieve the SIP api.
+   *
+   * @return const sipAPIDef*
+   */
+  const sipAPIDef* sipAPI();
 
   template <typename T, class = void> struct MetaData;
 
@@ -43,10 +63,10 @@ namespace mo2::details {
       //   sipAPI()->api_transfer_to(objPtr, Py_None);
       //
       void* data = nullptr;
-      if (PyObject_TypeCheck(src.ptr(), sipAPIAccess::sipAPI()->api_simplewrapper_type)) {
+      if (PyObject_TypeCheck(src.ptr(), mo2::details::sipAPI()->api_simplewrapper_type)) {
         data = reinterpret_cast<sipSimpleWrapper*>(src.ptr())->data;
       }
-      else if (PyObject_TypeCheck(src.ptr(), sipAPIAccess::sipAPI()->api_wrapper_type)) {
+      else if (PyObject_TypeCheck(src.ptr(), mo2::details::sipAPI()->api_wrapper_type)) {
         data = reinterpret_cast<sipWrapper*>(src.ptr())->super.data;
       }
 
@@ -68,7 +88,7 @@ namespace mo2::details {
       QtType src, pybind11::return_value_policy /* policy */, pybind11::handle /* parent */) {
 
       const sipTypeDef* type =
-        sipAPIAccess::sipAPI()->api_find_type(MetaData<QtType>::name);
+        mo2::details::sipAPI()->api_find_type(MetaData<QtType>::name);
       if (type == nullptr) {
         return Py_None;
       }
@@ -87,10 +107,10 @@ namespace mo2::details {
       }
 
       if constexpr (std::is_pointer_v<QtType>) {
-        sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(sipData, type, 0);
+        sipObj = mo2::details::sipAPI()->api_convert_from_type(sipData, type, 0);
       }
       else {
-        sipObj = sipAPIAccess::sipAPI()->api_convert_from_type(sipData, type, 0);
+        sipObj = mo2::details::sipAPI()->api_convert_from_type(sipData, type, 0);
       }
 
       if (sipObj == nullptr) {
@@ -99,7 +119,7 @@ namespace mo2::details {
 
       if constexpr (!std::is_pointer_v<QtType> && std::is_copy_constructible_v<QtType>) {
         // ensure Python deletes the C++ component
-        sipAPIAccess::sipAPI()->api_transfer_back(sipObj);
+        mo2::details::sipAPI()->api_transfer_back(sipObj);
       }
 
       return sipObj;

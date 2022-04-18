@@ -96,7 +96,7 @@ namespace pybind11::detail {
      * instance or return false upon failure. The second argument
      * indicates whether implicit conversions should be applied.
      */
-    bool load(handle src, bool) {
+    inline bool load(handle src, bool) {
 
       PyObject *objPtr = src.ptr();
 
@@ -125,7 +125,7 @@ namespace pybind11::detail {
      * ``return_value_policy::reference_internal``) and are generally
      * ignored by implicit casters.
      */
-    static handle cast(QString src, return_value_policy /* policy */, handle /* parent */) {
+    inline static handle cast(QString src, return_value_policy /* policy */, handle /* parent */) {
       static_assert(sizeof(QChar) == 2);
       return PyUnicode_FromKindAndData(PyUnicode_2BYTE_KIND, src.constData(), src.length());
     }
@@ -143,7 +143,7 @@ namespace pybind11::detail {
      * instance or return false upon failure. The second argument
      * indicates whether implicit conversions should be applied.
      */
-    bool load(handle src, bool);
+    inline bool load(handle src, bool);
 
     /**
      * Conversion part 2 (C++ -> Python): convert an QString instance into
@@ -152,7 +152,7 @@ namespace pybind11::detail {
      * ``return_value_policy::reference_internal``) and are generally
      * ignored by implicit casters.
      */
-    static handle cast(QVariant var, return_value_policy policy, handle parent);
+    inline static handle cast(QVariant var, return_value_policy policy, handle parent);
   };
 
   // QList

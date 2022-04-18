@@ -8,7 +8,7 @@
 #include <log.h>
 #include <utility.h>
 
-#include "sipApiAccess.h"
+#include "converters_qt_sip.h"
 #include "error.h"
 #include "gilock.h"
 
@@ -39,7 +39,7 @@ namespace details {
         *objPtr = result;
       }
       else if (apiTransfer) {
-        sipAPIAccess::sipAPI()->api_transfer_to(result.ptr(), Py_None);
+        mo2::details::sipAPI()->api_transfer_to(result.ptr(), Py_None);
       }
       if constexpr (!std::is_same_v<ReturnType, void>) {
         return boost::python::extract<ReturnType>(result)();

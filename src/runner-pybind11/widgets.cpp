@@ -5,7 +5,7 @@
 #include <boost/python.hpp>
 
 #include "report.h"
-#include "variant_helper.h"
+// #include "variant_helper.h"
 
 namespace bpy = boost::python;
 
