@@ -70,8 +70,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(mobase, m)
 {
-  py::module_::import("PyQt5.QtCore");
-  py::module_::import("PyQt5.QtWidgets");
+  py::module_::import("PyQt6.QtCore");
+  py::module_::import("PyQt6.QtWidgets");
 
   py::detail::type_caster<QString> t1;
   py::detail::type_caster<QVariant> t2;
@@ -1223,7 +1223,7 @@ bool PythonRunner::initPython()
                         mainNamespace);
 
     mainNamespace["mobase"] = py::module_::import("mobase");
-    mo2::details::configure_python_logging(mainNamespace["mobase"]);
+    mo2::python::configure_python_logging(mainNamespace["mobase"]);
 
     return true;
   } catch (const py::error_already_set&) {

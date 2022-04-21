@@ -7,7 +7,7 @@ pybind11_add_module(pythonrunner SHARED)
 mo2_configure_library(pythonrunner
 	WARNINGS OFF
 	AUTOMOC ON
-	TRANSLATIONS ON
+	TRANSLATIONS OFF
 	PRIVATE_DEPENDS uibase boost Qt::Core
 )
 set_target_properties(pythonrunner
@@ -15,16 +15,15 @@ set_target_properties(pythonrunner
 	OUTPUT_NAME "pythonrunner"
 	PREFIX ""
 	SUFFIX ".dll")
-# target_link_libraries(pythonrunner PRIVATE pybind11::embed)
-# target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
+target_link_libraries(pythonrunner PRIVATE pybind11::embed)
+target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
 
 # this is kind of broken but it only works with this...
 target_link_directories(pythonrunner
 	PRIVATE
-	${MO2_INSTALL_LIBS_PATH}
 	${Boost_LIBRARY_DIRS})
 target_compile_definitions(pythonrunner
-	PRIVATE QT_NO_KEYWORDS PYTHONRUNNER_LIBRARY)
+	PRIVATE PYTHONRUNNER_LIBRARY)
 mo2_install_target(pythonrunner INSTALLDIR bin/plugins/data)
 
 mo2_add_filter(NAME src/converters GROUPS

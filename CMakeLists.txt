@@ -6,9 +6,10 @@ else()
 	include(${CMAKE_CURRENT_LIST_DIR}/../cmake_common/mo2.cmake)
 endif()
 
+set(PYBIND11_FINDPYTHON true)
 set(PYTHON_EXECUTABLE ${PYTHON_ROOT}/PCBuild/amd64/python.exe)
-set(PYTHON_INCLUDE_DIR ${PYTHON_ROOT}/Include)
-set(PYTHON_LIBRARY ${PYTHON_ROOT}/PCBuild/amd64/python38.lib)
+set(PYTHON_INCLUDE_DIRS ${PYTHON_ROOT}/Include)
+set(PYTHON_LIBRARIES ${PYTHON_ROOT}/PCBuild/amd64/python310.lib)
 
 add_subdirectory(pybind11)
 
