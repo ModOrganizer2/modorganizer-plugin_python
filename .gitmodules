@@ -1,3 +1,0 @@
-[submodule "lib/pyind11"]
-	path = lib/pyind11
-	url = https://github.com/pybind/pybind11
