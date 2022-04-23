@@ -146,6 +146,22 @@ PYBIND11_MODULE(mobase, m)
         return new SaveGame();
     });
 
+    m.def("testSaveGameWidget", [](ISaveGameInfoWidget* widget) {
+        class SaveGame : public ISaveGame {
+            QString getFilepath() const override { return "filepath-c++"; }
+            QDateTime getCreationTime() const override
+            {
+                return QDateTime::fromString("2022-02-15T12:33:45",
+                                             Qt::ISODate);
+            }
+            QString getName() const override { return "name"; }
+            QString getSaveGroupIdentifier() const override { return "group"; }
+            QStringList allFiles() const override { return {"file1", "file2"}; }
+        };
+        static SaveGame s;
+        widget->setSave(s);
+    });
+
     m.def("testSaveGameRef", [](const ISaveGame& game) {
         std::cout << "getFilepath(): " << game.getFilepath().toStdString()
                   << "\n";
@@ -170,8 +186,7 @@ PYBIND11_MODULE(mobase, m)
                   << game->allFiles().join(" ").toStdString() << " ]\n";
     });
 
-    m.def("testWidget1", [](py::object o) {
-        auto* w = o.cast<QWidget*>();
+    m.def("testWidget1", [](QWidget* w) {
         if (w) {
             std::cout << "background role: " << w->backgroundRole() << "\n";
         }
@@ -297,9 +312,6 @@ PYBIND11_MODULE(mobase, m)
         m, "ISaveGameInfoWidget");
     iSaveGameInfoWidget.def(py::init<>())
         .def(py::init<QWidget*>(), py::arg("parent"))
-        .def(py::init([](py::none const&) {
-            return new PySaveGameInfoWidget();
-        }))
         .def("setSave", &ISaveGameInfoWidget::setSave, py::arg("save"));
     add_qt_delegate<QWidget>(iSaveGameInfoWidget, "widget");
 

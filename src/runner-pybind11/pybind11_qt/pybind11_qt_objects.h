@@ -27,10 +27,8 @@
         };                                                                     \
     }                                                                          \
     template <>                                                                \
-    struct type_caster<QClass> : qt::qt_type_caster<QClass> {                  \
-    };                                                                         \
-    template <>                                                                \
-    struct type_caster<QClass*> : qt::qt_type_caster<QClass> {                 \
+    struct type_caster<qt::ptr_if_non_copy_t<QClass>>                          \
+        : qt::qt_type_caster<qt::ptr_if_non_copy_t<QClass>> {                  \
     }
 
 namespace pybind11::detail {
@@ -51,6 +49,10 @@ namespace pybind11::detail {
 
     PYQT_CLASS(QtWidgets, QMainWindow);
     PYQT_CLASS(QtWidgets, QWidget);
+
+    template <>
+    struct type_caster<QWidget> : qt::qt_type_caster<QWidget*> {
+    };
 
 }  // namespace pybind11::detail
 

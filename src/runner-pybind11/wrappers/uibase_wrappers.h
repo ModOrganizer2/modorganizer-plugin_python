@@ -65,7 +65,7 @@ namespace mo2::python {
 
         void setSave(MOBase::ISaveGame const& save) override
         {
-            PYBIND11_OVERRIDE_PURE(void, ISaveGameInfoWidget, setSave, save);
+            PYBIND11_OVERRIDE_PURE(void, ISaveGameInfoWidget, setSave, &save);
         }
     };
 

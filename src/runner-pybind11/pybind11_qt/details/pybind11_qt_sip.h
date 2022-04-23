@@ -32,67 +32,48 @@ namespace pybind11::detail::qt {
     template <class QClass>
     struct qt_type_caster {
 
-        static constexpr bool is_copy = std::is_copy_constructible_v<QClass>;
+        static constexpr bool is_pointer = std::is_pointer_v<QClass>;
+        using pointer = std::conditional_t<is_pointer, QClass, QClass*>;
 
-        std::conditional_t<is_copy, QClass, QClass*> value;
+        QClass value;
 
     public:
         static constexpr auto name = MetaData<QClass>::python_name;
 
-        operator QClass*()
+        operator pointer()
         {
-            if constexpr (is_copy) {
+            if constexpr (is_pointer) {
+                return value;
+            }
+            else {
                 return &value;
             }
-            else {
-                return value;
-            }
         }
-        operator QClass&()
+
+        template <
+            class T,
+            std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
+        operator T&()
         {
-            if constexpr (is_copy) {
-                return value;
-            }
-            else {
-                return *value;
-            }
+            return value;
         }
-        operator QClass&&() &&
+
+        template <
+            class T,
+            std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
+        operator T&&() &&
         {
-            if constexpr (is_copy) {
-                return std::move(value);
-            }
-            else {
-                return *value;
-            }
+            return std::move(value);
         }
 
         template <typename T>
         using cast_op_type =
-            std::conditional_t<std::is_copy_constructible_v<QClass>,
-                               movable_cast_op_type<T>, QClass*>;
+            std::conditional_t<is_pointer, QClass, movable_cast_op_type<T>>;
 
         bool load(pybind11::handle src, bool)
         {
-            auto src_type      = type::of(src);
-            auto src_type_type = type::of(src_type);
-
-            scoped_ostream_redirect stream(
-                std::cout,                             // std::ostream&
-                module_::import("sys").attr("stdout")  // Python output
-            );
-
-            std::cout
-                << "trying to load '" +
-                       src_type.attr("__str__")().cast<std::string>() + " ["
-
-                       + src_type_type.attr("__str__")().cast<std::string>() +
-                       "]' in '" + std::string(MetaData<QClass>::class_name) +
-                       "' (" + std::string(MetaData<QClass>::python_name.text) +
-                       ")\n";
-
             // special check for none for pointer classes
-            if constexpr (std::is_pointer_v<QClass>) {
+            if constexpr (is_pointer) {
                 if (src.is_none()) {
                     value = nullptr;
                     return true;
@@ -117,7 +98,7 @@ namespace pybind11::detail::qt {
             }
 
             if (data) {
-                if constexpr (std::is_pointer_v<QClass>) {
+                if constexpr (is_pointer) {
                     value = reinterpret_cast<QClass>(data);
                 }
                 else {
@@ -130,13 +111,36 @@ namespace pybind11::detail::qt {
             }
         }
 
-        static pybind11::handle cast(QClass* src,
+        template <
+            typename T,
+            std::enable_if_t<std::is_same<QClass, std::remove_cv_t<T>>::value,
+                             int> = 0>
+        static handle cast(T* src, return_value_policy policy, handle parent)
+        {
+            // note: when QClass is a pointer type, e.g. a QWidget*, T is a
+            // pointer to pointer, so we can defer to the standard cast()
+
+            if (!src) {
+                return none().release();
+            }
+
+            if (!is_pointer && policy == return_value_policy::take_ownership) {
+                auto h = cast(std::move(*src), policy, parent);
+                delete src;
+                return h;
+            }
+            return cast(*src, policy, parent);
+        }
+
+        static pybind11::handle cast(QClass src,
                                      pybind11::return_value_policy policy,
                                      pybind11::handle /* parent */)
         {
-
-            if (!src)
-                return ::pybind11::none().release();
+            if constexpr (is_pointer) {
+                if (!src) {
+                    return none().release();
+                }
+            }
 
             const sipTypeDef* type =
                 qt::sipAPI()->api_find_type(MetaData<QClass>::class_name);
@@ -147,7 +151,7 @@ namespace pybind11::detail::qt {
             PyObject* sipObj;
             void* sipData;
 
-            if constexpr (!is_copy) {
+            if constexpr (is_pointer) {
                 sipData = src;
             }
             else if (std::is_copy_assignable_v<QClass>) {
@@ -162,19 +166,14 @@ namespace pybind11::detail::qt {
                 sipData = &src;
             }
 
-            if constexpr (std::is_pointer_v<QClass>) {
-                sipObj = qt::sipAPI()->api_convert_from_type(sipData, type, 0);
-            }
-            else {
-                sipObj = qt::sipAPI()->api_convert_from_type(sipData, type, 0);
-            }
+            sipObj = qt::sipAPI()->api_convert_from_type(sipData, type, 0);
 
             if (sipObj == nullptr) {
                 return Py_None;
             }
 
-            if constexpr (!std::is_pointer_v<QClass> &&
-                          std::is_copy_constructible_v<QClass>) {
+            if (policy == return_value_policy::take_ownership &&
+                std::is_copy_constructible_v<QClass>) {
                 // ensure Python deletes the C++ component
                 qt::sipAPI()->api_transfer_back(sipObj);
             }
