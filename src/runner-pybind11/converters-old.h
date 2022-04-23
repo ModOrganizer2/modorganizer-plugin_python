@@ -426,7 +426,7 @@ namespace utils {
           }
         }
         catch (const boost::python::error_already_set&) {
-          throw pyexcept::PythonError();
+          throw pyexcept::PythonError("");
         }
         catch (...) {
           throw pyexcept::UnknownException();

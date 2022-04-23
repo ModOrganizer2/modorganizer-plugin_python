@@ -23,7 +23,7 @@ target_link_directories(pythonrunner
 	PRIVATE
 	${Boost_LIBRARY_DIRS})
 target_compile_definitions(pythonrunner
-	PRIVATE PYTHONRUNNER_LIBRARY)
+	PRIVATE QT_NO_KEYWORDS PYTHONRUNNER_LIBRARY)
 mo2_install_target(pythonrunner INSTALLDIR bin/plugins/data)
 
 mo2_add_filter(NAME src/converters GROUPS
