@@ -27,8 +27,14 @@
         };                                                                             \
     }                                                                                  \
     template <>                                                                        \
-    struct type_caster<qt::ptr_if_non_copy_t<QClass>>                                  \
-        : qt::qt_type_caster<qt::ptr_if_non_copy_t<QClass>> {                          \
+    struct type_caster<QClass*>                                                        \
+        : std::conditional_t<std::is_copy_constructible_v<QClass>,                     \
+                             type_caster_generic, qt::qt_type_caster<QClass*>> {       \
+    };                                                                                 \
+    template <>                                                                        \
+    struct type_caster<QClass>                                                         \
+        : std::conditional_t<std::is_copy_constructible_v<QClass>,                     \
+                             qt::qt_type_caster<QClass>, type_caster<QClass*>> {       \
     }
 
 namespace pybind11::detail {
@@ -44,15 +50,12 @@ namespace pybind11::detail {
     PYQT_CLASS(QtCore, QSize);
     PYQT_CLASS(QtCore, QUrl);
 
+    PYQT_CLASS(QtGui, QColor);
     PYQT_CLASS(QtGui, QIcon);
     PYQT_CLASS(QtGui, QPixmap);
 
     PYQT_CLASS(QtWidgets, QMainWindow);
     PYQT_CLASS(QtWidgets, QWidget);
-
-    template <>
-    struct type_caster<QWidget> : qt::qt_type_caster<QWidget*> {
-    };
 
 }  // namespace pybind11::detail
 

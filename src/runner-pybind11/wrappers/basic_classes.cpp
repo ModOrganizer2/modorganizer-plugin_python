@@ -24,6 +24,8 @@ namespace mo2::python {
 
     namespace py = pybind11;
 
+    using namespace pybind11::literals;
+
     void add_versioninfo_classes(py::module_ m)
     {
         py::enum_<MOBase::VersionInfo::ReleaseType>(m, "ReleaseType")
@@ -128,56 +130,52 @@ namespace mo2::python {
             .value("TRACKED_TRUE", TrackedState::TRACKED_TRUE)
             .value("TRACKED_UNKNOWN", TrackedState::TRACKED_UNKNOWN);
 
-        // py::class_<IModInterface, boost::noncopyable>("IModInterface",
-        // py::no_init)
-        //     .def("name", &IModInterface::name)
-        //     .def("absolutePath", &IModInterface::absolutePath)
+        py::class_<IModInterface>(m, "IModInterface")
+            .def("name", &IModInterface::name)
+            .def("absolutePath", &IModInterface::absolutePath)
 
-        //     .def("comments", &IModInterface::comments)
-        //     .def("notes", &IModInterface::notes)
-        //     .def("gameName", &IModInterface::gameName)
-        //     .def("repository", &IModInterface::repository)
-        //     .def("nexusId", &IModInterface::nexusId)
-        //     .def("version", &IModInterface::version)
-        //     .def("newestVersion", &IModInterface::newestVersion)
-        //     .def("ignoredVersion", &IModInterface::ignoredVersion)
-        //     .def("installationFile", &IModInterface::installationFile)
-        //     .def("converted", &IModInterface::converted)
-        //     .def("validated", &IModInterface::validated)
-        //     .def("color", &IModInterface::color)
-        //     .def("url", &IModInterface::url)
-        //     .def("primaryCategory", &IModInterface::primaryCategory)
-        //     .def("categories", &IModInterface::categories)
-        //     .def("trackedState", &IModInterface::trackedState)
-        //     .def("endorsedState", &IModInterface::endorsedState)
-        //     .def("fileTree", &IModInterface::fileTree)
-        //     .def("isOverwrite", &IModInterface::isOverwrite)
-        //     .def("isBackup", &IModInterface::isBackup)
-        //     .def("isSeparator", &IModInterface::isSeparator)
-        //     .def("isForeign", &IModInterface::isForeign)
+            .def("comments", &IModInterface::comments)
+            .def("notes", &IModInterface::notes)
+            .def("gameName", &IModInterface::gameName)
+            .def("repository", &IModInterface::repository)
+            .def("nexusId", &IModInterface::nexusId)
+            .def("version", &IModInterface::version)
+            .def("newestVersion", &IModInterface::newestVersion)
+            .def("ignoredVersion", &IModInterface::ignoredVersion)
+            .def("installationFile", &IModInterface::installationFile)
+            .def("converted", &IModInterface::converted)
+            .def("validated", &IModInterface::validated)
+            .def("color", &IModInterface::color)
+            .def("url", &IModInterface::url)
+            .def("primaryCategory", &IModInterface::primaryCategory)
+            .def("categories", &IModInterface::categories)
+            .def("trackedState", &IModInterface::trackedState)
+            .def("endorsedState", &IModInterface::endorsedState)
+            .def("fileTree", &IModInterface::fileTree)
+            .def("isOverwrite", &IModInterface::isOverwrite)
+            .def("isBackup", &IModInterface::isBackup)
+            .def("isSeparator", &IModInterface::isSeparator)
+            .def("isForeign", &IModInterface::isForeign)
 
-        //     .def("setVersion", &IModInterface::setVersion,
-        //     py::arg("version")) .def("setNewestVersion",
-        //     &IModInterface::setNewestVersion, py::arg("version"))
-        //     .def("setIsEndorsed", &IModInterface::setIsEndorsed,
-        //     py::arg("endorsed")) .def("setNexusID",
-        //     &IModInterface::setNexusID, py::arg("nexus_id"))
-        //     .def("addNexusCategory", &IModInterface::addNexusCategory,
-        //     py::arg("category_id")) .def("addCategory",
-        //     &IModInterface::addCategory, py::arg("name"))
-        //     .def("removeCategory", &IModInterface::removeCategory,
-        //     py::arg("name")) .def("setGameName", &IModInterface::setGameName,
-        //     py::arg("name")) .def("setUrl", &IModInterface::setUrl,
-        //     py::arg("url")) .def("pluginSetting",
-        //     &IModInterface::pluginSetting, (py::arg("plugin_name"), "key",
-        //     py::arg("default") = QVariant())) .def("pluginSettings",
-        //     &IModInterface::pluginSettings, py::arg("plugin_name"))
-        //     .def("setPluginSetting", &IModInterface::setPluginSetting,
-        //     (py::arg("plugin_name"), "key", py::arg("value")))
-        //     .def("clearPluginSettings", &IModInterface::clearPluginSettings,
-        //     py::arg("plugin_name"))
-
-        //     ;
+            .def("setVersion", &IModInterface::setVersion, py::arg("version"))
+            .def("setNewestVersion", &IModInterface::setNewestVersion,
+                 py::arg("version"))
+            .def("setIsEndorsed", &IModInterface::setIsEndorsed, py::arg("endorsed"))
+            .def("setNexusID", &IModInterface::setNexusID, py::arg("nexus_id"))
+            .def("addNexusCategory", &IModInterface::addNexusCategory,
+                 py::arg("category_id"))
+            .def("addCategory", &IModInterface::addCategory, py::arg("name"))
+            .def("removeCategory", &IModInterface::removeCategory, py::arg("name"))
+            .def("setGameName", &IModInterface::setGameName, py::arg("name"))
+            .def("setUrl", &IModInterface::setUrl, py::arg("url"))
+            .def("pluginSetting", &IModInterface::pluginSetting, py::arg("plugin_name"),
+                 py::arg("key"), py::arg("default") = QVariant())
+            .def("pluginSettings", &IModInterface::pluginSettings,
+                 py::arg("plugin_name"))
+            .def("setPluginSetting", &IModInterface::setPluginSetting,
+                 py::arg("plugin_name"), py::arg("key"), py::arg("value"))
+            .def("clearPluginSettings", &IModInterface::clearPluginSettings,
+                 py::arg("plugin_name"));
     }
 
     void add_modrepository_classes(py::module_ m)

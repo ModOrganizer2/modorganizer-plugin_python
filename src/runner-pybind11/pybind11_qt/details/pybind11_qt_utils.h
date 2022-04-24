@@ -42,14 +42,6 @@ namespace pybind11::detail::qt {
      */
     pybind11::object get_attr_rec(std::string_view package, std::string_view path);
 
-    /**
-     * @brief Conditional add_pointer if T is non-copyable.
-     *
-     */
-    template <class QClass>
-    using ptr_if_non_copy_t = std::conditional_t<std::is_copy_constructible_v<QClass>,
-                                                 QClass, std::add_pointer_t<QClass>>;
-
 }  // namespace pybind11::detail::qt
 
 #endif
