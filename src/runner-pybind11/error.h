@@ -36,10 +36,7 @@ namespace pyexcept {
          * python. If the message cannot be retrieved, `defaultErrorMessage()`
          * is used instead.
          */
-        PythonError(pybind11::error_already_set const& ex)
-            : Exception(ex.what())
-        {
-        }
+        PythonError(pybind11::error_already_set const& ex) : Exception(ex.what()) {}
 
         /**
          * @brief Create a new PythonError with the given message.
@@ -75,8 +72,7 @@ namespace pyexcept {
          */
         static QString defaultErrorMessage()
         {
-            return QObject::tr(
-                "An unknown exception was thrown in python code.");
+            return QObject::tr("An unknown exception was thrown in python code.");
         }
     };
 

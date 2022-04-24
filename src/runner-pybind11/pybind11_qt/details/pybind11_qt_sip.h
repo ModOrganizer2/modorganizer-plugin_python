@@ -50,17 +50,15 @@ namespace pybind11::detail::qt {
             }
         }
 
-        template <
-            class T,
-            std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
+        template <class T,
+                  std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
         operator T&()
         {
             return value;
         }
 
-        template <
-            class T,
-            std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
+        template <class T,
+                  std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
         operator T&&() &&
         {
             return std::move(value);
@@ -88,12 +86,10 @@ namespace pybind11::detail::qt {
             //   sipAPI()->api_transfer_to(objPtr, Py_None);
             //
             void* data = nullptr;
-            if (PyObject_TypeCheck(src.ptr(),
-                                   qt::sipAPI()->api_simplewrapper_type)) {
+            if (PyObject_TypeCheck(src.ptr(), qt::sipAPI()->api_simplewrapper_type)) {
                 data = reinterpret_cast<sipSimpleWrapper*>(src.ptr())->data;
             }
-            else if (PyObject_TypeCheck(src.ptr(),
-                                        qt::sipAPI()->api_wrapper_type)) {
+            else if (PyObject_TypeCheck(src.ptr(), qt::sipAPI()->api_wrapper_type)) {
                 data = reinterpret_cast<sipWrapper*>(src.ptr())->super.data;
             }
 
@@ -113,8 +109,7 @@ namespace pybind11::detail::qt {
 
         template <
             typename T,
-            std::enable_if_t<std::is_same<QClass, std::remove_cv_t<T>>::value,
-                             int> = 0>
+            std::enable_if_t<std::is_same<QClass, std::remove_cv_t<T>>::value, int> = 0>
         static handle cast(T* src, return_value_policy policy, handle parent)
         {
             // note: when QClass is a pointer type, e.g. a QWidget*, T is a
@@ -132,8 +127,7 @@ namespace pybind11::detail::qt {
             return cast(*src, policy, parent);
         }
 
-        static pybind11::handle cast(QClass src,
-                                     pybind11::return_value_policy policy,
+        static pybind11::handle cast(QClass src, pybind11::return_value_policy policy,
                                      pybind11::handle /* parent */)
         {
             if constexpr (is_pointer) {
@@ -157,10 +151,10 @@ namespace pybind11::detail::qt {
             else if (std::is_copy_assignable_v<QClass>) {
                 // we send to SIP a newly allocated object, and transfer the
                 // owernship to it
-                sipData = new QClass(
-                    policy == ::pybind11::return_value_policy::take_ownership
-                        ? std::move(src)
-                        : src);
+                sipData =
+                    new QClass(policy == ::pybind11::return_value_policy::take_ownership
+                                   ? std::move(src)
+                                   : src);
             }
             else {
                 sipData = &src;

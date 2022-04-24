@@ -16,8 +16,7 @@ namespace pybind11::detail {
 
         bool load(handle src, bool);
 
-        static handle cast(QString src, return_value_policy policy,
-                           handle parent);
+        static handle cast(QString src, return_value_policy policy, handle parent);
     };
 
     // QVariant - this needs to be defined BEFORE QVariantList
@@ -29,8 +28,7 @@ namespace pybind11::detail {
 
         bool load(handle src, bool);
 
-        static handle cast(QVariant var, return_value_policy policy,
-                           handle parent);
+        static handle cast(QVariant var, return_value_policy policy, handle parent);
     };
 
 }  // namespace pybind11::detail

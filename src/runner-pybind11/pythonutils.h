@@ -32,9 +32,8 @@ namespace mo2::python {
      * @param message Deprecation message.
      * @param show_once Only show the message once per call location.
      */
-    void show_deprecation_warning(std::string_view name,
-                                  std::string_view message = "",
-                                  bool show_once           = true);
+    void show_deprecation_warning(std::string_view name, std::string_view message = "",
+                                  bool show_once = true);
 
 }  // namespace mo2::python
 

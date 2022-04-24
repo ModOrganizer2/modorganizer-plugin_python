@@ -2,8 +2,7 @@
 
 namespace pybind11::detail::qt {
 
-    pybind11::object get_attr_rec(std::string_view package,
-                                  std::string_view path)
+    pybind11::object get_attr_rec(std::string_view package, std::string_view path)
     {
 
         return module_::import("operator")

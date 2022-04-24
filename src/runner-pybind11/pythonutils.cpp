@@ -26,8 +26,8 @@ namespace mo2::python {
             buffer_ << message;
             if (buffer_.tellp() != 0 && buffer_.str().back() == '\n') {
                 const auto full_message = buffer_.str();
-                MOBase::log::log(
-                    level_, full_message.substr(0, full_message.length() - 1));
+                MOBase::log::log(level_,
+                                 full_message.substr(0, full_message.length() - 1));
                 buffer_ = std::stringstream{};
             }
         }
@@ -39,8 +39,7 @@ namespace mo2::python {
      */
     template <class... Args>
     pybind11::object make_python_type(std::string_view name,
-                                      pybind11::tuple base_classes,
-                                      Args&&... args)
+                                      pybind11::tuple base_classes, Args&&... args)
     {
         // this is ugly but that's how it's done in C Python
         auto type = py::reinterpret_borrow<py::object>((PyObject*)&PyType_Type);
@@ -89,9 +88,8 @@ namespace mo2::python {
 
         // There are other parameters that could be used, but this is minimal
         // for now (filename, line number, etc.).
-        const int level = record.attr("levelno").cast<int>();
-        const std::wstring msg =
-            py::str(record.attr("msg")).cast<std::wstring>();
+        const int level        = record.attr("levelno").cast<int>();
+        const std::wstring msg = py::str(record.attr("msg")).cast<std::wstring>();
 
         switch (level) {
         case PyLogLevel::CRITICAL:
@@ -132,8 +130,7 @@ namespace mo2::python {
         // create the default logger
         auto handler = MO2Handler();
         handler.attr("setLevel")(PyLogLevel::DEBUG);
-        auto logger =
-            logging.attr("getLogger")(py::object(mobase.attr("__name__")));
+        auto logger = logging.attr("getLogger")(py::object(mobase.attr("__name__")));
         logger.attr("setLevel")(PyLogLevel::DEBUG);
         logger.attr("addHandler")(handler);
 
@@ -142,8 +139,8 @@ namespace mo2::python {
         mobase.attr("logger")     = logger;
     }
 
-    void show_deprecation_warning(std::string_view name,
-                                  std::string_view message, bool show_once)
+    void show_deprecation_warning(std::string_view name, std::string_view message,
+                                  bool show_once)
     {
 
         // Contains the list of filename / line number for which a deprecation
@@ -151,10 +148,9 @@ namespace mo2::python {
         static std::set<std::pair<std::string, int>> DeprecatedLines;
 
         // Find the caller:
-        auto inspect       = py::module_::import("inspect");
-        auto current_frame = inspect.attr("currentframe")();
-        py::sequence callable_frame =
-            inspect.attr("getouterframes")(current_frame, 2);
+        auto inspect                = py::module_::import("inspect");
+        auto current_frame          = inspect.attr("currentframe")();
+        py::sequence callable_frame = inspect.attr("getouterframes")(current_frame, 2);
         auto filename = callable_frame[-1].attr("filename").cast<std::string>();
         auto function = callable_frame[-1].attr("function").cast<std::string>();
         auto lineno   = callable_frame[-1].attr("lineno").cast<int>();
@@ -167,9 +163,8 @@ namespace mo2::python {
         // Register the deprecation:
         DeprecatedLines.emplace(filename, lineno);
 
-        auto path =
-            relative(std::filesystem::path(filename),
-                     QCoreApplication::applicationDirPath().toStdWString());
+        auto path = relative(std::filesystem::path(filename),
+                             QCoreApplication::applicationDirPath().toStdWString());
 
         // Show the message:
         if (message.empty()) {
@@ -177,8 +172,8 @@ namespace mo2::python {
                               path.native(), lineno);
         }
         else {
-            MOBase::log::warn("[deprecated] {} in {} [{}:{}]: {}", name,
-                              function, path.native(), lineno, message);
+            MOBase::log::warn("[deprecated] {} in {} [{}:{}]: {}", name, function,
+                              path.native(), lineno, message);
         }
     }
 

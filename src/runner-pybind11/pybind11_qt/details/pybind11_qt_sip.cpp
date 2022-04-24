@@ -31,8 +31,7 @@ namespace pybind11::detail::qt {
                     exception = exp_str.cast<std::string>();
                 }
                 PyErr_Restore(type, value, traceback);
-                throw std::runtime_error{"Failed to load SIP API: " +
-                                         exception};
+                throw std::runtime_error{"Failed to load SIP API: " + exception};
             }
 
             sipApi = (const sipAPIDef*)PyCapsule_Import("PyQt6.sip._C_API", 0);
@@ -49,14 +48,12 @@ namespace pybind11::detail::qt {
                         py::object tb(py::module_::import("traceback"));
                         py::object fmt_exp(tb.attr("format_exception"));
                         py::object exp_list(fmt_exp(h_type, h_val, h_tb));
-                        py::object exp_str(
-                            py::str("\n").attr("join")(exp_list));
+                        py::object exp_str(py::str("\n").attr("join")(exp_list));
                         exception = exp_str.cast<std::string>();
                     }
                     PyErr_Restore(type, value, traceback);
                 }
-                throw std::runtime_error{"Failed to load SIP API: " +
-                                         exception};
+                throw std::runtime_error{"Failed to load SIP API: " + exception};
             }
         }
         return sipApi;

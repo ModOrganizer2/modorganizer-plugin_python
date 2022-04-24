@@ -34,8 +34,8 @@ namespace pybind11::detail::qt {
                 return true;
             }
 
-            auto pyenum = get_attr_rec(EnumData<Enum>::package.text,
-                                       EnumData<Enum>::name.text);
+            auto pyenum =
+                get_attr_rec(EnumData<Enum>::package.text, EnumData<Enum>::name.text);
 
             if (isinstance(src, pyenum)) {
                 value = static_cast<Enum>(src.attr("value").cast<int>());
@@ -49,8 +49,8 @@ namespace pybind11::detail::qt {
                                      pybind11::return_value_policy /* policy */,
                                      pybind11::handle /* parent */)
         {
-            auto pyenum = get_attr_rec(EnumData<Enum>::package.text,
-                                       EnumData<Enum>::name.text);
+            auto pyenum =
+                get_attr_rec(EnumData<Enum>::package.text, EnumData<Enum>::name.text);
             return pyenum(static_cast<int>(src));
         }
     };

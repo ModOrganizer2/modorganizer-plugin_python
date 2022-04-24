@@ -2,11 +2,11 @@
 
 GILock::GILock()
 {
-  m_State = PyGILState_Ensure();
+    m_State = PyGILState_Ensure();
 }
 
 GILock::~GILock()
 {
-  PyErr_Clear();
-  PyGILState_Release(m_State);
+    PyErr_Clear();
+    PyGILState_Release(m_State);
 }

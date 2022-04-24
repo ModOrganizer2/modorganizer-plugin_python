@@ -43,14 +43,13 @@ namespace pybind11::detail::qt {
             return_value_policy policy_key   = policy;
             return_value_policy policy_value = policy;
             if (!std::is_lvalue_reference<T>::value) {
-                policy_key =
-                    return_value_policy_override<Key>::policy(policy_key);
+                policy_key = return_value_policy_override<Key>::policy(policy_key);
                 policy_value =
                     return_value_policy_override<Value>::policy(policy_value);
             }
             for (auto it = src.begin(); it != src.end(); ++it) {
-                auto key   = reinterpret_steal<object>(key_conv::cast(
-                      forward_like<T>(it.key()), policy_key, parent));
+                auto key = reinterpret_steal<object>(
+                    key_conv::cast(forward_like<T>(it.key()), policy_key, parent));
                 auto value = reinterpret_steal<object>(value_conv::cast(
                     forward_like<T>(it.value()), policy_value, parent));
                 if (!key || !value) {
@@ -66,6 +65,6 @@ namespace pybind11::detail::qt {
                                        const_name("]"));
     };
 
-}  // namespace pybind11::qt::detail
+}  // namespace pybind11::detail::qt
 
 #endif

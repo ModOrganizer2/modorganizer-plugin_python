@@ -1,19 +1,54 @@
 #include "pybind11_qt_basic.h"
 
+#include <type_traits>
+
+#include <pybind11/stl/filesystem.h>
+
+#include "details/pybind11_qt_utils.h"
+
 namespace pybind11::detail {
+
+    template <class CharT>
+    QString qstring_from_stdstring(std::basic_string<CharT> const& s)
+    {
+        if constexpr (std::is_same_v<CharT, char>) {
+            return QString::fromStdString(s);
+        }
+        else if constexpr (std::is_same_v<CharT, wchar_t>) {
+            return QString::fromStdWString(s);
+        }
+        else if constexpr (std::is_same_v<CharT, char16_t>) {
+            return QString::fromStdU16String(s);
+        }
+        else if constexpr (std::is_same_v<CharT, char32_t>) {
+            return QString::fromStdU32String(s);
+        }
+    }
 
     /**
      * Conversion part 1 (Python->C++): convert a PyObject into a QString
      * instance or return false upon failure. The second argument
      * indicates whether implicit conversions should be applied.
      */
-    bool type_caster<QString>::load(handle src, bool)
+    bool type_caster<QString>::load(handle src, bool implicit)
     {
 
         PyObject* objPtr = src.ptr();
 
         if (!PyBytes_Check(objPtr) && !PyUnicode_Check(objPtr)) {
+#ifndef PYBIND11_QT_QSTRING_NOFS
+            // try converting from os.PathLike
+            type_caster<std::filesystem::path> path_caster;
+            if (!path_caster.load(src, implicit)) {
+                return false;
+            }
+
+            value = qstring_from_stdstring((*path_caster).native());
+            return true;
+#else
+            // do not try to convert from os.PathLike
             return false;
+#endif
         }
 
         // Ensure the string uses 8-bit characters
@@ -38,8 +73,7 @@ namespace pybind11::detail {
      * ``return_value_policy::reference_internal``) and are generally
      * ignored by implicit casters.
      */
-    handle type_caster<QString>::cast(QString src,
-                                      return_value_policy /* policy */,
+    handle type_caster<QString>::cast(QString src, return_value_policy /* policy */,
                                       handle /* parent */)
     {
         static_assert(sizeof(QChar) == 2);
@@ -102,11 +136,9 @@ namespace pybind11::detail {
         // We need to check for StringList here because these are not considered
         // List since List is QList<QVariant> will StringList is QList<QString>:
         case QVariant::StringList:
-            return type_caster<QStringList>::cast(var.toStringList(), policy,
-                                                  parent);
+            return type_caster<QStringList>::cast(var.toStringList(), policy, parent);
         case QVariant::List:
-            return type_caster<QVariantList>::cast(var.toList(), policy,
-                                                   parent);
+            return type_caster<QVariantList>::cast(var.toList(), policy, parent);
         case QVariant::Map:  // return
                              // type_caster<QVariantMap>::cast(var.toList(),
                              // policy, parent);

@@ -11,8 +11,7 @@ namespace pybind11::detail {
     //
     template <class T>
     struct type_caster<QFlags<T>> {
-        PYBIND11_TYPE_CASTER(QFlags<T>, const_name("QFlags[") +
-                                            make_caster<T>::name +
+        PYBIND11_TYPE_CASTER(QFlags<T>, const_name("QFlags[") + make_caster<T>::name +
                                             const_name("]"));
 
         /**
@@ -45,14 +44,13 @@ namespace pybind11::detail {
          * ``return_value_policy::reference_internal``) and are generally
          * ignored by implicit casters.
          */
-        static handle cast(QFlags<T> const& src,
-                           return_value_policy /* policy */,
+        static handle cast(QFlags<T> const& src, return_value_policy /* policy */,
                            handle /* parent */)
         {
             return PyLong_FromLong(static_cast<int>(src));
         }
     };
 
-}  // namespace pybind11::details
+}  // namespace pybind11::detail
 
 #endif

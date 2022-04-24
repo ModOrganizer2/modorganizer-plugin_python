@@ -16,19 +16,19 @@
 #include "details/pybind11_qt_sip.h"
 #include "details/pybind11_qt_utils.h"
 
-#define PYQT_CLASS(QModule, QClass)                                            \
-    namespace qt {                                                             \
-        template <>                                                            \
-        struct MetaData<QClass> {                                              \
-            constexpr static const auto class_name = #QClass;                  \
-            constexpr static const auto python_name =                          \
-                const_name("PyQt6.") + const_name(#QModule) +                  \
-                const_name(".") + const_name(#QClass);                         \
-        };                                                                     \
-    }                                                                          \
-    template <>                                                                \
-    struct type_caster<qt::ptr_if_non_copy_t<QClass>>                          \
-        : qt::qt_type_caster<qt::ptr_if_non_copy_t<QClass>> {                  \
+#define PYQT_CLASS(QModule, QClass)                                                    \
+    namespace qt {                                                                     \
+        template <>                                                                    \
+        struct MetaData<QClass> {                                                      \
+            constexpr static const auto class_name = #QClass;                          \
+            constexpr static const auto python_name =                                  \
+                const_name("PyQt6.") + const_name(#QModule) + const_name(".") +        \
+                const_name(#QClass);                                                   \
+        };                                                                             \
+    }                                                                                  \
+    template <>                                                                        \
+    struct type_caster<qt::ptr_if_non_copy_t<QClass>>                                  \
+        : qt::qt_type_caster<qt::ptr_if_non_copy_t<QClass>> {                          \
     }
 
 namespace pybind11::detail {

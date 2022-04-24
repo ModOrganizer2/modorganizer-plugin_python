@@ -7,25 +7,24 @@
 #include "details/pybind11_qt_enum.h"
 #include "details/pybind11_qt_utils.h"
 
-#define PYQT_ENUM(QPackage, QEnum)                                             \
-    namespace qt {                                                             \
-        template <>                                                            \
-        struct EnumData<QEnum> {                                               \
-            constexpr static const auto package =                              \
-                const_name("PyQt6.") + const_name(#QPackage);                  \
-            constexpr static const auto name = qt_name_cpp2py(#QEnum);         \
-        };                                                                     \
-    }                                                                          \
-    template <>                                                                \
-    struct type_caster<QEnum> : qt::qt_enum_caster<QEnum> {                    \
+#define PYQT_ENUM(QPackage, QEnum)                                                     \
+    namespace qt {                                                                     \
+        template <>                                                                    \
+        struct EnumData<QEnum> {                                                       \
+            constexpr static const auto package =                                      \
+                const_name("PyQt6.") + const_name(#QPackage);                          \
+            constexpr static const auto name = qt_name_cpp2py(#QEnum);                 \
+        };                                                                             \
+    }                                                                                  \
+    template <>                                                                        \
+    struct type_caster<QEnum> : qt::qt_enum_caster<QEnum> {                            \
     }
 
 namespace pybind11::detail {
 
     PYQT_ENUM(QtCore, Qt::GlobalColor);
-    static_assert(std::string_view("PyQt6.QtCore.Qt.GlobalColor") ==
-                  std::string_view(type_caster<Qt::GlobalColor>::name.text));
     PYQT_ENUM(QtWidgets, QMessageBox::Icon);
+    PYQT_ENUM(QtWidgets, QMessageBox::StandardButton);
 
 }  // namespace pybind11::detail
 

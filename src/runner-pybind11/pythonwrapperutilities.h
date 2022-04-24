@@ -18,10 +18,9 @@ namespace details {
      * @brief Common stuffs for all basicWrapperFunction methods.
      */
     template <class ReturnType, class WrapperTypePtr, class Fn, class... Args>
-    ReturnType
-    wrapperFunctionImplementation(WrapperTypePtr wrapper, bool apiTransfer,
-                                  Fn fn, boost::python::object* objPtr,
-                                  const char* methodName, Args... args)
+    ReturnType wrapperFunctionImplementation(WrapperTypePtr wrapper, bool apiTransfer,
+                                             Fn fn, boost::python::object* objPtr,
+                                             const char* methodName, Args... args)
     {
         boost::python::override implementation = [&]() {
             GILock lock;
@@ -29,8 +28,7 @@ namespace details {
         }();
         if (!implementation) {
             if constexpr (std::is_same_v<Fn, std::nullptr_t>) {
-                throw pyexcept::MissingImplementation(wrapper->className,
-                                                      methodName);
+                throw pyexcept::MissingImplementation(wrapper->className, methodName);
             }
             else {
                 return std::invoke(fn, wrapper, args...);
@@ -79,8 +77,7 @@ namespace details {
  */
 template <class ReturnType, class WrapperType, class... Args>
 ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper,
-                                              const char* methodName,
-                                              Args... args)
+                                              const char* methodName, Args... args)
 {
     return details::wrapperFunctionImplementation<ReturnType>(
         wrapper, false, nullptr, nullptr, methodName, args...);
@@ -108,8 +105,7 @@ ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper,
 template <class ReturnType, class WrapperType, class... Args>
 ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper,
                                               boost::python::object& ref,
-                                              const char* methodName,
-                                              Args... args)
+                                              const char* methodName, Args... args)
 {
     return details::wrapperFunctionImplementation<ReturnType>(
         wrapper, false, nullptr, &ref, methodName, args...);
@@ -133,8 +129,9 @@ ReturnType basicWrapperFunctionImplementation(const WrapperType* wrapper,
  * @throw pyexecpt::UnknownException if an unknown error occurs.
  */
 template <class ReturnType, class WrapperType, class... Args>
-ReturnType wrapperFunctionImplementationWithApiTransfer(
-    const WrapperType* wrapper, const char* methodName, Args... args)
+ReturnType wrapperFunctionImplementationWithApiTransfer(const WrapperType* wrapper,
+                                                        const char* methodName,
+                                                        Args... args)
 {
     return details::wrapperFunctionImplementation<ReturnType>(
         wrapper, true, nullptr, nullptr, methodName, args...);
@@ -161,8 +158,7 @@ ReturnType wrapperFunctionImplementationWithApiTransfer(
  * @throw pyexecpt::UnknownException if an unknown error occurs.
  */
 template <class ReturnType, class WrapperTypePtr, class Fn, class... Args>
-ReturnType basicWrapperFunctionImplementationWithDefault(WrapperTypePtr wrapper,
-                                                         Fn fn,
+ReturnType basicWrapperFunctionImplementationWithDefault(WrapperTypePtr wrapper, Fn fn,
                                                          const char* methodName,
                                                          Args... args)
 {
@@ -194,12 +190,13 @@ ReturnType basicWrapperFunctionImplementationWithDefault(WrapperTypePtr wrapper,
  * @throw pyexecpt::UnknownException if an unknown error occurs.
  */
 template <class ReturnType, class WrapperType, class Fn, class... Args>
-ReturnType basicWrapperFunctionImplementationWithDefault(
-    const WrapperType* wrapper, Fn fn, boost::python::object& ref,
-    const char* methodName, Args... args)
+ReturnType
+basicWrapperFunctionImplementationWithDefault(const WrapperType* wrapper, Fn fn,
+                                              boost::python::object& ref,
+                                              const char* methodName, Args... args)
 {
-    return details::wrapperFunctionImplementation<ReturnType>(
-        wrapper, false, fn, &ref, methodName, args...);
+    return details::wrapperFunctionImplementation<ReturnType>(wrapper, false, fn, &ref,
+                                                              methodName, args...);
 }
 
 #endif  // PYTHONWRAPPERUTILITIES_H

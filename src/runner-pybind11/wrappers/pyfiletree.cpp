@@ -5,12 +5,13 @@
 
 #include <pybind11/functional.h>
 #include <pybind11/operators.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "../pybind11_qt/pybind11_qt.h"
 
 #include <ifiletree.h>
 #include <log.h>
-
-#include "pybind11_qt/pybind11_qt.h"
 
 namespace py = pybind11;
 using namespace MOBase;
@@ -32,8 +33,7 @@ namespace mo2::details {
         std::shared_ptr<FileTreeEntry> addFile(QString name, bool) override
         {
             if (m_Callback && !m_Callback(name, false)) {
-                throw UnsupportedOperationException(
-                    "File rejected by callback.");
+                throw UnsupportedOperationException("File rejected by callback.");
             }
             return IFileTree::addFile(name);
         }
@@ -41,8 +41,7 @@ namespace mo2::details {
         std::shared_ptr<IFileTree> addDirectory(QString name) override
         {
             if (m_Callback && !m_Callback(name, true)) {
-                throw UnsupportedOperationException(
-                    "Directory rejected by callback.");
+                throw UnsupportedOperationException("Directory rejected by callback.");
             }
             return IFileTree::addDirectory(name);
         }
@@ -55,9 +54,9 @@ namespace mo2::details {
             return std::make_shared<PyFileTree>(parent, name, m_Callback);
         }
 
-        bool doPopulate(
-            std::shared_ptr<const IFileTree> parent,
-            std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override
+        bool
+        doPopulate(std::shared_ptr<const IFileTree> parent,
+                   std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override
         {
             return true;
         }
@@ -75,9 +74,8 @@ namespace mo2::details {
 #pragma optimize("", off)
 
 namespace pybind11 {
-    const void*
-    polymorphic_type_hook<FileTreeEntry>::get(const FileTreeEntry* src,
-                                              const std::type_info*& type)
+    const void* polymorphic_type_hook<FileTreeEntry>::get(const FileTreeEntry* src,
+                                                          const std::type_info*& type)
     {
         if (auto p = dynamic_cast<const IFileTree*>(src)) {
             type = &typeid(IFileTree);
@@ -94,8 +92,8 @@ namespace mo2::python {
 
         // FileTreeEntry Scope:
         auto fileTreeEntryClass =
-            py::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>>(
-                m, "FileTreeEntry");
+            py::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>>(m,
+                                                                      "FileTreeEntry");
 
         // we do not use the enum directly, we will mostly bind the FileTypes
         // (with an S)
@@ -110,17 +108,15 @@ namespace mo2::python {
                                           [](py::object) {
                                               return FileTreeEntry::DIRECTORY;
                                           })
-            .def_property_readonly_static(
-                "FILE_OR_DIRECTORY",
-                [](py::object) {
-                    return FileTreeEntry::FILE_OR_DIRECTORY;
-                })
+            .def_property_readonly_static("FILE_OR_DIRECTORY",
+                                          [](py::object) {
+                                              return FileTreeEntry::FILE_OR_DIRECTORY;
+                                          })
 
             .def(py::self == py::self)
             .def(py::self != py::self)
             .def(py::self | py::self);
-        py::implicitly_convertible<FileTreeEntry::FileType,
-                                   FileTreeEntry::FileTypes>();
+        py::implicitly_convertible<FileTreeEntry::FileType, FileTreeEntry::FileTypes>();
 
         fileTreeEntryClass
             .def_property_readonly_static("FILE",
@@ -159,8 +155,7 @@ namespace mo2::python {
                     return entry->hasSuffix(suffix);
                 },
                 py::arg("suffix"))
-            .def("parent", py::overload_cast<>(&FileTreeEntry::parent),
-                 "[optional]")
+            .def("parent", py::overload_cast<>(&FileTreeEntry::parent), "[optional]")
             .def("path", &FileTreeEntry::path, py::arg("sep") = "\\")
             .def("pathFrom", &FileTreeEntry::pathFrom, py::arg("tree"),
                  py::arg("sep") = "\\")
@@ -175,8 +170,7 @@ namespace mo2::python {
                      return entry->compare(other) == 0;
                  })
             .def("__eq__",
-                 [](const FileTreeEntry* entry,
-                    std::shared_ptr<FileTreeEntry> other) {
+                 [](const FileTreeEntry* entry, std::shared_ptr<FileTreeEntry> other) {
                      return entry == other.get();
                  })
 
@@ -209,8 +203,7 @@ namespace mo2::python {
                            py::arg("path"),
                            py::arg("type") = IFileTree::FILE_OR_DIRECTORY);
         iFileTreeClass.def(
-            "find",
-            py::overload_cast<QString, IFileTree::FileTypes>(&IFileTree::find),
+            "find", py::overload_cast<QString, IFileTree::FileTypes>(&IFileTree::find),
             py::arg("path"), py::arg("type") = IFileTree::FILE_OR_DIRECTORY,
             "[optional]");
         iFileTreeClass.def("pathTo", &IFileTree::pathTo, py::arg("entry"),
@@ -254,12 +247,10 @@ namespace mo2::python {
         // and handling.
         iFileTreeClass.def(
             "merge",
-            [](IFileTree* p, std::shared_ptr<IFileTree> other,
-               bool returnOverwrites)
+            [](IFileTree* p, std::shared_ptr<IFileTree> other, bool returnOverwrites)
                 -> std::variant<IFileTree::OverwritesType, std::size_t> {
                 IFileTree::OverwritesType overwrites;
-                auto result =
-                    p->merge(other, returnOverwrites ? &overwrites : nullptr);
+                auto result = p->merge(other, returnOverwrites ? &overwrites : nullptr);
                 if (result == IFileTree::MERGE_FAILED) {
                     throw std::logic_error("merge failed");
                 }
@@ -295,9 +286,8 @@ namespace mo2::python {
             },
             py::arg("entry"));
 
-        iFileTreeClass.def(
-            "move", &IFileTree::move, py::arg("entry"), py::arg("path"),
-            py::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS);
+        iFileTreeClass.def("move", &IFileTree::move, py::arg("entry"), py::arg("path"),
+                           py::arg("policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS);
         iFileTreeClass.def(
             "copy",
             [](IFileTree* w, std::shared_ptr<FileTreeEntry> entry, QString path,
@@ -312,8 +302,7 @@ namespace mo2::python {
             py::arg("insert_policy") = IFileTree::InsertPolicy::FAIL_IF_EXISTS);
 
         iFileTreeClass.def("clear", &IFileTree::clear);
-        iFileTreeClass.def("removeAll", &IFileTree::removeAll,
-                           py::arg("names"));
+        iFileTreeClass.def("removeAll", &IFileTree::removeAll, py::arg("names"));
         iFileTreeClass.def("removeIf", &IFileTree::removeIf, py::arg("filter"));
 
         // Special methods:

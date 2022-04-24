@@ -4,136 +4,183 @@
 #include <QUrl>
 #include <QWidget>
 
-#include "shared_ptr_converter.h"
 #include "pythonwrapperutilities.h"
-#include "uibasewrappers.h"
+#include "shared_ptr_converter.h"
 
-#include <variant>
 #include <tuple>
+#include <variant>
 
-namespace boost
-{
- // See bug https://connect.microsoft.com/VisualStudio/Feedback/Details/2852624
+namespace boost {
+    // See bug https://connect.microsoft.com/VisualStudio/Feedback/Details/2852624
 #if (_MSC_VER == 1900)
-	template<> const volatile MOBase::IOrganizer* get_pointer(const volatile MOBase::IOrganizer* p) { return p; }
-	template<> const volatile MOBase::IModInterface* get_pointer(const volatile MOBase::IModInterface* p) { return p; }
-	template<> const volatile MOBase::IPluginGame* get_pointer(const volatile MOBase::IPluginGame* p) { return p; }
-	template<> const volatile MOBase::IProfile* get_pointer(const volatile MOBase::IProfile* p) { return p; }
-	template<> const volatile MOBase::IModList* get_pointer(const volatile MOBase::IModList* p) { return p; }
-	template<> const volatile MOBase::IPluginList* get_pointer(const volatile MOBase::IPluginList* p) { return p; }
-	template<> const volatile MOBase::IDownloadManager* get_pointer(const volatile MOBase::IDownloadManager* p) { return p; }
-	template<> const volatile MOBase::IModRepositoryBridge* get_pointer(const volatile MOBase::IModRepositoryBridge* p) { return p; }
+    template <>
+    const volatile MOBase::IOrganizer* get_pointer(const volatile MOBase::IOrganizer* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IModInterface*
+    get_pointer(const volatile MOBase::IModInterface* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IPluginGame*
+    get_pointer(const volatile MOBase::IPluginGame* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IProfile* get_pointer(const volatile MOBase::IProfile* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IModList* get_pointer(const volatile MOBase::IModList* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IPluginList*
+    get_pointer(const volatile MOBase::IPluginList* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IDownloadManager*
+    get_pointer(const volatile MOBase::IDownloadManager* p)
+    {
+        return p;
+    }
+    template <>
+    const volatile MOBase::IModRepositoryBridge*
+    get_pointer(const volatile MOBase::IModRepositoryBridge* p)
+    {
+        return p;
+    }
 #endif
-}
+}  // namespace boost
 
 using namespace MOBase;
 
-// See COMMON_I_PLUGIN_WRAPPER_DECLARATIONS__IMPL in proxypluginwrappers.h for explanation on
-// the "include_requirements".
-#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, include_requirements) \
-bool class_name::init(MOBase::IOrganizer *moInfo) \
-{ \
-  return basicWrapperFunctionImplementation<bool>(this, "init", boost::python::ptr(moInfo)); \
-} \
- \
-QString class_name::name() const \
-{ \
-  return basicWrapperFunctionImplementation<QString>(this, "name"); \
-} \
- \
-QString class_name::localizedName() const \
-{ \
-  return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::localizedName_Default, "localizedName"); \
-} \
- \
-QString class_name::master() const \
-{ \
-  return basicWrapperFunctionImplementationWithDefault<QString>(this, &class_name::master_Default, "master"); \
-} \
- \
-QString class_name::author() const \
-{ \
-  return basicWrapperFunctionImplementation<QString>(this, "author"); \
-} \
- \
-QString class_name::description() const \
-{ \
-  return basicWrapperFunctionImplementation<QString>(this, "description"); \
-} \
- \
-MOBase::VersionInfo class_name::version() const \
-{ \
-  return basicWrapperFunctionImplementation<MOBase::VersionInfo>(this, "version"); \
-} \
- \
-QList<MOBase::PluginSetting> class_name::settings() const \
-{ \
-  return basicWrapperFunctionImplementation<QList<MOBase::PluginSetting>>(this, "settings"); \
-} \
-QString class_name::localizedName_Default() const { return IPlugin::localizedName(); } \
-QString class_name::master_Default() const { return IPlugin::master(); } \
-BOOST_PP_EXPR_IF(include_requirements, \
-  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> class_name::requirements() const { \
-    return basicWrapperFunctionImplementationWithDefault<std::vector<std::shared_ptr<const MOBase::IPluginRequirement>>>( \
-      this, &class_name::requirements_Default, "requirements"); \
-  } \
-  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> class_name::requirements_Default() const { return IPlugin::requirements(); } \
-  bool class_name::enabledByDefault() const \
-  { \
-      return basicWrapperFunctionImplementationWithDefault<bool>(this, &class_name::enabledByDefault_Default, "enabledByDefault"); \
-  } \
-  bool class_name::enabledByDefault_Default() const { return IPlugin::enabledByDefault(); })
+// See COMMON_I_PLUGIN_WRAPPER_DECLARATIONS__IMPL in proxypluginwrappers.h for
+// explanation on the "include_requirements".
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, include_requirements)     \
+    bool class_name::init(MOBase::IOrganizer* moInfo)                                  \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<bool>(this, "init",                  \
+                                                        boost::python::ptr(moInfo));   \
+    }                                                                                  \
+                                                                                       \
+    QString class_name::name() const                                                   \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<QString>(this, "name");              \
+    }                                                                                  \
+                                                                                       \
+    QString class_name::localizedName() const                                          \
+    {                                                                                  \
+        return basicWrapperFunctionImplementationWithDefault<QString>(                 \
+            this, &class_name::localizedName_Default, "localizedName");                \
+    }                                                                                  \
+                                                                                       \
+    QString class_name::master() const                                                 \
+    {                                                                                  \
+        return basicWrapperFunctionImplementationWithDefault<QString>(                 \
+            this, &class_name::master_Default, "master");                              \
+    }                                                                                  \
+                                                                                       \
+    QString class_name::author() const                                                 \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<QString>(this, "author");            \
+    }                                                                                  \
+                                                                                       \
+    QString class_name::description() const                                            \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<QString>(this, "description");       \
+    }                                                                                  \
+                                                                                       \
+    MOBase::VersionInfo class_name::version() const                                    \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<MOBase::VersionInfo>(this,           \
+                                                                       "version");     \
+    }                                                                                  \
+                                                                                       \
+    QList<MOBase::PluginSetting> class_name::settings() const                          \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<QList<MOBase::PluginSetting>>(       \
+            this, "settings");                                                         \
+    }                                                                                  \
+    QString class_name::localizedName_Default() const                                  \
+    {                                                                                  \
+        return IPlugin::localizedName();                                               \
+    }                                                                                  \
+    QString class_name::master_Default() const { return IPlugin::master(); }           \
+    BOOST_PP_EXPR_IF(                                                                  \
+        include_requirements,                                                          \
+        std::vector<std::shared_ptr<const MOBase::IPluginRequirement>>                 \
+            class_name::requirements() const {                                         \
+                return basicWrapperFunctionImplementationWithDefault<                  \
+                    std::vector<std::shared_ptr<const MOBase::IPluginRequirement>>>(   \
+                    this, &class_name::requirements_Default, "requirements");          \
+            } std::vector<std::shared_ptr<const MOBase::IPluginRequirement>>           \
+                class_name::requirements_Default() const {                             \
+                    return IPlugin::requirements();                                    \
+                } bool class_name::enabledByDefault() const {                          \
+                    return basicWrapperFunctionImplementationWithDefault<bool>(        \
+                        this, &class_name::enabledByDefault_Default,                   \
+                        "enabledByDefault");                                           \
+                } bool class_name::enabledByDefault_Default()                          \
+                    const { return IPlugin::enabledByDefault(); })
 
-#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name) COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, 1)
+#define COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(class_name)                                \
+    COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(class_name, 1)
 
 /// end COMMON_I_PLUGIN_WRAPPER_DEFINITIONS
 /////////////////////////////
 /// IPlugin Wrapper
-
 
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginWrapper)
 /// end IPlugin Wrapper
 /////////////////////////////////////
 /// IPluginDiagnose Wrapper
 
-
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginDiagnoseWrapper)
 
 std::vector<unsigned int> IPluginDiagnoseWrapper::activeProblems() const
 {
-  return basicWrapperFunctionImplementation<std::vector<unsigned int>>(this, "activeProblems");
+    return basicWrapperFunctionImplementation<std::vector<unsigned int>>(
+        this, "activeProblems");
 }
 
 QString IPluginDiagnoseWrapper::shortDescription(unsigned int key) const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "shortDescription", key);
+    return basicWrapperFunctionImplementation<QString>(this, "shortDescription", key);
 }
 
 QString IPluginDiagnoseWrapper::fullDescription(unsigned int key) const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "fullDescription", key);
+    return basicWrapperFunctionImplementation<QString>(this, "fullDescription", key);
 }
 
 bool IPluginDiagnoseWrapper::hasGuidedFix(unsigned int key) const
 {
-  return basicWrapperFunctionImplementation<bool>(this, "hasGuidedFix", key);
+    return basicWrapperFunctionImplementation<bool>(this, "hasGuidedFix", key);
 }
 
 void IPluginDiagnoseWrapper::startGuidedFix(unsigned int key) const
 {
-  basicWrapperFunctionImplementation<void>(this, "startGuidedFix", key);
+    basicWrapperFunctionImplementation<void>(this, "startGuidedFix", key);
 }
 
 /// end IPluginDiagnose Wrapper
 /////////////////////////////////////
 /// IPluginFileMapper Wrapper
 
-
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginFileMapperWrapper)
 
 MappingType IPluginFileMapperWrapper::mappings() const
 {
-  return basicWrapperFunctionImplementation<MappingType>(this, "mappings");
+    return basicWrapperFunctionImplementation<MappingType>(this, "mappings");
 }
 /// end IPluginFileMapper Wrapper
 /////////////////////////////////////
@@ -141,184 +188,215 @@ MappingType IPluginFileMapperWrapper::mappings() const
 
 void IPluginGameWrapper::detectGame()
 {
-  return basicWrapperFunctionImplementation<void>(this, "detectGame");
+    return basicWrapperFunctionImplementation<void>(this, "detectGame");
 }
 
 QString IPluginGameWrapper::gameName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "gameName");
+    return basicWrapperFunctionImplementation<QString>(this, "gameName");
 }
 
-void IPluginGameWrapper::initializeProfile(const QDir & directory, ProfileSettings settings) const
+void IPluginGameWrapper::initializeProfile(const QDir& directory,
+                                           ProfileSettings settings) const
 {
-  basicWrapperFunctionImplementation<void>(this, "initializeProfile", directory, settings);
+    basicWrapperFunctionImplementation<void>(this, "initializeProfile", directory,
+                                             settings);
 }
 
-std::vector<std::shared_ptr<const MOBase::ISaveGame>> IPluginGameWrapper::listSaves(QDir folder) const
+std::vector<std::shared_ptr<const MOBase::ISaveGame>>
+IPluginGameWrapper::listSaves(QDir folder) const
 {
-  // Why do I not need to hold python references here? Is it because those are wrapped
-  // in shared_ptr?
-  return basicWrapperFunctionImplementation<std::vector<std::shared_ptr<const MOBase::ISaveGame>>>(this, "listSaves", folder);
+    // Why do I not need to hold python references here? Is it because those are wrapped
+    // in shared_ptr?
+    return basicWrapperFunctionImplementation<
+        std::vector<std::shared_ptr<const MOBase::ISaveGame>>>(this, "listSaves",
+                                                               folder);
 }
 
 bool IPluginGameWrapper::isInstalled() const
 {
-  return basicWrapperFunctionImplementation<bool>(this, "isInstalled");
+    return basicWrapperFunctionImplementation<bool>(this, "isInstalled");
 }
 
 QIcon IPluginGameWrapper::gameIcon() const
 {
-  return basicWrapperFunctionImplementation<QIcon>(this, "gameIcon");
+    return basicWrapperFunctionImplementation<QIcon>(this, "gameIcon");
 }
 
 QDir IPluginGameWrapper::gameDirectory() const
 {
-  return basicWrapperFunctionImplementation<QDir>(this, "gameDirectory");
+    return basicWrapperFunctionImplementation<QDir>(this, "gameDirectory");
 }
 
 QDir IPluginGameWrapper::dataDirectory() const
 {
-  return basicWrapperFunctionImplementation<QDir>(this, "dataDirectory");
+    return basicWrapperFunctionImplementation<QDir>(this, "dataDirectory");
 }
 
-void IPluginGameWrapper::setGamePath(const QString & path)
+void IPluginGameWrapper::setGamePath(const QString& path)
 {
-  basicWrapperFunctionImplementation<void>(this, "setGamePath", path);
+    basicWrapperFunctionImplementation<void>(this, "setGamePath", path);
 }
 
 QDir IPluginGameWrapper::documentsDirectory() const
 {
-  return basicWrapperFunctionImplementation<QDir>(this, "documentsDirectory");
+    return basicWrapperFunctionImplementation<QDir>(this, "documentsDirectory");
 }
 
 QDir IPluginGameWrapper::savesDirectory() const
 {
-  return basicWrapperFunctionImplementation<QDir>(this, "savesDirectory");
+    return basicWrapperFunctionImplementation<QDir>(this, "savesDirectory");
 }
 
 QList<MOBase::ExecutableInfo> IPluginGameWrapper::executables() const
 {
-  return basicWrapperFunctionImplementation<QList<MOBase::ExecutableInfo>>(this, "executables");
+    return basicWrapperFunctionImplementation<QList<MOBase::ExecutableInfo>>(
+        this, "executables");
 }
 
-QList<MOBase::ExecutableForcedLoadSetting> IPluginGameWrapper::executableForcedLoads() const
+QList<MOBase::ExecutableForcedLoadSetting>
+IPluginGameWrapper::executableForcedLoads() const
 {
-  return basicWrapperFunctionImplementation<QList<MOBase::ExecutableForcedLoadSetting>>(this, "executableForcedLoads");
+    return basicWrapperFunctionImplementation<
+        QList<MOBase::ExecutableForcedLoadSetting>>(this, "executableForcedLoads");
 }
 
 QString IPluginGameWrapper::steamAPPId() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "steamAPPId");
+    return basicWrapperFunctionImplementation<QString>(this, "steamAPPId");
 }
 
 QStringList IPluginGameWrapper::primaryPlugins() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "primaryPlugins");
+    return basicWrapperFunctionImplementation<QStringList>(this, "primaryPlugins");
 }
 
 QStringList IPluginGameWrapper::gameVariants() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "gameVariants");
+    return basicWrapperFunctionImplementation<QStringList>(this, "gameVariants");
 }
 
-void IPluginGameWrapper::setGameVariant(const QString & variant)
+void IPluginGameWrapper::setGameVariant(const QString& variant)
 {
-  basicWrapperFunctionImplementation<void>(this, "setGameVariant", variant);
+    basicWrapperFunctionImplementation<void>(this, "setGameVariant", variant);
 }
 
 QString IPluginGameWrapper::binaryName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "binaryName");
+    return basicWrapperFunctionImplementation<QString>(this, "binaryName");
 }
 
 QString IPluginGameWrapper::gameShortName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "gameShortName");
+    return basicWrapperFunctionImplementation<QString>(this, "gameShortName");
 }
 
 QStringList IPluginGameWrapper::primarySources() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "primarySources");
+    return basicWrapperFunctionImplementation<QStringList>(this, "primarySources");
 }
 
 QStringList IPluginGameWrapper::validShortNames() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "validShortNames");
+    return basicWrapperFunctionImplementation<QStringList>(this, "validShortNames");
 }
 
 QString IPluginGameWrapper::gameNexusName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "gameNexusName");
+    return basicWrapperFunctionImplementation<QString>(this, "gameNexusName");
 }
 
 QStringList IPluginGameWrapper::iniFiles() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "iniFiles");
+    return basicWrapperFunctionImplementation<QStringList>(this, "iniFiles");
 }
 
 QStringList IPluginGameWrapper::DLCPlugins() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "DLCPlugins");
+    return basicWrapperFunctionImplementation<QStringList>(this, "DLCPlugins");
 }
 
 QStringList IPluginGameWrapper::CCPlugins() const
 {
-  return basicWrapperFunctionImplementation<QStringList>(this, "CCPlugins");
+    return basicWrapperFunctionImplementation<QStringList>(this, "CCPlugins");
 }
 
 IPluginGame::LoadOrderMechanism IPluginGameWrapper::loadOrderMechanism() const
 {
-  return basicWrapperFunctionImplementation<IPluginGame::LoadOrderMechanism>(this, "loadOrderMechanism");
+    return basicWrapperFunctionImplementation<IPluginGame::LoadOrderMechanism>(
+        this, "loadOrderMechanism");
 }
 
 IPluginGame::SortMechanism IPluginGameWrapper::sortMechanism() const
 {
-  return basicWrapperFunctionImplementation<IPluginGame::SortMechanism>(this, "sortMechanism");
+    return basicWrapperFunctionImplementation<IPluginGame::SortMechanism>(
+        this, "sortMechanism");
 }
 
 int IPluginGameWrapper::nexusModOrganizerID() const
 {
-  return basicWrapperFunctionImplementation<int>(this, "nexusModOrganizerID");
+    return basicWrapperFunctionImplementation<int>(this, "nexusModOrganizerID");
 }
 
 int IPluginGameWrapper::nexusGameID() const
 {
-  return basicWrapperFunctionImplementation<int>(this, "nexusGameID");
+    return basicWrapperFunctionImplementation<int>(this, "nexusGameID");
 }
 
-bool IPluginGameWrapper::looksValid(QDir const & dir) const
+bool IPluginGameWrapper::looksValid(QDir const& dir) const
 {
-  return basicWrapperFunctionImplementation<bool>(this, "looksValid", dir);
+    return basicWrapperFunctionImplementation<bool>(this, "looksValid", dir);
 }
 
 QString IPluginGameWrapper::gameVersion() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "gameVersion");
+    return basicWrapperFunctionImplementation<QString>(this, "gameVersion");
 }
 
 QString IPluginGameWrapper::getLauncherName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "getLauncherName");
+    return basicWrapperFunctionImplementation<QString>(this, "getLauncherName");
 }
 
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS_IMPL(IPluginGameWrapper, 0)
 
 std::map<std::type_index, std::any> IPluginGameWrapper::featureList() const
 {
-  return basicWrapperFunctionImplementation<std::map<std::type_index, std::any>>(this, "_featureList");
+    return basicWrapperFunctionImplementation<std::map<std::type_index, std::any>>(
+        this, "_featureList");
 }
 /// end IPluginGame Wrapper
 /////////////////////////////////////
 /// IPluginInstaller macro
 
-#define COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(class_name) \
-unsigned int class_name::priority() const { return basicWrapperFunctionImplementation<unsigned int>(this, "priority"); } \
-bool class_name::isManualInstaller() const { return basicWrapperFunctionImplementation<bool>(this, "isManualInstaller"); } \
-void class_name::onInstallationStart(QString const& archive, bool reinstallation, MOBase::IModInterface* currentMod) { \
-  basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::onInstallationStart_Default, "onInstallationStart", archive, reinstallation, boost::python::ptr(currentMod)); } \
-void class_name::onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod) { \
-  basicWrapperFunctionImplementationWithDefault<void>(this, &class_name::onInstallationEnd_Default, "onInstallationEnd", result, boost::python::ptr(newMod)); } \
-bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const { return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported", tree); }
+#define COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(class_name)                      \
+    unsigned int class_name::priority() const                                          \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<unsigned int>(this, "priority");     \
+    }                                                                                  \
+    bool class_name::isManualInstaller() const                                         \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<bool>(this, "isManualInstaller");    \
+    }                                                                                  \
+    void class_name::onInstallationStart(QString const& archive, bool reinstallation,  \
+                                         MOBase::IModInterface* currentMod)            \
+    {                                                                                  \
+        basicWrapperFunctionImplementationWithDefault<void>(                           \
+            this, &class_name::onInstallationStart_Default, "onInstallationStart",     \
+            archive, reinstallation, boost::python::ptr(currentMod));                  \
+    }                                                                                  \
+    void class_name::onInstallationEnd(EInstallResult result,                          \
+                                       MOBase::IModInterface* newMod)                  \
+    {                                                                                  \
+        basicWrapperFunctionImplementationWithDefault<void>(                           \
+            this, &class_name::onInstallationEnd_Default, "onInstallationEnd", result, \
+            boost::python::ptr(newMod));                                               \
+    }                                                                                  \
+    bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const   \
+    {                                                                                  \
+        return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported",    \
+                                                        tree);                         \
+    }
 
 /// end IPluginInstaller macro
 /////////////////////////////////////
@@ -327,37 +405,44 @@ bool class_name::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerSimpleWrapper)
 COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(IPluginInstallerSimpleWrapper)
 
-IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
-  GuessedValue<QString>& modName, std::shared_ptr<IFileTree>& tree,
-  QString& version, int& nexusID)
+IPluginInstaller::EInstallResult
+IPluginInstallerSimpleWrapper::install(GuessedValue<QString>& modName,
+                                       std::shared_ptr<IFileTree>& tree,
+                                       QString& version, int& nexusID)
 {
-  namespace bpy = boost::python;
+    namespace bpy = boost::python;
 
-  using return_type = std::variant<
-    IPluginInstaller::EInstallResult,
-    std::shared_ptr<IFileTree>,
-    std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>;
-  auto ret = basicWrapperFunctionImplementation<return_type>(this, "install", boost::ref(modName), tree, version, nexusID);
+    using return_type =
+        std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>,
+                     std::tuple<IPluginInstaller::EInstallResult,
+                                std::shared_ptr<IFileTree>, QString, int>>;
+    auto ret = basicWrapperFunctionImplementation<return_type>(
+        this, "install", boost::ref(modName), tree, version, nexusID);
 
-  auto result = std::visit([&](auto const& t) {
-    using type = std::decay_t<decltype(t)>;
-    if constexpr (std::is_same_v<type, IPluginInstaller::EInstallResult>) {
-      return t;
-    }
-    else if constexpr (std::is_same_v<type, std::shared_ptr<IFileTree>>) {
-      tree = t;
-      return IPluginInstaller::RESULT_SUCCESS;
-    }
-    else if constexpr (std::is_same_v<type, std::tuple<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>, QString, int>>) {
-      tree = std::get<1>(t);
-      version = std::get<2>(t);
-      nexusID = std::get<3>(t);
-      return std::get<0>(t);
-    }
-  }, ret);
+    auto result = std::visit(
+        [&](auto const& t) {
+            using type = std::decay_t<decltype(t)>;
+            if constexpr (std::is_same_v<type, IPluginInstaller::EInstallResult>) {
+                return t;
+            }
+            else if constexpr (std::is_same_v<type, std::shared_ptr<IFileTree>>) {
+                tree = t;
+                return IPluginInstaller::RESULT_SUCCESS;
+            }
+            else if constexpr (std::is_same_v<
+                                   type, std::tuple<IPluginInstaller::EInstallResult,
+                                                    std::shared_ptr<IFileTree>, QString,
+                                                    int>>) {
+                tree    = std::get<1>(t);
+                version = std::get<2>(t);
+                nexusID = std::get<3>(t);
+                return std::get<0>(t);
+            }
+        },
+        ret);
 
-  tree = utils::clean_shared_ptr(tree);
-  return result;
+    tree = utils::clean_shared_ptr(tree);
+    return result;
 }
 
 /// end IPluginInstallerSimple Wrapper
@@ -366,108 +451,118 @@ IPluginInstaller::EInstallResult IPluginInstallerSimpleWrapper::install(
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
 COMMON_I_PLUGIN_INSTALLER_WRAPPER_DEFINITIONS(IPluginInstallerCustomWrapper)
 
-bool IPluginInstallerCustomWrapper::isArchiveSupported(const QString &archiveName) const
+bool IPluginInstallerCustomWrapper::isArchiveSupported(const QString& archiveName) const
 {
-  return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported", archiveName);
+    return basicWrapperFunctionImplementation<bool>(this, "isArchiveSupported",
+                                                    archiveName);
 }
 
 std::set<QString> IPluginInstallerCustomWrapper::supportedExtensions() const
 {
-  return basicWrapperFunctionImplementation<std::set<QString>>(this, "supportedExtensions");
+    return basicWrapperFunctionImplementation<std::set<QString>>(this,
+                                                                 "supportedExtensions");
 }
 
-IPluginInstaller::EInstallResult IPluginInstallerCustomWrapper::install(
-  GuessedValue<QString> &modName, QString gameName, const QString &archiveName, const QString &version, int modID)
+IPluginInstaller::EInstallResult
+IPluginInstallerCustomWrapper::install(GuessedValue<QString>& modName, QString gameName,
+                                       const QString& archiveName,
+                                       const QString& version, int modID)
 {
-  // Note: This requires far more less trouble than the "Simple" installer version since 1) there is no tree
-  // and 2) there version and modId cannot be modified:
-  return basicWrapperFunctionImplementation<IPluginInstaller::EInstallResult>(
-    this, "install", boost::ref(modName), gameName, archiveName, version, modID);
+    // Note: This requires far more less trouble than the "Simple" installer version
+    // since 1) there is no tree and 2) there version and modId cannot be modified:
+    return basicWrapperFunctionImplementation<IPluginInstaller::EInstallResult>(
+        this, "install", boost::ref(modName), gameName, archiveName, version, modID);
 }
 
 /// end IPluginInstallerCustom Wrapper
 /////////////////////////////
 /// IPluginModPage Wrapper
 
-
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginModPageWrapper)
 
 QString IPluginModPageWrapper::displayName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "displayName");
+    return basicWrapperFunctionImplementation<QString>(this, "displayName");
 }
 
 QIcon IPluginModPageWrapper::icon() const
 {
-  return basicWrapperFunctionImplementation<QIcon>(this, "icon");
+    return basicWrapperFunctionImplementation<QIcon>(this, "icon");
 }
 
 QUrl IPluginModPageWrapper::pageURL() const
 {
-  return basicWrapperFunctionImplementation<QUrl>(this, "pageURL");
+    return basicWrapperFunctionImplementation<QUrl>(this, "pageURL");
 }
 
 bool IPluginModPageWrapper::useIntegratedBrowser() const
 {
-  return basicWrapperFunctionImplementation<bool>(this, "useIntegratedBrowser");
+    return basicWrapperFunctionImplementation<bool>(this, "useIntegratedBrowser");
 }
 
-bool IPluginModPageWrapper::handlesDownload(const QUrl & pageURL, const QUrl & downloadURL, MOBase::ModRepositoryFileInfo & fileInfo) const
+bool IPluginModPageWrapper::handlesDownload(
+    const QUrl& pageURL, const QUrl& downloadURL,
+    MOBase::ModRepositoryFileInfo& fileInfo) const
 {
-  return basicWrapperFunctionImplementation<bool>(this, "handlesDownload", pageURL, downloadURL, fileInfo);
+    return basicWrapperFunctionImplementation<bool>(this, "handlesDownload", pageURL,
+                                                    downloadURL, fileInfo);
 }
 
-void IPluginModPageWrapper::setParentWidget(QWidget * widget)
+void IPluginModPageWrapper::setParentWidget(QWidget* widget)
 {
-  basicWrapperFunctionImplementationWithDefault<void>(this, &IPluginModPageWrapper::setParentWidget_Default, "setParentWidget", widget);
+    basicWrapperFunctionImplementationWithDefault<void>(
+        this, &IPluginModPageWrapper::setParentWidget_Default, "setParentWidget",
+        widget);
 }
 /// end IPluginModPage Wrapper
 /////////////////////////////
 /// IPluginPreview Wrapper
 
-
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginPreviewWrapper)
 
 std::set<QString> IPluginPreviewWrapper::supportedExtensions() const
 {
-  return basicWrapperFunctionImplementation<std::set<QString>>(this, "supportedExtensions");
+    return basicWrapperFunctionImplementation<std::set<QString>>(this,
+                                                                 "supportedExtensions");
 }
 
-QWidget *IPluginPreviewWrapper::genFilePreview(const QString &fileName, const QSize &maxSize) const
+QWidget* IPluginPreviewWrapper::genFilePreview(const QString& fileName,
+                                               const QSize& maxSize) const
 {
-  // We need responsibility for deleting the QWidget to be transferred to C++:
-  return wrapperFunctionImplementationWithApiTransfer<QWidget*>(this, "genFilePreview", fileName, maxSize);
+    // We need responsibility for deleting the QWidget to be transferred to C++:
+    return wrapperFunctionImplementationWithApiTransfer<QWidget*>(
+        this, "genFilePreview", fileName, maxSize);
 }
 /// end IPluginPreview Wrapper
 /////////////////////////////
 /// IPluginTool Wrapper
 
-
 COMMON_I_PLUGIN_WRAPPER_DEFINITIONS(IPluginToolWrapper)
 
 QString IPluginToolWrapper::displayName() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "displayName");
+    return basicWrapperFunctionImplementation<QString>(this, "displayName");
 }
 
 QString IPluginToolWrapper::tooltip() const
 {
-  return basicWrapperFunctionImplementation<QString>(this, "tooltip");
+    return basicWrapperFunctionImplementation<QString>(this, "tooltip");
 }
 
 QIcon IPluginToolWrapper::icon() const
 {
-  return basicWrapperFunctionImplementation<QIcon>(this, "icon");
+    return basicWrapperFunctionImplementation<QIcon>(this, "icon");
 }
 
-void IPluginToolWrapper::setParentWidget(QWidget *parent)
+void IPluginToolWrapper::setParentWidget(QWidget* parent)
 {
-  basicWrapperFunctionImplementationWithDefault<void>(this, &IPluginToolWrapper::setParentWidget_Default, "setParentWidget", parent);
+    basicWrapperFunctionImplementationWithDefault<void>(
+        this, &IPluginToolWrapper::setParentWidget_Default, "setParentWidget", parent);
 }
 
 void IPluginToolWrapper::display() const
 {
-  basicWrapperFunctionImplementation<void>(this, "display");
+    basicWrapperFunctionImplementation<void>(this, "display");
 }
 
 /// end IPluginTool Wrapper

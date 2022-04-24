@@ -22,6 +22,8 @@ target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
 target_link_directories(pythonrunner
 	PRIVATE
 	${Boost_LIBRARY_DIRS})
+target_compile_options(pythonrunner
+	PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/MP>)
 target_compile_definitions(pythonrunner
 	PRIVATE QT_NO_KEYWORDS PYTHONRUNNER_LIBRARY)
 mo2_install_target(pythonrunner INSTALLDIR bin/plugins/data)

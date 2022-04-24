@@ -17,26 +17,25 @@
 
 bool BSAInvalidationWrapper::isInvalidationBSA(const QString& bsaName)
 {
-    return basicWrapperFunctionImplementation<bool>(this, "isInvalidationBSA",
-                                                    bsaName);
+    return basicWrapperFunctionImplementation<bool>(this, "isInvalidationBSA", bsaName);
 }
 
 void BSAInvalidationWrapper::deactivate(MOBase::IProfile* profile)
 {
-    return basicWrapperFunctionImplementation<void>(
-        this, "deactivate", boost::python::ptr(profile));
+    return basicWrapperFunctionImplementation<void>(this, "deactivate",
+                                                    boost::python::ptr(profile));
 }
 
 void BSAInvalidationWrapper::activate(MOBase::IProfile* profile)
 {
-    return basicWrapperFunctionImplementation<void>(
-        this, "activate", boost::python::ptr(profile));
+    return basicWrapperFunctionImplementation<void>(this, "activate",
+                                                    boost::python::ptr(profile));
 }
 
 bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile* profile)
 {
-    return basicWrapperFunctionImplementation<bool>(
-        this, "prepareProfile", boost::python::ptr(profile));
+    return basicWrapperFunctionImplementation<bool>(this, "prepareProfile",
+                                                    boost::python::ptr(profile));
 }
 /// end BSAInvalidation Wrapper
 /////////////////////////////
@@ -44,14 +43,13 @@ bool BSAInvalidationWrapper::prepareProfile(MOBase::IProfile* profile)
 
 QStringList DataArchivesWrapper::vanillaArchives() const
 {
-    return basicWrapperFunctionImplementation<QStringList>(this,
-                                                           "vanillaArchives");
+    return basicWrapperFunctionImplementation<QStringList>(this, "vanillaArchives");
 }
 
 QStringList DataArchivesWrapper::archives(const MOBase::IProfile* profile) const
 {
-    return basicWrapperFunctionImplementation<QStringList>(
-        this, "archives", boost::python::ptr(profile));
+    return basicWrapperFunctionImplementation<QStringList>(this, "archives",
+                                                           boost::python::ptr(profile));
 }
 
 void DataArchivesWrapper::addArchive(MOBase::IProfile* profile, int index,
@@ -73,26 +71,24 @@ void DataArchivesWrapper::removeArchive(MOBase::IProfile* profile,
 
 void GamePluginsWrapper::writePluginLists(const MOBase::IPluginList* pluginList)
 {
-    return basicWrapperFunctionImplementation<void>(
-        this, "writePluginLists", boost::python::ptr(pluginList));
+    return basicWrapperFunctionImplementation<void>(this, "writePluginLists",
+                                                    boost::python::ptr(pluginList));
 }
 
 void GamePluginsWrapper::readPluginLists(MOBase::IPluginList* pluginList)
 {
-    return basicWrapperFunctionImplementation<void>(
-        this, "readPluginLists", boost::python::ptr(pluginList));
+    return basicWrapperFunctionImplementation<void>(this, "readPluginLists",
+                                                    boost::python::ptr(pluginList));
 }
 
 QStringList GamePluginsWrapper::getLoadOrder()
 {
-    return basicWrapperFunctionImplementation<QStringList>(this,
-                                                           "getLoadOrder");
+    return basicWrapperFunctionImplementation<QStringList>(this, "getLoadOrder");
 }
 
 bool GamePluginsWrapper::lightPluginsAreSupported()
 {
-    return basicWrapperFunctionImplementation<bool>(this,
-                                                    "lightPluginsAreSupported");
+    return basicWrapperFunctionImplementation<bool>(this, "lightPluginsAreSupported");
 }
 
 /// end GamePlugins Wrapper
@@ -107,8 +103,8 @@ MappingType LocalSavegamesWrapper::mappings(const QDir& profileSaveDir) const
 
 bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile* profile)
 {
-    return basicWrapperFunctionImplementation<bool>(
-        this, "prepareProfile", boost::python::ptr(profile));
+    return basicWrapperFunctionImplementation<bool>(this, "prepareProfile",
+                                                    boost::python::ptr(profile));
 }
 
 /// end LocalSavegames Wrapper
@@ -118,38 +114,36 @@ bool LocalSavegamesWrapper::prepareProfile(MOBase::IProfile* profile)
 ModDataChecker::CheckReturn ModDataCheckerWrapper::dataLooksValid(
     std::shared_ptr<const MOBase::IFileTree> fileTree) const
 {
-    return basicWrapperFunctionImplementation<CheckReturn>(
-        this, "dataLooksValid", fileTree);
+    return basicWrapperFunctionImplementation<CheckReturn>(this, "dataLooksValid",
+                                                           fileTree);
 }
 
 std::shared_ptr<MOBase::IFileTree>
 ModDataCheckerWrapper::fix(std::shared_ptr<MOBase::IFileTree> fileTree) const
 {
-    return utils::clean_shared_ptr(
-        basicWrapperFunctionImplementationWithDefault<
-            std::shared_ptr<MOBase::IFileTree>>(
-            this,
-            [](auto&&... args) {
-                return nullptr;
-            },
-            "fix", fileTree));
+    return utils::clean_shared_ptr(basicWrapperFunctionImplementationWithDefault<
+                                   std::shared_ptr<MOBase::IFileTree>>(
+        this,
+        [](auto&&... args) {
+            return nullptr;
+        },
+        "fix", fileTree));
 }
 
 /// end ModDataChecker Wrapper
 /////////////////////////////
 /// ModDataContent Wrapper
 
-std::vector<ModDataContent::Content>
-ModDataContentWrapper::getAllContents() const
+std::vector<ModDataContent::Content> ModDataContentWrapper::getAllContents() const
 {
-    return basicWrapperFunctionImplementation<std::vector<Content>>(
-        this, "getAllContents");
+    return basicWrapperFunctionImplementation<std::vector<Content>>(this,
+                                                                    "getAllContents");
 }
 std::vector<int> ModDataContentWrapper::getContentsFor(
     std::shared_ptr<const MOBase::IFileTree> fileTree) const
 {
-    return basicWrapperFunctionImplementation<std::vector<int>>(
-        this, "getContentsFor", fileTree);
+    return basicWrapperFunctionImplementation<std::vector<int>>(this, "getContentsFor",
+                                                                fileTree);
 }
 
 /// end ModDataContent Wrapper
@@ -159,9 +153,8 @@ std::vector<int> ModDataContentWrapper::getContentsFor(
 SaveGameInfoWrapper::MissingAssets
 SaveGameInfoWrapper::getMissingAssets(MOBase::ISaveGame const& save) const
 {
-    return basicWrapperFunctionImplementation<
-        SaveGameInfoWrapper::MissingAssets>(this, "getMissingAssets",
-                                            boost::ref(save));
+    return basicWrapperFunctionImplementation<SaveGameInfoWrapper::MissingAssets>(
+        this, "getMissingAssets", boost::ref(save));
 }
 
 MOBase::ISaveGameInfoWidget*
@@ -197,8 +190,7 @@ QString ScriptExtenderWrapper::loaderPath() const
 
 QString ScriptExtenderWrapper::savegameExtension() const
 {
-    return basicWrapperFunctionImplementation<QString>(this,
-                                                       "savegameExtension");
+    return basicWrapperFunctionImplementation<QString>(this, "savegameExtension");
 }
 
 bool ScriptExtenderWrapper::isInstalled() const
@@ -208,8 +200,7 @@ bool ScriptExtenderWrapper::isInstalled() const
 
 QString ScriptExtenderWrapper::getExtenderVersion() const
 {
-    return basicWrapperFunctionImplementation<QString>(this,
-                                                       "getExtenderVersion");
+    return basicWrapperFunctionImplementation<QString>(this, "getExtenderVersion");
 }
 
 WORD ScriptExtenderWrapper::getArch() const
@@ -223,14 +214,12 @@ WORD ScriptExtenderWrapper::getArch() const
 
 QStringList UnmanagedModsWrapper::mods(bool onlyOfficial) const
 {
-    return basicWrapperFunctionImplementation<QStringList>(this, "mods",
-                                                           onlyOfficial);
+    return basicWrapperFunctionImplementation<QStringList>(this, "mods", onlyOfficial);
 }
 
 QString UnmanagedModsWrapper::displayName(const QString& modName) const
 {
-    return basicWrapperFunctionImplementation<QString>(this, "displayName",
-                                                       modName);
+    return basicWrapperFunctionImplementation<QString>(this, "displayName", modName);
 }
 
 QFileInfo UnmanagedModsWrapper::referenceFile(const QString& modName) const
@@ -241,8 +230,8 @@ QFileInfo UnmanagedModsWrapper::referenceFile(const QString& modName) const
 
 QStringList UnmanagedModsWrapper::secondaryFiles(const QString& modName) const
 {
-    return basicWrapperFunctionImplementation<QStringList>(
-        this, "secondaryFiles", modName);
+    return basicWrapperFunctionImplementation<QStringList>(this, "secondaryFiles",
+                                                           modName);
 }
 /// end UnmanagedMods Wrapper
 /////////////////////////////
@@ -267,8 +256,7 @@ void insertGameFeature(std::map<std::type_index, std::any>& map,
 }
 
 void game_features_map_from_python::construct(
-    PyObject* objPtr,
-    boost::python::converter::rvalue_from_python_stage1_data* data)
+    PyObject* objPtr, boost::python::converter::rvalue_from_python_stage1_data* data)
 {
     void* storage = ((boost::python::converter::rvalue_from_python_storage<
                          std::map<std::type_index, std::any>>*)data)
@@ -307,16 +295,14 @@ void registerGameFeaturesPythonConverters()
     // Features require defs for all methods as Python can access C++ features
     bpy::class_<BSAInvalidationWrapper, boost::noncopyable>("BSAInvalidation")
         .def("isInvalidationBSA",
-             bpy::pure_virtual(&BSAInvalidation::isInvalidationBSA),
-             bpy::arg("name"))
+             bpy::pure_virtual(&BSAInvalidation::isInvalidationBSA), bpy::arg("name"))
         .def("deactivate", bpy::pure_virtual(&BSAInvalidation::deactivate),
              bpy::arg("profile"))
         .def("activate", bpy::pure_virtual(&BSAInvalidation::activate),
              bpy::arg("profile"));
 
     bpy::class_<DataArchivesWrapper, boost::noncopyable>("DataArchives")
-        .def("vanillaArchives",
-             bpy::pure_virtual(&DataArchives::vanillaArchives))
+        .def("vanillaArchives", bpy::pure_virtual(&DataArchives::vanillaArchives))
         .def("archives", bpy::pure_virtual(&DataArchives::archives),
              bpy::arg("profile"))
         .def("addArchive", bpy::pure_virtual(&DataArchives::addArchive),
@@ -325,11 +311,9 @@ void registerGameFeaturesPythonConverters()
              (bpy::arg("profile"), "name"));
 
     bpy::class_<GamePluginsWrapper, boost::noncopyable>("GamePlugins")
-        .def("writePluginLists",
-             bpy::pure_virtual(&GamePlugins::writePluginLists),
+        .def("writePluginLists", bpy::pure_virtual(&GamePlugins::writePluginLists),
              bpy::arg("plugin_list"))
-        .def("readPluginLists",
-             bpy::pure_virtual(&GamePlugins::readPluginLists),
+        .def("readPluginLists", bpy::pure_virtual(&GamePlugins::readPluginLists),
              bpy::arg("plugin_list"))
         .def("getLoadOrder", bpy::pure_virtual(&GamePlugins::getLoadOrder))
         .def("lightPluginsAreSupported",
@@ -338,13 +322,11 @@ void registerGameFeaturesPythonConverters()
     bpy::class_<LocalSavegamesWrapper, boost::noncopyable>("LocalSavegames")
         .def("mappings", bpy::pure_virtual(&LocalSavegames::mappings),
              bpy::arg("profile_save_dir"))
-        .def("prepareProfile",
-             bpy::pure_virtual(&LocalSavegames::prepareProfile),
+        .def("prepareProfile", bpy::pure_virtual(&LocalSavegames::prepareProfile),
              bpy::arg("profile"));
 
     auto modDataCheckerClass =
-        bpy::class_<ModDataCheckerWrapper, boost::noncopyable>(
-            "ModDataChecker");
+        bpy::class_<ModDataCheckerWrapper, boost::noncopyable>("ModDataChecker");
     {
         bpy::scope scope = modDataCheckerClass;
 
@@ -355,17 +337,14 @@ void registerGameFeaturesPythonConverters()
             .export_values();
 
         modDataCheckerClass
-            .def("dataLooksValid",
-                 bpy::pure_virtual(&ModDataChecker::dataLooksValid),
+            .def("dataLooksValid", bpy::pure_virtual(&ModDataChecker::dataLooksValid),
                  bpy::arg("filetree"))
-            .def("fix", bpy::pure_virtual(&ModDataChecker::fix),
-                 bpy::arg("filetree"));
+            .def("fix", bpy::pure_virtual(&ModDataChecker::fix), bpy::arg("filetree"));
     }
 
     {
         bpy::scope scope =
-            bpy::class_<ModDataContentWrapper, boost::noncopyable>(
-                "ModDataContent")
+            bpy::class_<ModDataContentWrapper, boost::noncopyable>("ModDataContent")
                 .def("getAllContents",
                      bpy::pure_virtual(&ModDataContent::getAllContents))
                 .def("getContentsFor",
@@ -373,9 +352,9 @@ void registerGameFeaturesPythonConverters()
                      bpy::arg("filetree"));
 
         bpy::class_<ModDataContent::Content>(
-            "Content", bpy::init<int, QString, QString, bpy::optional<bool>>(
-                           (bpy::arg("id"), "name", "icon",
-                            bpy::arg("filter_only") = false)))
+            "Content",
+            bpy::init<int, QString, QString, bpy::optional<bool>>(
+                (bpy::arg("id"), "name", "icon", bpy::arg("filter_only") = false)))
             .add_property("id", &ModDataContent::Content::id)
             .add_property("name", &ModDataContent::Content::name)
             .add_property("icon", &ModDataContent::Content::icon)
@@ -383,34 +362,29 @@ void registerGameFeaturesPythonConverters()
     }
 
     bpy::class_<SaveGameInfoWrapper, boost::noncopyable>("SaveGameInfo")
-        .def("getMissingAssets",
-             bpy::pure_virtual(&SaveGameInfo::getMissingAssets),
+        .def("getMissingAssets", bpy::pure_virtual(&SaveGameInfo::getMissingAssets),
              bpy::arg("save"))
-        .def("getSaveGameWidget",
-             bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget),
-             bpy::return_value_policy<bpy::manage_new_object>(),
-             bpy::arg("parent"), "[optional]");
+        .def("getSaveGameWidget", bpy::pure_virtual(&SaveGameInfo::getSaveGameWidget),
+             bpy::return_value_policy<bpy::manage_new_object>(), bpy::arg("parent"),
+             "[optional]");
 
     bpy::class_<ScriptExtenderWrapper, boost::noncopyable>("ScriptExtender")
         .def("BinaryName", bpy::pure_virtual(&ScriptExtender::BinaryName))
         .def("PluginPath", bpy::pure_virtual(&ScriptExtender::PluginPath))
         .def("loaderName", bpy::pure_virtual(&ScriptExtender::loaderName))
         .def("loaderPath", bpy::pure_virtual(&ScriptExtender::loaderPath))
-        .def("savegameExtension",
-             bpy::pure_virtual(&ScriptExtender::savegameExtension))
+        .def("savegameExtension", bpy::pure_virtual(&ScriptExtender::savegameExtension))
         .def("isInstalled", bpy::pure_virtual(&ScriptExtender::isInstalled))
         .def("getExtenderVersion",
              bpy::pure_virtual(&ScriptExtender::getExtenderVersion))
         .def("getArch", bpy::pure_virtual(&ScriptExtender::getArch));
 
     bpy::class_<UnmanagedModsWrapper, boost::noncopyable>("UnmanagedMods")
-        .def("mods", bpy::pure_virtual(&UnmanagedMods::mods),
-             bpy::arg("official_only"))
+        .def("mods", bpy::pure_virtual(&UnmanagedMods::mods), bpy::arg("official_only"))
         .def("displayName", bpy::pure_virtual(&UnmanagedMods::displayName),
              bpy::arg("mod_name"))
         .def("referenceFile", bpy::pure_virtual(&UnmanagedMods::referenceFile),
              bpy::arg("mod_name"))
-        .def("secondaryFiles",
-             bpy::pure_virtual(&UnmanagedMods::secondaryFiles),
+        .def("secondaryFiles", bpy::pure_virtual(&UnmanagedMods::secondaryFiles),
              bpy::arg("mod_name"));
 }
