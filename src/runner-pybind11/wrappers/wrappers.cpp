@@ -95,12 +95,13 @@ namespace mo2::python {
         iSaveGameInfoWidget.def(py::init<>())
             .def(py::init<QWidget*>(), py::arg("parent"))
             .def("setSave", &ISaveGameInfoWidget::setSave, py::arg("save"));
-        py::qt::add_qt_delegate<QWidget>(iSaveGameInfoWidget, "widget");
+        py::qt::add_qt_delegate<QWidget>(iSaveGameInfoWidget, "_widget");
 
         // IPluginRequirement
         //
-        py::class_<IPluginRequirement, PyPluginRequirement> iPluginRequirementClass(
-            m, "IPluginRequirement");
+        py::class_<IPluginRequirement, std::shared_ptr<IPluginRequirement>,
+                   PyPluginRequirement>
+            iPluginRequirementClass(m, "IPluginRequirement");
 
         py::class_<IPluginRequirement::Problem>(iPluginRequirementClass, "Problem")
             .def(py::init<QString, QString>(), py::arg("short_description"),

@@ -19,3 +19,5 @@ project(plugin_python)
 # add_subdirectory(src/runner)
 add_subdirectory(src/runner-pybind11)
 add_subdirectory(src/proxy)
+
+# add_subdirectory(tests)

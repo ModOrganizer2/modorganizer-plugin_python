@@ -86,6 +86,18 @@ PYBIND11_MODULE(mobase, m)
         return res;
     });
 
+    m.def("testGuessedString", [](GuessedValue<QString> const& value) {
+        return std::make_tuple(value.operator const QString&(), value.variants());
+    });
+
+    m.def("testQStringList", [](QStringList const& list) {
+        QStringList res = list;
+        for (QString& value : res) {
+            value = value + "_CPP";
+        }
+        return res;
+    });
+
     m.def("testQMap1", [](QMap<QString, QString> const& map) {
         QMap<QString, int> res;
         for (auto it = map.begin(); it != map.end(); ++it) {

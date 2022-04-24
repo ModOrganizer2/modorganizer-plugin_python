@@ -27,30 +27,3 @@ target_compile_options(pythonrunner
 target_compile_definitions(pythonrunner
 	PRIVATE QT_NO_KEYWORDS PYTHONRUNNER_LIBRARY)
 mo2_install_target(pythonrunner INSTALLDIR bin/plugins/data)
-
-mo2_add_filter(NAME src/converters GROUPS
-	converters
-	pythonutils
-	shared_ptr_converter
-	tuple_helper
-	variant_helper
-)
-
-mo2_add_filter(NAME src/runner GROUPS
-	pythonrunner
-	pylogger
-	widgets
-)
-
-mo2_add_filter(NAME src/utils GROUPS
-	error
-	gilock
-	sipapiaccess
-)
-
-mo2_add_filter(NAME src/wrappers GROUPS
-	gamefeatureswrappers
-	proxypluginwrappers
-	pythonwrapperutilities
-	uibasewrappers
-)
