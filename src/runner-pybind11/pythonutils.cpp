@@ -56,13 +56,15 @@ namespace mo2::python {
             py::arg("write") = py::cpp_function([](std::string_view message) {
                 static PrintWrapper wrapper(MOBase::log::Debug);
                 wrapper.write(message);
-            }));
+            }),
+            py::arg("flush") = py::cpp_function([] {}));
         auto errorWrapper = make_python_type(
             "MO2ErrorWrapper", py::make_tuple(),
             py::arg("write") = py::cpp_function([](std::string_view message) {
                 static PrintWrapper wrapper(MOBase::log::Error);
                 wrapper.write(message);
-            }));
+            }),
+            py::arg("flush") = py::cpp_function([] {}));
         py::module_ sys    = py::module_::import("sys");
         sys.attr("stdout") = printWrapper();
         sys.attr("stderr") = errorWrapper();

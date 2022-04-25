@@ -300,19 +300,19 @@ PythonRunner::PythonRunner() {}
 
 PythonRunner::~PythonRunner()
 {
-    // We need the GIL lock when destroying Python objects.
-    py::gil_scoped_acquire lock;
-    // m_Interpreter.reset();
-
-    // Boost.Python does not handle cyclic garbace collection, so we need to
-    // release everything hold by the objects before deleting the objects
-    // themselves: for (auto& [name, objects] : m_PythonObjects) {
-    //   for (auto& obj : objects) {
-    //     obj.attr("__dict__").attr("clear")();
-    //   }
+    // Boost.Python does not handle cyclic garbace collection, so we need to release
+    // everything hold by the objects before deleting the objects themselves:
+    // for (auto& [name, objects] : m_PythonObjects) {
+    //     for (auto& obj : objects) {
+    //         obj.attr("__dict__").attr("clear")();
+    //     }
     // }
 
-    // m_PythonObjects.clear();
+    // we need to clear this here otherwise there is a crash in
+    // finalize_interpreter()
+    m_PythonObjects.clear();
+
+    py::finalize_interpreter();
 }
 
 // ErrWrapper is in error.h
@@ -331,13 +331,6 @@ bool PythonRunner::initPython()
     try {
         static const char* argv0 = "ModOrganizer.exe";
 
-        // we initialize the interpreter "the old way" because
-        // scoped_interpreter does not seem to work well with PyQt
-        wchar_t argBuffer[MAX_PATH];
-        const size_t cSize = strlen(argv0) + 1;
-        mbstowcs(argBuffer, argv0, MAX_PATH);
-        Py_SetProgramName(argBuffer);
-
         PyImport_AppendInittab("mobase", &PyInit_mobase);
         PyImport_AppendInittab("moprivate", &PyInit_moprivate);
 
@@ -345,7 +338,8 @@ bool PythonRunner::initPython()
         Py_NoSiteFlag   = 1;
 
         initPath();
-        Py_InitializeEx(0);
+
+        py::initialize_interpreter(false, 1, &argv0);
 
         if (!Py_IsInitialized()) {
             return false;
