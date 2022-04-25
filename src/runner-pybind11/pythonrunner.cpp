@@ -29,7 +29,15 @@
 #include "wrappers/wrappers.h"
 
 // TODO: remove these include (only for testing)
+#include <iplugin.h>
+#include <iplugindiagnose.h>
+#include <ipluginfilemapper.h>
+#include <iplugingame.h>
+#include <iplugininstaller.h>
 #include <ipluginlist.h>
+#include <ipluginmodpage.h>
+#include <ipluginpreview.h>
+#include <iplugintool.h>
 #include <isavegame.h>
 #include <isavegameinfowidget.h>
 
@@ -74,6 +82,22 @@ PYBIND11_MODULE(mobase, m)
     m.attr("MoVariant") = py::none();
 
     // == BEGIN TESTS ==
+
+    m.def("testPlugin", [](py::object pyobj) {
+        py::scoped_ostream_redirect s{std::cout};
+        std::cout << "type: " << pyobj.get_type().attr("__name__").cast<std::string>()
+                  << "\n";
+        auto qobjects = mo2::python::extract_plugins(pyobj);
+        std::cout << "  found " << qobjects.size() << " plugins\n";
+
+        // cast as IPlugin
+        for (int i = 0; i < qobjects.size(); ++i) {
+            IPlugin* plugin = qobject_cast<IPlugin*>(qobjects[i]);
+            std::cout << fmt::format("  plugin {}: {} -> {}\n", i, (void*)qobjects[i],
+                                     (void*)plugin);
+            std::cout << fmt::format("    name: {}\n", plugin->name().toStdString());
+        }
+    });
 
     py::detail::type_caster<QString> t1;
     py::detail::type_caster<QVariant> t2;
@@ -255,17 +279,6 @@ private:
      */
     void ensureFolderInPath(QString folder);
 
-    /**
-     * @brief Append the underlying object of the given python object to the
-     *     interface list if it is an instance (pointer) of the given type.
-     *
-     * @param obj The object to check.
-     * @param interfaces The list to append the object to.
-     *
-     */
-    template <class T>
-    void appendIfInstance(py::object const& obj, QList<QObject*>& interfaces);
-
 private:
     // For each "identifier" (python file or python module folder), contains the
     // list of python objects to keep "alive" during the execution.
@@ -378,14 +391,6 @@ void PythonRunner::ensureFolderInPath(QString folder)
     }
 }
 
-template <class T>
-void PythonRunner::appendIfInstance(py::object const& obj, QList<QObject*>& interfaces)
-{
-    if (py::isinstance<T*>(obj)) {
-        interfaces.append(obj.cast<T*>());
-    }
-}
-
 QList<QObject*> PythonRunner::load(const QString& identifier)
 {
     py::gil_scoped_acquire lock;
@@ -472,27 +477,7 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
             // Add the plugin to keep it alive:
             m_PythonObjects[identifier].push_back(pluginObj);
 
-            QList<QObject*> interfaceList;
-
-            // appendIfInstance<IPluginGame>(pluginObj, interfaceList);
-            // Must try the wrapper because it's only a plugin extension
-            // interface in C++, so doesn't extend QObject
-            // appendIfInstance<IPluginDiagnoseWrapper>(pluginObj,
-            // interfaceList); Must try the wrapper because it's only a plugin
-            // extension interface in C++, so doesn't extend QObject
-            // appendIfInstance<IPluginFileMapperWrapper>(pluginObj,
-            // interfaceList);
-            // appendIfInstance<IPluginInstallerCustom>(pluginObj,
-            // interfaceList);
-            // appendIfInstance<IPluginInstallerSimple>(pluginObj,
-            // interfaceList); appendIfInstance<IPluginModPage>(pluginObj,
-            // interfaceList); appendIfInstance<IPluginPreview>(pluginObj,
-            // interfaceList); appendIfInstance<IPluginTool>(pluginObj,
-            // interfaceList);
-
-            if (interfaceList.isEmpty()) {
-                // appendIfInstance<IPluginWrapper>(pluginObj, interfaceList);
-            }
+            QList<QObject*> interfaceList = mo2::python::extract_plugins(pluginObj);
 
             if (interfaceList.isEmpty()) {
                 MOBase::log::error("Plugin {}: no plugin interface implemented.",

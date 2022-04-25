@@ -3,6 +3,9 @@
 
 #include <pybind11/pybind11.h>
 
+#include <QList>
+#include <QObject>
+
 namespace mo2::python {
 
     /**
@@ -37,6 +40,16 @@ namespace mo2::python {
      * @param m Python module to add bindings to.
      */
     void add_plugins_bindings(pybind11::module_ m);
+
+    /**
+     * @brief Extract plugins from the given object. For each plugin implemented, an
+     * object is returned.
+     *
+     * @param object Python object to extract plugins from.
+     *
+     * @return a QObject* for each plugin implemented by the given object.
+     */
+    QList<QObject*> extract_plugins(pybind11::object object);
 
     /**
      * @brief Add bindings for the various game features classes in uibase that
