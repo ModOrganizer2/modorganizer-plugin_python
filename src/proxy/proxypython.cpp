@@ -153,7 +153,7 @@ QStringList ProxyPython::pluginList(const QDir& pluginPath) const
         QString name   = iter.next();
         QFileInfo info = iter.fileInfo();
 
-        if (info.fileName() == "pyCfg.py") {
+        if (info.fileName() == "pyCfg.py" || info.fileName() == "installer_wizard") {
             result.append(name);
         }
 

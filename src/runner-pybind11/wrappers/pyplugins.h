@@ -262,7 +262,8 @@ namespace mo2::python {
     class PyPluginInstallerCustom
         : public PyPluginInstallerBase<IPluginInstallerCustom> {
         Q_OBJECT
-        Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstallerCustom)
+        Q_INTERFACES(
+            MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom)
     public:
         bool isArchiveSupported(const QString& archiveName) const
         {
@@ -288,7 +289,8 @@ namespace mo2::python {
     class PyPluginInstallerSimple
         : public PyPluginInstallerBase<IPluginInstallerSimple> {
         Q_OBJECT
-        Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstallerSimple)
+        Q_INTERFACES(
+            MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerSimple)
     public:
         using py_install_return_type =
             std::variant<IPluginInstaller::EInstallResult, std::shared_ptr<IFileTree>,

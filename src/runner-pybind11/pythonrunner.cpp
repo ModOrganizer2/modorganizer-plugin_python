@@ -34,6 +34,7 @@
 #include <ipluginfilemapper.h>
 #include <iplugingame.h>
 #include <iplugininstaller.h>
+#include <iplugininstallersimple.h>
 #include <ipluginlist.h>
 #include <ipluginmodpage.h>
 #include <ipluginpreview.h>
@@ -55,8 +56,11 @@ PYBIND11_MODULE(mobase, m)
     //
     mo2::python::add_basic_bindings(m);
     mo2::python::add_wrapper_bindings(m);
-    mo2::python::add_plugins_bindings(m);
+
+    // game features must be added before plugins
     mo2::python::add_game_feature_bindings(m);
+
+    mo2::python::add_plugins_bindings(m);
 
     // widgets
     //
@@ -96,6 +100,12 @@ PYBIND11_MODULE(mobase, m)
             std::cout << fmt::format("  plugin {}: {} -> {}\n", i, (void*)qobjects[i],
                                      (void*)plugin);
             std::cout << fmt::format("    name: {}\n", plugin->name().toStdString());
+            std::cout << fmt::format(
+                "    installer?: {}\n",
+                (void*)qobject_cast<IPluginInstaller*>(qobjects[i]));
+            std::cout << fmt::format(
+                "    installer simple?: {}\n",
+                (void*)qobject_cast<IPluginInstallerSimple*>(qobjects[i]));
         }
     });
 
