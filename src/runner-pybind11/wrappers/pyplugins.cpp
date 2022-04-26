@@ -4,188 +4,103 @@
 
 #include "pyplugins.h"
 
-#include <bsainvalidation.h>
-#include <dataarchives.h>
-#include <gameplugins.h>
-#include <localsavegames.h>
-#include <moddatachecker.h>
-#include <moddatacontent.h>
-#include <savegameinfo.h>
-#include <scriptextender.h>
-#include <unmanagedmods.h>
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 using namespace MOBase;
 
 namespace mo2::python {
 
-    class GameFeaturesHelper {
-        using GameFeatures = std::tuple<
-            // BSAInvalidation, DataArchives, GamePlugins, LocalSavegames,
-            ModDataChecker,
-            // ModDataContent, SaveGameInfo,
-            ScriptExtender
-            // , UnmanagedMods
-            >;
+    std::map<std::type_index, std::any> PyPluginGame::featureList() const
+    {
+        py::dict pyFeatures = [this]() {
+            PYBIND11_OVERRIDE_PURE(py::dict, IPluginGame, featureList, );
+        }();
 
-        template <class F, std::size_t... Is>
-        static void helper(F&& f, std::index_sequence<Is...>)
-        {
-            (f(static_cast<std::tuple_element_t<Is, GameFeatures>*>(nullptr)), ...);
-        }
-
-    public:
-        // apply the function f on a null-pointer of type Feature* for each game
-        // feature
-        template <class F>
-        static void apply(F&& f)
-        {
-            helper(f, std::make_index_sequence<std::tuple_size_v<GameFeatures>>{});
-        }
-    };
+        return convert_feature_list(pyFeatures);
+    }
 
     // this one is kind of big so it has its own function
     void add_iplugingame_bindings(pybind11::module_ m)
     {
-        py::enum_<MOBase::IPluginGame::LoadOrderMechanism>(m, "LoadOrderMechanism")
-            .value("FileTime", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
-            .value("PluginsTxt", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt)
+        py::enum_<IPluginGame::LoadOrderMechanism>(m, "LoadOrderMechanism")
+            .value("FileTime", IPluginGame::LoadOrderMechanism::FileTime)
+            .value("PluginsTxt", IPluginGame::LoadOrderMechanism::PluginsTxt)
 
-            .value("FILE_TIME", MOBase::IPluginGame::LoadOrderMechanism::FileTime)
-            .value("PLUGINS_TXT", MOBase::IPluginGame::LoadOrderMechanism::PluginsTxt);
+            .value("FILE_TIME", IPluginGame::LoadOrderMechanism::FileTime)
+            .value("PLUGINS_TXT", IPluginGame::LoadOrderMechanism::PluginsTxt);
 
-        py::enum_<MOBase::IPluginGame::SortMechanism>(m, "SortMechanism")
-            .value("NONE", MOBase::IPluginGame::SortMechanism::NONE)
-            .value("MLOX", MOBase::IPluginGame::SortMechanism::MLOX)
-            .value("BOSS", MOBase::IPluginGame::SortMechanism::BOSS)
-            .value("LOOT", MOBase::IPluginGame::SortMechanism::LOOT);
+        py::enum_<IPluginGame::SortMechanism>(m, "SortMechanism")
+            .value("NONE", IPluginGame::SortMechanism::NONE)
+            .value("MLOX", IPluginGame::SortMechanism::MLOX)
+            .value("BOSS", IPluginGame::SortMechanism::BOSS)
+            .value("LOOT", IPluginGame::SortMechanism::LOOT);
 
         // this does not actually do the conversion, but might be convenient
         // for accessing the names for enum bits
-        py::enum_<MOBase::IPluginGame::ProfileSetting>(m, "ProfileSetting")
-            .value("mods", MOBase::IPluginGame::MODS)
-            .value("configuration", MOBase::IPluginGame::CONFIGURATION)
-            .value("savegames", MOBase::IPluginGame::SAVEGAMES)
-            .value("preferDefaults", MOBase::IPluginGame::PREFER_DEFAULTS)
+        py::enum_<IPluginGame::ProfileSetting>(m, "ProfileSetting")
+            .value("mods", IPluginGame::MODS)
+            .value("configuration", IPluginGame::CONFIGURATION)
+            .value("savegames", IPluginGame::SAVEGAMES)
+            .value("preferDefaults", IPluginGame::PREFER_DEFAULTS)
 
-            .value("MODS", MOBase::IPluginGame::MODS)
-            .value("CONFIGURATION", MOBase::IPluginGame::CONFIGURATION)
-            .value("SAVEGAMES", MOBase::IPluginGame::SAVEGAMES)
-            .value("PREFER_DEFAULTS", MOBase::IPluginGame::PREFER_DEFAULTS);
+            .value("MODS", IPluginGame::MODS)
+            .value("CONFIGURATION", IPluginGame::CONFIGURATION)
+            .value("SAVEGAMES", IPluginGame::SAVEGAMES)
+            .value("PREFER_DEFAULTS", IPluginGame::PREFER_DEFAULTS);
 
-        py::class_<IPluginGame, IPlugin, std::unique_ptr<IPluginGame, py::nodelete>>(
-            m, "IPluginGame")
+        py::class_<IPluginGame, PyPluginGame, IPlugin,
+                   std::unique_ptr<IPluginGame, py::nodelete>>(
+            m, "IPluginGame", py::multiple_inheritance())
+            .def(py::init<>())
 
-            .def("featureList",
-                 [](MOBase::IPluginGame* p) {
-                     // constructing a dict from class name to actual object
-                     py::dict dict;
-                     GameFeaturesHelper::apply(
-                         [p, &dict]<class Feature>(Feature* feature) {
-                             const auto name = py::type::of<Feature>().attr("__name__");
-                             dict[name]      = py::cast(p->feature<Feature>(),
-                                                        py::return_value_policy::reference);
-                         });
-                     return dict;
-                 })
+            .def("featureList", &extract_feature_list)
+            .def("feature", &extract_feature, "feature_type"_a,
+                 py::return_value_policy::reference)
 
-            .def(
-                "feature",
-                [](MOBase::IPluginGame* p, py::object clsObj) {
-                    py::object py_feature = py::none();
-
-                    GameFeaturesHelper::apply([p, &clsObj, &py_feature]<class Feature>(
-                                                  Feature* feature) {
-                        if (py::type::of<Feature>().is(clsObj)) {
-                            py_feature = py::cast(p->feature<Feature>(),
-                                                  py::return_value_policy::reference);
-                        }
-                    });
-                    return py_feature;
-                },
-                "feature_type"_a, py::return_value_policy::reference)
-
-            //     .def("localizedName", &MOBase::IPlugin::localizedName,
-            //     &IPluginGameWrapper::localizedName_Default) .def("master",
-            //     &MOBase::IPlugin::master, &IPluginGameWrapper::master_Default)
-
-            //     .def("detectGame",
-            //     py::pure_virtual(&MOBase::IPluginGame::detectGame))
-            //     .def("gameName",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameName))
-            //     .def("initializeProfile",
-            //     py::pure_virtual(&MOBase::IPluginGame::initializeProfile),
-            //     (py::arg("directory"), "settings")) .def("listSaves",
-            //     py::pure_virtual(&MOBase::IPluginGame::listSaves),
-            //     py::arg("folder")) .def("isInstalled",
-            //     py::pure_virtual(&MOBase::IPluginGame::isInstalled))
-            //     .def("gameIcon",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameIcon))
-            //     .def("gameDirectory",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameDirectory))
-            .def("dataDirectory", &MOBase::IPluginGame::dataDirectory)
-            //     .def("setGamePath",
-            //     py::pure_virtual(&MOBase::IPluginGame::setGamePath),
-            //     py::arg("path")) .def("documentsDirectory",
-            //     py::pure_virtual(&MOBase::IPluginGame::documentsDirectory))
-            //     .def("savesDirectory",
-            //     py::pure_virtual(&MOBase::IPluginGame::savesDirectory))
-            //     .def("executables",
-            //     py::pure_virtual(&MOBase::IPluginGame::executables))
-            //     .def("executableForcedLoads",
-            //     py::pure_virtual(&MOBase::IPluginGame::executableForcedLoads))
-            //     .def("steamAPPId",
-            //     py::pure_virtual(&MOBase::IPluginGame::steamAPPId))
-            //     .def("primaryPlugins",
-            //     py::pure_virtual(&MOBase::IPluginGame::primaryPlugins))
-            //     .def("gameVariants",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameVariants))
-            //     .def("setGameVariant",
-            //     py::pure_virtual(&MOBase::IPluginGame::setGameVariant),
-            //     py::arg("variant")) .def("binaryName",
-            //     py::pure_virtual(&MOBase::IPluginGame::binaryName))
-            //     .def("gameShortName",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameShortName))
-            //     .def("primarySources",
-            //     py::pure_virtual(&MOBase::IPluginGame::primarySources))
-            //     .def("validShortNames",
-            //     py::pure_virtual(&MOBase::IPluginGame::validShortNames))
-            //     .def("gameNexusName",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameNexusName))
-            //     .def("iniFiles",
-            //     py::pure_virtual(&MOBase::IPluginGame::iniFiles))
-            //     .def("DLCPlugins",
-            //     py::pure_virtual(&MOBase::IPluginGame::DLCPlugins))
-            //     .def("CCPlugins",
-            //     py::pure_virtual(&MOBase::IPluginGame::CCPlugins))
-            //     .def("loadOrderMechanism",
-            //     py::pure_virtual(&MOBase::IPluginGame::loadOrderMechanism))
-            //     .def("sortMechanism",
-            //     py::pure_virtual(&MOBase::IPluginGame::sortMechanism))
-            //     .def("nexusModOrganizerID",
-            //     py::pure_virtual(&MOBase::IPluginGame::nexusModOrganizerID))
-            //     .def("nexusGameID",
-            //     py::pure_virtual(&MOBase::IPluginGame::nexusGameID))
-            //     .def("looksValid",
-            //     py::pure_virtual(&MOBase::IPluginGame::looksValid),
-            //     py::arg("directory")) .def("gameVersion",
-            //     py::pure_virtual(&MOBase::IPluginGame::gameVersion))
-            //     .def("getLauncherName",
-            //     py::pure_virtual(&MOBase::IPluginGame::getLauncherName))
-            //
-            ;
+            .def("detectGame", &IPluginGame::detectGame)
+            .def("gameName", &IPluginGame::gameName)
+            .def("initializeProfile", &IPluginGame::initializeProfile, "directory"_a,
+                 "settings"_a)
+            .def("listSaves", &IPluginGame::listSaves, "folder"_a)
+            .def("isInstalled", &IPluginGame::isInstalled)
+            .def("gameIcon", &IPluginGame::gameIcon)
+            .def("gameDirectory", &IPluginGame::gameDirectory)
+            .def("dataDirectory", &IPluginGame::dataDirectory)
+            .def("setGamePath", &IPluginGame::setGamePath, "path"_a)
+            .def("documentsDirectory", &IPluginGame::documentsDirectory)
+            .def("savesDirectory", &IPluginGame::savesDirectory)
+            .def("executables", &IPluginGame::executables)
+            .def("executableForcedLoads", &IPluginGame::executableForcedLoads)
+            .def("steamAPPId", &IPluginGame::steamAPPId)
+            .def("primaryPlugins", &IPluginGame::primaryPlugins)
+            .def("gameVariants", &IPluginGame::gameVariants)
+            .def("setGameVariant", &IPluginGame::setGameVariant, "variant"_a)
+            .def("binaryName", &IPluginGame::binaryName)
+            .def("gameShortName", &IPluginGame::gameShortName)
+            .def("primarySources", &IPluginGame::primarySources)
+            .def("validShortNames", &IPluginGame::validShortNames)
+            .def("gameNexusName", &IPluginGame::gameNexusName)
+            .def("iniFiles", &IPluginGame::iniFiles)
+            .def("DLCPlugins", &IPluginGame::DLCPlugins)
+            .def("CCPlugins", &IPluginGame::CCPlugins)
+            .def("loadOrderMechanism", &IPluginGame::loadOrderMechanism)
+            .def("sortMechanism", &IPluginGame::sortMechanism)
+            .def("nexusModOrganizerID", &IPluginGame::nexusModOrganizerID)
+            .def("nexusGameID", &IPluginGame::nexusGameID)
+            .def("looksValid", &IPluginGame::looksValid, "directory"_a)
+            .def("gameVersion", &IPluginGame::gameVersion)
+            .def("getLauncherName", &IPluginGame::getLauncherName);
     }
 
     // multiple installers
     void add_iplugininstaller_bindings(pybind11::module_ m)
     {
-        py::enum_<MOBase::IPluginInstaller::EInstallResult>(m, "InstallResult")
-            .value("SUCCESS", MOBase::IPluginInstaller::RESULT_SUCCESS)
-            .value("FAILED", MOBase::IPluginInstaller::RESULT_FAILED)
-            .value("CANCELED", MOBase::IPluginInstaller::RESULT_CANCELED)
-            .value("MANUAL_REQUESTED", MOBase::IPluginInstaller::RESULT_MANUALREQUESTED)
-            .value("NOT_ATTEMPTED", MOBase::IPluginInstaller::RESULT_NOTATTEMPTED);
+        py::enum_<IPluginInstaller::EInstallResult>(m, "InstallResult")
+            .value("SUCCESS", IPluginInstaller::RESULT_SUCCESS)
+            .value("FAILED", IPluginInstaller::RESULT_FAILED)
+            .value("CANCELED", IPluginInstaller::RESULT_CANCELED)
+            .value("MANUAL_REQUESTED", IPluginInstaller::RESULT_MANUALREQUESTED)
+            .value("NOT_ATTEMPTED", IPluginInstaller::RESULT_NOTATTEMPTED);
 
         // this is bind but should not be inherited in Python - does not make sense,
         // having it makes it simpler to bind the Simple and Custom installers
@@ -240,16 +155,16 @@ namespace mo2::python {
         py::class_<IPlugin, PyPlugin, std::unique_ptr<IPlugin, py::nodelete>>(
             m, "IPluginBase", py::multiple_inheritance())
             .def(py::init<>())
-            .def("init", &MOBase::IPlugin::init, "organizer"_a)
-            .def("name", &MOBase::IPlugin::name)
-            .def("localizedName", &MOBase::IPlugin::localizedName)
-            .def("master", &MOBase::IPlugin::master)
-            .def("author", &MOBase::IPlugin::author)
-            .def("description", &MOBase::IPlugin::description)
-            .def("version", &MOBase::IPlugin::version)
-            .def("requirements", &MOBase::IPlugin::requirements)
-            .def("settings", &MOBase::IPlugin::settings)
-            .def("enabledByDefault", &MOBase::IPlugin::enabledByDefault);
+            .def("init", &IPlugin::init, "organizer"_a)
+            .def("name", &IPlugin::name)
+            .def("localizedName", &IPlugin::localizedName)
+            .def("master", &IPlugin::master)
+            .def("author", &IPlugin::author)
+            .def("description", &IPlugin::description)
+            .def("version", &IPlugin::version)
+            .def("requirements", &IPlugin::requirements)
+            .def("settings", &IPlugin::settings)
+            .def("enabledByDefault", &IPlugin::enabledByDefault);
 
         py::class_<IPyPlugin, PyPlugin, IPlugin,
                    std::unique_ptr<IPyPlugin, py::nodelete>>(m, "IPlugin",
@@ -266,14 +181,11 @@ namespace mo2::python {
                    std::unique_ptr<IPyPluginDiagnose, py::nodelete>>(
             m, "IPluginDiagnose", py::multiple_inheritance())
             .def(py::init<>())
-            .def("activeProblems", &MOBase::IPluginDiagnose::activeProblems)
-            .def("shortDescription", &MOBase::IPluginDiagnose::shortDescription,
-                 py::arg("key"))
-            .def("fullDescription", &MOBase::IPluginDiagnose::fullDescription,
-                 py::arg("key"))
-            .def("hasGuidedFix", &MOBase::IPluginDiagnose::hasGuidedFix, py::arg("key"))
-            .def("startGuidedFix", &MOBase::IPluginDiagnose::startGuidedFix,
-                 py::arg("key"))
+            .def("activeProblems", &IPluginDiagnose::activeProblems)
+            .def("shortDescription", &IPluginDiagnose::shortDescription, "key"_a)
+            .def("fullDescription", &IPluginDiagnose::fullDescription, "key"_a)
+            .def("hasGuidedFix", &IPluginDiagnose::hasGuidedFix, "key"_a)
+            .def("startGuidedFix", &IPluginDiagnose::startGuidedFix, "key"_a)
             .def("_invalidate", &PyPluginDiagnose::invalidate);
 
         py::class_<IPluginTool, PyPluginTool, IPlugin,
@@ -337,14 +249,15 @@ namespace mo2::python {
         helper.append_if_instance<IPluginPreview>(plugin_obj);
         helper.append_if_instance<IPluginTool>(plugin_obj);
 
-        // helper.append_if_instance<IPluginGame>(plugin_obj);
+        helper.append_if_instance<IPluginGame>(plugin_obj);
+
+        // we need to check the two installer types because IPluginInstaller does not
+        // inherit QObject, and the trampoline do not have a common ancestor
         helper.append_if_instance<IPluginInstallerSimple>(plugin_obj);
         helper.append_if_instance<IPluginInstallerCustom>(plugin_obj);
 
         if (helper.objects.isEmpty()) {
-            if (py::isinstance<IPyPlugin>(plugin_obj)) {
-                helper.objects.append(plugin_obj.cast<IPyPlugin*>());
-            }
+            helper.append_if_instance<IPyPlugin>(plugin_obj);
         }
 
         return helper.objects;

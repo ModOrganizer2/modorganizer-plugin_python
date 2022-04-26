@@ -80,7 +80,7 @@ namespace mo2::python {
 
         // ISaveGame
         //
-        py::class_<ISaveGame, PySaveGame>(m, "ISaveGame")
+        py::class_<ISaveGame, PySaveGame, std::shared_ptr<ISaveGame>>(m, "ISaveGame")
             .def(py::init<>())
             .def("getFilepath", &ISaveGame::getFilepath)
             .def("getCreationTime", &ISaveGame::getCreationTime)

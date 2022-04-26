@@ -153,15 +153,11 @@ QStringList ProxyPython::pluginList(const QDir& pluginPath) const
         QString name   = iter.next();
         QFileInfo info = iter.fileInfo();
 
-        if (info.fileName() == "pyCfg.py" || info.fileName() == "installer_wizard") {
+        if (info.isFile() && name.endsWith(".py")) {
             result.append(name);
         }
-
-        if (info.isFile() && name.endsWith(".py")) {
-            // result.append(name);
-        }
         else if (info.isDir() && QDir(info.absoluteFilePath()).exists("__init__.py")) {
-            // result.append(name);
+            result.append(name);
         }
     }
 

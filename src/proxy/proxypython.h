@@ -25,59 +25,56 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Windows.h>
 
-#include <ipluginproxy.h>
 #include <iplugindiagnose.h>
+#include <ipluginproxy.h>
 
 #include <pythonrunner.h>
 
-
-class ProxyPython : public QObject, public MOBase::IPluginProxy, public MOBase::IPluginDiagnose
-{
-  Q_OBJECT
-  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy MOBase::IPluginDiagnose)
-#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
-  Q_PLUGIN_METADATA(IID "org.tannin.ProxyPython" FILE "proxypython.json")
+class ProxyPython : public QObject,
+                    public MOBase::IPluginProxy,
+                    public MOBase::IPluginDiagnose {
+    Q_OBJECT
+    Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy MOBase::IPluginDiagnose)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_PLUGIN_METADATA(IID "org.mo2.ProxyPython")
 #endif
 
 public:
-  ProxyPython();
+    ProxyPython();
 
-  virtual bool init(MOBase::IOrganizer *moInfo);
-  virtual QString name() const override;
-  virtual QString localizedName() const override;
-  virtual QString author() const override;
-  virtual QString description() const override;
-  virtual MOBase::VersionInfo version() const override;
-  virtual QList<MOBase::PluginSetting> settings() const override;
+    virtual bool init(MOBase::IOrganizer* moInfo);
+    virtual QString name() const override;
+    virtual QString localizedName() const override;
+    virtual QString author() const override;
+    virtual QString description() const override;
+    virtual MOBase::VersionInfo version() const override;
+    virtual QList<MOBase::PluginSetting> settings() const override;
 
-  QStringList pluginList(const QDir& pluginPath) const override;
-  QList<QObject*> load(const QString& identifier) override;
-  void unload(const QString& identifier) override;
+    QStringList pluginList(const QDir& pluginPath) const override;
+    QList<QObject*> load(const QString& identifier) override;
+    void unload(const QString& identifier) override;
 
-public: // IPluginDiagnose
-
-  virtual std::vector<unsigned int> activeProblems() const override;
-  virtual QString shortDescription(unsigned int key) const override;
-  virtual QString fullDescription(unsigned int key) const override;
-  virtual bool hasGuidedFix(unsigned int key) const override;
-  virtual void startGuidedFix(unsigned int key) const override;
+public:  // IPluginDiagnose
+    virtual std::vector<unsigned int> activeProblems() const override;
+    virtual QString shortDescription(unsigned int key) const override;
+    virtual QString fullDescription(unsigned int key) const override;
+    virtual bool hasGuidedFix(unsigned int key) const override;
+    virtual void startGuidedFix(unsigned int key) const override;
 
 private:
+    MOBase::IOrganizer* m_MOInfo;
+    HMODULE m_RunnerLib;
+    std::unique_ptr<IPythonRunner> m_Runner;
 
-  MOBase::IOrganizer *m_MOInfo;
-  HMODULE m_RunnerLib;
-  std::unique_ptr<IPythonRunner> m_Runner;
+    enum class FailureType : unsigned int {
+        NONE           = 0,
+        SEMICOLON      = 1,
+        DLL_NOT_FOUND  = 2,
+        INVALID_DLL    = 3,
+        INITIALIZATION = 4
+    };
 
-  enum class FailureType : unsigned int {
-    NONE = 0,
-    SEMICOLON = 1,
-    DLL_NOT_FOUND = 2,
-    INVALID_DLL = 3,
-    INITIALIZATION = 4
-  };
-
-  FailureType m_LoadFailure;
-
+    FailureType m_LoadFailure;
 };
 
-#endif // PROXYPYTHON_H
+#endif  // PROXYPYTHON_H

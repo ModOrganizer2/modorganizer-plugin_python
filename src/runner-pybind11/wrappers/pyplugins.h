@@ -27,14 +27,9 @@ namespace mo2::python {
 
     using namespace MOBase;
 
-    class IPyPlugin : public QObject, public IPlugin {};
-
-    class IPyPluginFileMapper : public IPyPlugin, public IPluginFileMapper {};
-
-    class IPyPluginDiagnose : public IPyPlugin, public IPluginDiagnose {};
-
+    // we need two base trampoline because IPluginGame has some final methods.
     template <class PluginBase>
-    class PyPluginBase : public PluginBase {
+    class PyPluginBaseNoFinal : public PluginBase {
     public:
         using PluginBase::PluginBase;
 
@@ -54,11 +49,6 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE(QString, PluginBase, master, );
         }
-        std::vector<std::shared_ptr<const IPluginRequirement>> requirements() const
-        {
-            PYBIND11_OVERRIDE(std::vector<std::shared_ptr<const IPluginRequirement>>,
-                              PluginBase, requirements, );
-        }
         QString author() const override
         {
             PYBIND11_OVERRIDE_PURE(QString, PluginBase, author, );
@@ -75,11 +65,31 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QList<PluginSetting>, PluginBase, settings, );
         }
+    };
+
+    template <class PluginBase>
+    class PyPluginBase : public PyPluginBaseNoFinal<PluginBase> {
+    public:
+        using PyPluginBaseNoFinal<PluginBase>::PyPluginBaseNoFinal;
+
+        std::vector<std::shared_ptr<const IPluginRequirement>> requirements() const
+        {
+            PYBIND11_OVERRIDE(std::vector<std::shared_ptr<const IPluginRequirement>>,
+                              PluginBase, requirements, );
+        }
         bool enabledByDefault() const override
         {
             PYBIND11_OVERRIDE(bool, PluginBase, enabledByDefault, );
         }
     };
+
+    // these classes do not inherit IPlugin or QObject so we need intermediate class to
+    // get proper bindings
+    class IPyPlugin : public QObject, public IPlugin {};
+    class IPyPluginFileMapper : public IPyPlugin, public IPluginFileMapper {};
+    class IPyPluginDiagnose : public IPyPlugin, public IPluginDiagnose {};
+
+    // PyXXX classes - trampoline classes for the plugins
 
     class PyPlugin : public PyPluginBase<IPyPlugin> {
         Q_OBJECT
@@ -329,6 +339,150 @@ namespace mo2::python {
                 },
                 result);
         }
+    };
+
+    // game
+    class PyPluginGame : public PyPluginBaseNoFinal<IPluginGame> {
+        Q_OBJECT
+        Q_INTERFACES(MOBase::IPlugin MOBase::IPluginGame)
+    public:
+        void detectGame() override
+        {
+            PYBIND11_OVERRIDE_PURE(void, IPluginGame, detectGame, );
+        }
+        QString gameName() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameName, );
+        }
+        void initializeProfile(const QDir& directory,
+                               ProfileSettings settings) const override
+        {
+            PYBIND11_OVERRIDE_PURE(void, IPluginGame, initializeProfile, directory,
+                                   settings);
+        }
+        std::vector<std::shared_ptr<const ISaveGame>>
+        listSaves(QDir folder) const override
+        {
+            PYBIND11_OVERRIDE_PURE(std::vector<std::shared_ptr<const ISaveGame>>,
+                                   IPluginGame, listSaves, folder);
+        }
+        bool isInstalled() const override
+        {
+            PYBIND11_OVERRIDE_PURE(bool, IPluginGame, isInstalled, );
+        }
+        QIcon gameIcon() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QIcon, IPluginGame, gameIcon, );
+        }
+        QDir gameDirectory() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, gameDirectory, );
+        }
+        QDir dataDirectory() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, dataDirectory, );
+        }
+        void setGamePath(const QString& path) override
+        {
+            PYBIND11_OVERRIDE_PURE(void, IPluginGame, setGamePath, path);
+        }
+        QDir documentsDirectory() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, documentsDirectory, );
+        }
+        QDir savesDirectory() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, savesDirectory, );
+        }
+        QList<ExecutableInfo> executables() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QList<ExecutableInfo>, IPluginGame, executables, );
+        }
+        QList<ExecutableForcedLoadSetting> executableForcedLoads() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QList<ExecutableForcedLoadSetting>, IPluginGame,
+                                   executableForcedLoads, );
+        }
+        QString steamAPPId() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, steamAPPId, );
+        }
+        QStringList primaryPlugins() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, primaryPlugins, );
+        }
+        QStringList gameVariants() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, gameVariants, );
+        }
+        void setGameVariant(const QString& variant) override
+        {
+            PYBIND11_OVERRIDE_PURE(void, IPluginGame, setGameVariant, variant);
+        }
+        QString binaryName() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, binaryName, );
+        }
+        QString gameShortName() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameShortName, );
+        }
+        QStringList primarySources() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, primarySources, );
+        }
+        QStringList validShortNames() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, validShortNames, );
+        }
+        QString gameNexusName() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameNexuesName, );
+        }
+        QStringList iniFiles() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, iniFiles, );
+        }
+        QStringList DLCPlugins() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, DLCPlugins, );
+        }
+        QStringList CCPlugins() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, CCPlugins, );
+        }
+        LoadOrderMechanism loadOrderMechanism() const override
+        {
+            PYBIND11_OVERRIDE_PURE(LoadOrderMechanism, IPluginGame,
+                                   loadOrderMechanism, );
+        }
+        SortMechanism sortMechanism() const override
+        {
+            PYBIND11_OVERRIDE_PURE(SortMechanism, IPluginGame, sortMechanism, );
+        }
+        int nexusModOrganizerID() const override
+        {
+            PYBIND11_OVERRIDE_PURE(int, IPluginGame, nexusModOrganizerID, );
+        }
+        int nexusGameID() const override
+        {
+            PYBIND11_OVERRIDE_PURE(int, IPluginGame, nexusGameID, );
+        }
+        bool looksValid(QDir const& dir) const override
+        {
+            PYBIND11_OVERRIDE_PURE(bool, IPluginGame, looksValid, dir);
+        }
+        QString gameVersion() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameVersion, );
+        }
+        QString getLauncherName() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, getLauncherName, );
+        }
+
+    protected:
+        std::map<std::type_index, std::any> featureList() const override;
     };
 
 }  // namespace mo2::python
