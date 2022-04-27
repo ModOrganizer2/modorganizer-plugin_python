@@ -9,6 +9,8 @@
 #include <iostream>
 #include <pybind11/iostream.h>
 
+#include "../pybind11_qt_holder.h"
+
 namespace pybind11::detail::qt {
 
     /**
@@ -96,6 +98,12 @@ namespace pybind11::detail::qt {
             if (data) {
                 if constexpr (is_pointer) {
                     value = reinterpret_cast<QClass>(data);
+
+                    // transfer ownership
+                    sipAPI()->api_transfer_to(src.ptr(), Py_None);
+
+                    // tie the py::object to the C++ one
+                    new pybind11::detail::qt::qobject_holder(value);
                 }
                 else {
                     value = *reinterpret_cast<QClass*>(data);

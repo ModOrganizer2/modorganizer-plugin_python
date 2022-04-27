@@ -13,12 +13,8 @@
 #include <QFile>
 #include <QWidget>
 
+#include "pybind11_all.h"
 #include <pybind11/embed.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl/filesystem.h>
-
-#include "pybind11_qt/pybind11_qt.h"
 
 #include <log.h>
 #include <utility.h>
@@ -330,7 +326,10 @@ PythonRunner::~PythonRunner()
 
     // we need to clear this here otherwise there is a crash in
     // finalize_interpreter()
-    m_PythonObjects.clear();
+    // {
+    //     py::gil_scoped_acquire s;
+    //     m_PythonObjects.clear();
+    // }
 
     // py::finalize_interpreter();
 }
@@ -425,7 +424,7 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
     // previous call.
     try {
 
-        // Dictionary that will contain createPlugin() or createPlugins().
+        // dictionary that will contain createPlugin() or createPlugins().
         py::dict moduleDict;
 
         if (identifier.endsWith(".py")) {
@@ -441,6 +440,8 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
             QStringList parts      = identifier.split("/");
             std::string moduleName = ToString(parts.takeLast());
             ensureFolderInPath(parts.join("/"));
+
+            // check if the module is already loaded
             moduleDict = py::module_::import(moduleName.c_str()).attr("__dict__");
         }
 
@@ -456,24 +457,24 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
             plugins.push_back(moduleDict["createPlugin"]());
 
             // Clear for future call
-            PyDict_DelItemString(moduleDict.ptr(), "createPlugin");
+            // PyDict_DelItemString(moduleDict.ptr(), "createPlugin");
         }
         else if (moduleDict.contains("createPlugins")) {
             py::object pyPlugins = moduleDict["createPlugins"]();
-            if (!PySequence_Check(pyPlugins.ptr())) {
-                MOBase::log::error("Plugin {}: createPlugins must return a list.",
+            if (!py::isinstance<py::sequence>(pyPlugins)) {
+                MOBase::log::error("Plugin {}: createPlugins must return a sequence.",
                                    identifier);
             }
             else {
-                py::list pyList(pyPlugins);
-                int nPlugins = py::len(pyList);
-                for (int i = 0; i < nPlugins; ++i) {
+                py::sequence pyList(pyPlugins);
+                size_t nPlugins = pyList.size();
+                for (size_t i = 0; i < nPlugins; ++i) {
                     plugins.push_back(pyList[i]);
                 }
             }
 
             // Clear for future call
-            PyDict_DelItemString(moduleDict.ptr(), "createPlugins");
+            // PyDict_DelItemString(moduleDict.ptr(), "createPlugins");
         }
         else {
             MOBase::log::error("Plugin {}: missing a createPlugin(s) function.",

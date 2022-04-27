@@ -146,7 +146,6 @@ namespace mo2::python {
         }
         ISaveGameInfoWidget* getSaveGameWidget(QWidget* parent = 0) const override
         {
-            // TODO: transfer ownership
             PYBIND11_OVERRIDE_PURE(ISaveGameInfoWidget*, SaveGameInfo,
                                    getSaveGameWidget, parent);
         }

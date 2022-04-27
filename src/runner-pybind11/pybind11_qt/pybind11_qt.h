@@ -4,6 +4,7 @@
 #include "pybind11_qt_basic.h"
 #include "pybind11_qt_containers.h"
 #include "pybind11_qt_enums.h"
+#include "pybind11_qt_holder.h"
 #include "pybind11_qt_objects.h"
 #include "pybind11_qt_qflags.h"
 

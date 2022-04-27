@@ -177,7 +177,6 @@ namespace mo2::python {
         QWidget* genFilePreview(const QString& fileName,
                                 const QSize& maxSize) const override
         {
-            // TODO: transfer ownership to C++
             PYBIND11_OVERRIDE_PURE(QWidget*, IPluginPreview, genFilePreview, fileName,
                                    maxSize);
         }

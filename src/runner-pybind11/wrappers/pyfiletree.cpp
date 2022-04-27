@@ -16,7 +16,7 @@
 namespace py = pybind11;
 using namespace MOBase;
 
-namespace mo2::details {
+namespace mo2::detail {
 
     // filetree implementation for testing purpose
     //
@@ -69,7 +69,7 @@ namespace mo2::details {
         callback_t m_Callback;
     };
 
-}  // namespace mo2::details
+}  // namespace mo2::detail
 
 #pragma optimize("", off)
 
@@ -329,12 +329,11 @@ namespace mo2::python {
     {
         m.def(
             "makeTree",
-            [](mo2::details::PyFileTree::callback_t callback)
+            [](mo2::detail::PyFileTree::callback_t callback)
                 -> std::shared_ptr<IFileTree> {
-                return std::make_shared<mo2::details::PyFileTree>(nullptr, "",
-                                                                  callback);
+                return std::make_shared<mo2::detail::PyFileTree>(nullptr, "", callback);
             },
-            py::arg("callback") = mo2::details::PyFileTree::callback_t{});
+            py::arg("callback") = mo2::detail::PyFileTree::callback_t{});
     }
 
 }  // namespace mo2::python
