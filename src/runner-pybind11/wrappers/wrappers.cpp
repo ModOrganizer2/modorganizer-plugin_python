@@ -1,12 +1,7 @@
 
 #include "wrappers.h"
 
-#include <pybind11/functional.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "../pybind11_qt/pybind11_qt.h"
+#include "../pybind11_all.h"
 
 #include <QDir>
 #include <QIcon>
@@ -20,6 +15,7 @@
 #include <isavegameinfowidget.h>
 #include <pluginrequirements.h>
 
+namespace py = pybind11;
 using namespace MOBase;
 
 namespace mo2::python {
@@ -76,10 +72,8 @@ namespace mo2::python {
 
     void add_wrapper_bindings(pybind11::module_ m)
     {
-        namespace py = pybind11;
-
         // ISaveGame
-        //
+
         py::class_<ISaveGame, PySaveGame, std::shared_ptr<ISaveGame>>(m, "ISaveGame")
             .def(py::init<>())
             .def("getFilepath", &ISaveGame::getFilepath)
@@ -89,16 +83,17 @@ namespace mo2::python {
             .def("allFiles", &ISaveGame::allFiles);
 
         // ISaveGameInfoWidget
-        //
-        py::class_<ISaveGameInfoWidget, PySaveGameInfoWidget> iSaveGameInfoWidget(
-            m, "ISaveGameInfoWidget");
+
+        py::class_<ISaveGameInfoWidget, PySaveGameInfoWidget,
+                   std::unique_ptr<ISaveGameInfoWidget, py::nodelete>>
+            iSaveGameInfoWidget(m, "ISaveGameInfoWidget");
         iSaveGameInfoWidget.def(py::init<>())
             .def(py::init<QWidget*>(), py::arg("parent"))
             .def("setSave", &ISaveGameInfoWidget::setSave, py::arg("save"));
         py::qt::add_qt_delegate<QWidget>(iSaveGameInfoWidget, "_widget");
 
         // IPluginRequirement
-        //
+
         py::class_<IPluginRequirement, std::shared_ptr<IPluginRequirement>,
                    PyPluginRequirement>
             iPluginRequirementClass(m, "IPluginRequirement");

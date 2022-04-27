@@ -100,12 +100,22 @@ PYBIND11_MODULE(mobase, m)
             std::cout << fmt::format("  plugin {}: {} -> {}\n", i, (void*)qobjects[i],
                                      (void*)plugin);
             std::cout << fmt::format("    name: {}\n", plugin->name().toStdString());
-            std::cout << fmt::format(
-                "    installer?: {}\n",
-                (void*)qobject_cast<IPluginInstaller*>(qobjects[i]));
-            std::cout << fmt::format(
-                "    installer simple?: {}\n",
-                (void*)qobject_cast<IPluginInstallerSimple*>(qobjects[i]));
+            // std::cout << fmt::format(
+            //     "    installer?: {}\n",
+            //     (void*)qobject_cast<IPluginInstaller*>(qobjects[i]));
+            // std::cout << fmt::format(
+            //     "    installer simple?: {}\n",
+            //     (void*)qobject_cast<IPluginInstallerSimple*>(qobjects[i]));
+
+            if (IPluginGame* game = dynamic_cast<IPluginGame*>(plugin)) {
+                auto saves = game->listSaves(QDir());
+                std::cout << "    saves: " << saves.size() << "\n";
+                for (auto& save : saves) {
+                    std::cout << "      save: " << (void*)save.get() << ", "
+                              << py::reinterpret_borrow<py::object>(py::cast(save))
+                              << ", " << save->getFilepath().toStdString() << "\n";
+                }
+            }
         }
     });
 
@@ -322,7 +332,7 @@ PythonRunner::~PythonRunner()
     // finalize_interpreter()
     m_PythonObjects.clear();
 
-    py::finalize_interpreter();
+    // py::finalize_interpreter();
 }
 
 // ErrWrapper is in error.h
@@ -336,8 +346,10 @@ PYBIND11_MODULE(moprivate, m)
 
 bool PythonRunner::initPython()
 {
-    if (Py_IsInitialized())
+    if (Py_IsInitialized()) {
         return true;
+    }
+
     try {
         static const char* argv0 = "ModOrganizer.exe";
 

@@ -13,7 +13,7 @@ namespace mo2::python {
     std::map<std::type_index, std::any> PyPluginGame::featureList() const
     {
         py::dict pyFeatures = [this]() {
-            PYBIND11_OVERRIDE_PURE(py::dict, IPluginGame, featureList, );
+            PYBIND11_OVERRIDE_PURE(py::dict, IPluginGame, _featureList, );
         }();
 
         return convert_feature_list(pyFeatures);
@@ -37,7 +37,7 @@ namespace mo2::python {
 
         // this does not actually do the conversion, but might be convenient
         // for accessing the names for enum bits
-        py::enum_<IPluginGame::ProfileSetting>(m, "ProfileSetting")
+        py::enum_<IPluginGame::ProfileSetting>(m, "ProfileSetting", py::arithmetic())
             .value("mods", IPluginGame::MODS)
             .value("configuration", IPluginGame::CONFIGURATION)
             .value("savegames", IPluginGame::SAVEGAMES)

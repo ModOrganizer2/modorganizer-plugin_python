@@ -1,11 +1,6 @@
 #include "wrappers.h"
 
-#include <pybind11/functional.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "../pybind11_qt/pybind11_qt.h"
+#include "../pybind11_all.h"
 
 #include <report.h>
 

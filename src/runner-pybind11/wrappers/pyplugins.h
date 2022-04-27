@@ -1,12 +1,7 @@
 #ifndef PYTHON_WRAPPERS_PYPLUGINS_H
 #define PYTHON_WRAPPERS_PYPLUGINS_H
 
-#include <pybind11/functional.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "../pybind11_qt/pybind11_qt.h"
+#include "../pybind11_all.h"
 
 #include <iinstallationmanager.h>
 
@@ -437,7 +432,7 @@ namespace mo2::python {
         }
         QString gameNexusName() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameNexuesName, );
+            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameNexusName, );
         }
         QStringList iniFiles() const override
         {

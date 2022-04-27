@@ -21,3 +21,5 @@ add_subdirectory(src/runner-pybind11)
 add_subdirectory(src/proxy)
 
 # add_subdirectory(tests)
+
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT plugin_python)

@@ -1,11 +1,9 @@
 #ifndef MO2_PYTHON_FILETREE_H
 #define MO2_PYTHON_FILETREE_H
 
-#include <pybind11/pybind11.h>
+#include "../pybind11_all.h"
 
 #include <ifiletree.h>
-
-#include "../pybind11_qt/pybind11_qt.h"
 
 namespace pybind11 {
     template <>

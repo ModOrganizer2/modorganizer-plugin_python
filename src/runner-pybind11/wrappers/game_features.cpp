@@ -2,12 +2,7 @@
 
 #include <tuple>
 
-#include <pybind11/functional.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "../pybind11_qt/pybind11_qt.h"
+#include "../pybind11_all.h"
 
 #include <ipluginlist.h>
 #include <isavegameinfowidget.h>
@@ -323,13 +318,9 @@ namespace mo2::python {
 namespace mo2::python {
 
     class GameFeaturesHelper {
-        using GameFeatures = std::tuple<
-            // BSAInvalidation, DataArchives, GamePlugins, LocalSavegames,
-            ModDataChecker,
-            // ModDataContent, SaveGameInfo,
-            ScriptExtender
-            // , UnmanagedMods
-            >;
+        using GameFeatures = std::tuple<BSAInvalidation, DataArchives, GamePlugins,
+                                        LocalSavegames, ModDataChecker, ModDataContent,
+                                        SaveGameInfo, ScriptExtender, UnmanagedMods>;
 
         template <class F, std::size_t... Is>
         static void helper(F&& f, std::index_sequence<Is...>)

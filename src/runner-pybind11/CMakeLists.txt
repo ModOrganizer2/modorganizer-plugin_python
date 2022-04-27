@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 pybind11_add_module(pythonrunner SHARED)
 mo2_configure_library(pythonrunner
+	SOURCE_TREE
 	WARNINGS OFF
 	AUTOMOC ON
 	TRANSLATIONS OFF
