@@ -279,13 +279,11 @@ public:
     PythonRunner()  = default;
     ~PythonRunner() = default;
 
-    bool initPython();
+    QList<QObject*> load(const QString& identifier) override;
+    void unload(const QString& identifier) override;
 
-    QList<QObject*> load(const QString& identifier);
-    void unload(const QString& identifier);
-
-    bool isPythonInitialized() const;
-    bool isPythonVersionSupported() const;
+    bool initialize(std::filesystem::path const& libpath) override;
+    bool isInitialized() const override;
 
 private:
     /**
@@ -302,13 +300,7 @@ private:
 
 IPythonRunner* CreatePythonRunner()
 {
-    std::unique_ptr<PythonRunner> result = std::make_unique<PythonRunner>();
-    if (result->initPython()) {
-        return result.release();
-    }
-    else {
-        return nullptr;
-    }
+    return new PythonRunner();
 }
 
 PYBIND11_MODULE(moprivate, m)
@@ -318,7 +310,7 @@ PYBIND11_MODULE(moprivate, m)
     mo2::python::add_make_tree_function(m);
 }
 
-bool PythonRunner::initPython()
+bool PythonRunner::initialize(std::filesystem::path const& libpath)
 {
     // we only initialize Python once for the whole lifetime of the program, even if MO2
     // is restarted and the proxy or PythonRunner objects are deleted and recreated,
@@ -340,10 +332,10 @@ bool PythonRunner::initPython()
         static const char* argv0 = "ModOrganizer.exe";
 
         // initialize the core Path of Python, this must be done before initialization
-        const QStringList paths = {
-            QCoreApplication::applicationDirPath() + "/pythoncore.zip",
-            QCoreApplication::applicationDirPath() + "/pythoncore",
-            IOrganizer::getPluginDataPath()};
+        //
+        const QStringList paths{
+            QFileInfo(libpath / "pythoncore.zip").absoluteFilePath(),
+            QFileInfo(libpath).absoluteFilePath(), IOrganizer::getPluginDataPath()};
         Py_SetPath(paths.join(';').toStdWString().c_str());
 
         if (PyImport_AppendInittab("mobase", &PyInit_mobase) == -1) {
@@ -508,11 +500,6 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
                                    identifier);
             }
 
-            // tie the lifetime of the Python object to the lifetime of the QObject
-            for (auto* object : interfaceList) {
-                py::qt::set_owner(object, pluginObj);
-            }
-
             // Append the plugins to the main list:
             allInterfaceList.append(interfaceList);
         }
@@ -572,7 +559,7 @@ void PythonRunner::unload(const QString& identifier)
     }
 }
 
-bool PythonRunner::isPythonInitialized() const
+bool PythonRunner::isInitialized() const
 {
     return Py_IsInitialized() != 0;
 }

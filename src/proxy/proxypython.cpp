@@ -16,18 +16,40 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include "proxypython.h"
-#include "log.h"
+
+#include <filesystem>
+
 #include <QCoreApplication>
 #include <QDirIterator>
 #include <QMessageBox>
 #include <QWidget>
 #include <QtPlugin>
+
+#include "log.h"
 #include <utility.h>
 #include <versioninfo.h>
 
+namespace fs = std::filesystem;
 using namespace MOBase;
+
+// retrieve the path to the folder containing the proxy DLL
+fs::path getPluginFolder()
+{
+    wchar_t path[MAX_PATH];
+    HMODULE hm = NULL;
+
+    if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                          (LPCWSTR)&getPluginFolder, &hm) == 0) {
+        return {};
+    }
+    if (GetModuleFileName(hm, path, sizeof(path)) == 0) {
+        return {};
+    }
+
+    return fs::path(path).parent_path();
+}
 
 ProxyPython::ProxyPython()
     : m_MOInfo{nullptr}, m_RunnerLib{nullptr}, m_Runner{nullptr},
@@ -50,15 +72,32 @@ bool ProxyPython::init(IOrganizer* moInfo)
         return true;
     }
 
+    const auto pluginFolder = getPluginFolder();
+
+    if (pluginFolder.empty()) {
+        DWORD error   = ::GetLastError();
+        m_LoadFailure = FailureType::DLL_NOT_FOUND;
+        log::error("failed to resolve Python proxy directory ({}): {}", error,
+                   qUtf8Printable(windowsErrorString(::GetLastError())));
+        return false;
+    }
+
     // load the pythonrunner library
-    m_RunnerLib = ::LoadLibraryW(
-        QDir::toNativeSeparators(IOrganizer::getPluginDataPath() + "/pythonRunner.dll")
-            .toStdWString()
-            .c_str());
+    const auto dllPaths = pluginFolder / "dlls";
+    if (SetDllDirectoryW(dllPaths.c_str()) == 0) {
+        DWORD error   = ::GetLastError();
+        m_LoadFailure = FailureType::DLL_NOT_FOUND;
+        log::error("failed to add python DLL directory ({}): {}", error,
+                   qUtf8Printable(windowsErrorString(::GetLastError())));
+        return false;
+    }
+
+    const auto runnerPath = pluginFolder / "pythonrunner.dll";
+    m_RunnerLib           = ::LoadLibraryW(runnerPath.c_str());
 
     if (!m_RunnerLib) {
         DWORD error = ::GetLastError();
-        log::error("failed to load python runner ({}): {}",
+        log::error("failed to load python runner ({}): {}", error,
                    qUtf8Printable(windowsErrorString(error)));
         if (error == ERROR_MOD_NOT_FOUND) {
             m_LoadFailure = FailureType::DLL_NOT_FOUND;
@@ -95,17 +134,20 @@ bool ProxyPython::init(IOrganizer* moInfo)
 
     if (m_MOInfo) {
         m_MOInfo->setPersistent(name(), "tryInit", true);
+
+        m_Runner = std::unique_ptr<IPythonRunner>{createPythonRunner()};
     }
 
-    m_Runner = std::unique_ptr<IPythonRunner>{createPythonRunner()};
+    if (!m_Runner->initialize(pluginFolder / "libs")) {
+        m_LoadFailure = FailureType::INITIALIZATION;
+    }
 
     if (m_MOInfo) {
         m_MOInfo->setPersistent(name(), "tryInit", false);
     }
 
-    if (!m_Runner) {
-        m_LoadFailure = FailureType::INITIALIZATION;
-    }
+    // reset DLL directory
+    SetDllDirectoryW(NULL);
 
     return true;
 }
@@ -184,7 +226,7 @@ std::vector<unsigned int> ProxyPython::activeProblems() const
     auto failure = m_LoadFailure;
 
     // don't know how this could happen but wth
-    if (m_Runner && !m_Runner->isPythonInitialized()) {
+    if (m_Runner && !m_Runner->isInitialized()) {
         failure = FailureType::INITIALIZATION;
     }
 

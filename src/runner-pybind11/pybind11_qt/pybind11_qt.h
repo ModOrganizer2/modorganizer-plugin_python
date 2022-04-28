@@ -1,6 +1,21 @@
 #ifndef PYTHON_PYBIND11_QT_HPP
 #define PYTHON_PYBIND11_QT_HPP
 
+// this header defines many type casters for Qt types, including:
+// - basic Qt types such as QString and QVariant - those do not have PyQt6 equivalent
+// - QFlags<> class templates
+// - containers such as QList<>, QSet<>, etc., the QList<> casters is more flexible than
+//   the std::vector<> or std::list<> ones as it accepts any iterable
+// - many Qt enumeration types (see pybind11_qt_enums)
+// - many Qt classes with PyQt6 equivalent
+//   - copyable type are copied between Python and C++
+//   - non-copyable type (QObject, QWidget, QMainWindow) are always owned by the C++
+//     side, even when constructed on the Python side, and owned their corresponding
+//     Python object, e.g., an instance of a class inheriting QWidget created on the
+//     Python side can be safely used in C++ since the Python object will be owned by
+//     the C++ QWidget object
+//
+
 #include "pybind11_qt_basic.h"
 #include "pybind11_qt_containers.h"
 #include "pybind11_qt_enums.h"
@@ -17,7 +32,7 @@ namespace pybind11::qt {
      * @param owner QObject that will own the python object.
      * @param child Python object that the QObject will own.
      */
-    inline void set_owner(QObject* owner, object child)
+    inline void set_qt_owner(QObject* owner, object child)
     {
         new detail::qt::qobject_holder{owner, child};
     }
@@ -31,7 +46,7 @@ namespace pybind11::qt {
      * @param object Object to tie.
      */
     template <typename Class>
-    void set_owner(Class* object)
+    void set_qt_owner(Class* object)
     {
         static_assert(std::is_base_of_v<QObject, Class>);
         new detail::qt::qobject_holder{object};

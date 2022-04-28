@@ -20,7 +20,6 @@ using namespace MOBase;
 
 namespace mo2::python {
 
-    // this can be extended in C++, so why not in Python
     class PyPluginRequirement : public IPluginRequirement {
     public:
         std::optional<Problem> check(IOrganizer* organizer) const override
@@ -30,7 +29,6 @@ namespace mo2::python {
         };
     };
 
-    // this needs to be extendable in Python, so actually needs a wrapper
     class PySaveGame : public ISaveGame {
     public:
         QString getFilepath() const override
@@ -57,6 +55,8 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QStringList, ISaveGame, allFiles, );
         }
+
+        ~PySaveGame() { std::cout << "~PySaveGame()" << std::endl; }
     };
 
     class PySaveGameInfoWidget : public ISaveGameInfoWidget {
@@ -68,11 +68,14 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(void, ISaveGameInfoWidget, setSave, &save);
         }
+
+        ~PySaveGameInfoWidget() { std::cout << "~PySaveGameInfoWidget()" << std::endl; }
     };
 
     void add_wrapper_bindings(pybind11::module_ m)
     {
-        // ISaveGame
+        // ISaveGame - custom type_caster<> for shared_ptr<> to keep the Python object
+        // alive when returned from Python (see shared_cpp_owner.h)
 
         py::class_<ISaveGame, PySaveGame, std::shared_ptr<ISaveGame>>(m, "ISaveGame")
             .def(py::init<>())
@@ -82,7 +85,8 @@ namespace mo2::python {
             .def("getSaveGroupIdentifier", &ISaveGame::getSaveGroupIdentifier)
             .def("allFiles", &ISaveGame::allFiles);
 
-        // ISaveGameInfoWidget
+        // ISaveGameInfoWidget - custom holder to keep the Python object alive alongside
+        // the widget
 
         py::class_<ISaveGameInfoWidget, PySaveGameInfoWidget,
                    py::qt::qholder<ISaveGameInfoWidget>>
@@ -92,7 +96,8 @@ namespace mo2::python {
             .def("setSave", &ISaveGameInfoWidget::setSave, py::arg("save"));
         py::qt::add_qt_delegate<QWidget>(iSaveGameInfoWidget, "_widget");
 
-        // IPluginRequirement
+        // IPluginRequirement - custom type_caster<> for shared_ptr<> to keep the Python
+        // object alive when returned from Python (see shared_cpp_owner.h)
 
         py::class_<IPluginRequirement, std::shared_ptr<IPluginRequirement>,
                    PyPluginRequirement>

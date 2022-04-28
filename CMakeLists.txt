@@ -6,17 +6,19 @@ else()
 	include(${CMAKE_CURRENT_LIST_DIR}/../cmake_common/mo2.cmake)
 endif()
 
+set(PYTHON_BUILD_PATH ${PYTHON_ROOT}/PCBuild/amd64)
+set(PYVERSION 310)
+
 set(PYBIND11_FINDPYTHON true)
-set(PYTHON_EXECUTABLE ${PYTHON_ROOT}/PCBuild/amd64/python.exe)
+set(PYTHON_EXECUTABLE ${PYTHON_BUILD_PATH}/python.exe)
 set(PYTHON_INCLUDE_DIRS ${PYTHON_ROOT}/Include)
-set(PYTHON_LIBRARIES ${PYTHON_ROOT}/PCBuild/amd64/python310.lib)
+set(PYTHON_LIBRARIES ${MO2_INSTALL_LIBS_PATH}/python${PYVERSION}.lib)
 
 add_subdirectory(pybind11)
 
 project(plugin_python)
 
 # order matters!
-# add_subdirectory(src/runner)
 add_subdirectory(src/runner-pybind11)
 add_subdirectory(src/proxy)
 

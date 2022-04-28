@@ -260,6 +260,11 @@ namespace mo2::python {
             helper.append_if_instance<IPyPlugin>(plugin_obj);
         }
 
+        // tie the lifetime of the Python object to the lifetime of the QObject
+        for (auto* object : helper.objects) {
+            py::qt::set_qt_owner(object, plugin_obj);
+        }
+
         return helper.objects;
     }
 

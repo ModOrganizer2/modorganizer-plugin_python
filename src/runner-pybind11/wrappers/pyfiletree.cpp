@@ -308,8 +308,6 @@ namespace mo2::python {
         // Special methods:
         iFileTreeClass.def("__getitem__",
                            py::overload_cast<std::size_t>(&IFileTree::at));
-        // , py::return_value_policy<utils::downcast_return<FileTreeEntry,
-        // IFileTree>>()
 
         iFileTreeClass.def("__iter__", [](IFileTree* tree) {
             return py::make_iterator(*tree);

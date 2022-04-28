@@ -28,6 +28,11 @@ namespace mo2::python {
     public:
         using PluginBase::PluginBase;
 
+        ~PyPluginBaseNoFinal()
+        {
+            std::cout << "~PyPluginBaseNoFinal() " << typeid(this).name() << std::endl;
+        }
+
         bool init(IOrganizer* organizer) override
         {
             PYBIND11_OVERRIDE_PURE(bool, PluginBase, init, organizer);

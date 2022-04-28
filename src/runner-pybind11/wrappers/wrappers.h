@@ -51,6 +51,9 @@ namespace mo2::python {
      * @brief Extract plugins from the given object. For each plugin implemented, an
      * object is returned.
      *
+     * The returned QObject* are set as owner of the given object so that the Python
+     * object lifetime does not end immediately after returning to C++.
+     *
      * @param object Python object to extract plugins from.
      *
      * @return a QObject* for each plugin implemented by the given object.
