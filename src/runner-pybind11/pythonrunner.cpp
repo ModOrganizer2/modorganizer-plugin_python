@@ -288,8 +288,6 @@ public:
     bool isPythonVersionSupported() const;
 
 private:
-    void initPath();
-
     /**
      * @brief Ensure that the given folder is in sys.path.
      */
@@ -322,6 +320,18 @@ PYBIND11_MODULE(moprivate, m)
 
 bool PythonRunner::initPython()
 {
+    // we only initialize Python once for the whole lifetime of the program, even if MO2
+    // is restarted and the proxy or PythonRunner objects are deleted and recreated,
+    // Python is not re-initialized
+    //
+    // in an ideal world, we would initialize Python here (or in the constructor) and
+    // then finalize it in the destructor
+    //
+    // unfortunately, many library, including PyQt6, do not handle properly
+    // re-initializing the Python interpreter, so we cannot do that and we keep the
+    // interpreter alive
+    //
+
     if (Py_IsInitialized()) {
         return true;
     }
@@ -329,7 +339,12 @@ bool PythonRunner::initPython()
     try {
         static const char* argv0 = "ModOrganizer.exe";
 
-        initPath();
+        // initialize the core Path of Python, this must be done before initialization
+        const QStringList paths = {
+            QCoreApplication::applicationDirPath() + "/pythoncore.zip",
+            QCoreApplication::applicationDirPath() + "/pythoncore",
+            IOrganizer::getPluginDataPath()};
+        Py_SetPath(paths.join(';').toStdWString().c_str());
 
         if (PyImport_AppendInittab("mobase", &PyInit_mobase) == -1) {
             MOBase::log::error("failed to init python: failed to append mobase.");
@@ -391,16 +406,6 @@ void PythonRunner::ensureFolderInPath(QString folder)
     if (!currentPath.contains(folder, Qt::CaseInsensitive)) {
         sysPath.insert(0, folder);
     }
-}
-
-void PythonRunner::initPath()
-{
-    static QStringList paths = {QCoreApplication::applicationDirPath() +
-                                    "/pythoncore.zip",
-                                QCoreApplication::applicationDirPath() + "/pythoncore",
-                                IOrganizer::getPluginDataPath()};
-
-    Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
 QList<QObject*> PythonRunner::load(const QString& identifier)
