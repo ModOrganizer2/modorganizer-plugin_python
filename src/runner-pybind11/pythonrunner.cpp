@@ -276,8 +276,8 @@ PYBIND11_MODULE(mobase, m)
 class PythonRunner : public IPythonRunner {
 
 public:
-    PythonRunner();
-    ~PythonRunner();
+    PythonRunner()  = default;
+    ~PythonRunner() = default;
 
     bool initPython();
 
@@ -296,9 +296,10 @@ private:
     void ensureFolderInPath(QString folder);
 
 private:
-    // For each "identifier" (python file or python module folder), contains the
-    // list of python objects to keep "alive" during the execution.
-    std::unordered_map<QString, std::vector<py::object>> m_PythonObjects;
+    // for each "identifier" (python file or python module folder), contains the
+    // list of python objects - this does not keep the objects alive, it simply used to
+    // unload plugins
+    std::unordered_map<QString, std::vector<py::handle>> m_PythonObjects;
 };
 
 IPythonRunner* CreatePythonRunner()
@@ -311,30 +312,6 @@ IPythonRunner* CreatePythonRunner()
         return nullptr;
     }
 }
-
-PythonRunner::PythonRunner() {}
-
-PythonRunner::~PythonRunner()
-{
-    // Boost.Python does not handle cyclic garbace collection, so we need to release
-    // everything hold by the objects before deleting the objects themselves:
-    // for (auto& [name, objects] : m_PythonObjects) {
-    //     for (auto& obj : objects) {
-    //         obj.attr("__dict__").attr("clear")();
-    //     }
-    // }
-
-    // we need to clear this here otherwise there is a crash in
-    // finalize_interpreter()
-    // {
-    //     py::gil_scoped_acquire s;
-    //     m_PythonObjects.clear();
-    // }
-
-    // py::finalize_interpreter();
-}
-
-// ErrWrapper is in error.h
 
 PYBIND11_MODULE(moprivate, m)
 {
@@ -352,17 +329,31 @@ bool PythonRunner::initPython()
     try {
         static const char* argv0 = "ModOrganizer.exe";
 
-        PyImport_AppendInittab("mobase", &PyInit_mobase);
-        PyImport_AppendInittab("moprivate", &PyInit_moprivate);
+        initPath();
+
+        if (PyImport_AppendInittab("mobase", &PyInit_mobase) == -1) {
+            MOBase::log::error("failed to init python: failed to append mobase.");
+            return false;
+        }
+
+        if (PyImport_AppendInittab("moprivate", &PyInit_moprivate) == -1) {
+            MOBase::log::error("failed to init python: failed to append moprivate.");
+            return false;
+        }
 
         Py_OptimizeFlag = 2;
         Py_NoSiteFlag   = 1;
 
-        initPath();
-
         py::initialize_interpreter(false, 1, &argv0);
 
         if (!Py_IsInitialized()) {
+            MOBase::log::error(
+                "failed to init python: failed to initialize interpreter.");
+
+            if (PyGILState_Check()) {
+                PyEval_SaveThread();
+            }
+
             return false;
         }
 
@@ -375,22 +366,18 @@ bool PythonRunner::initPython()
         mo2::python::configure_python_stream();
         mo2::python::configure_python_logging(mainNamespace["mobase"]);
 
+        // we need to release the GIL here - which is what this does
+        //
+        // when Python is initialized, the GIl is acquired, and if it is not release,
+        // trying to acquire it on a different thread will deadlock
+        PyEval_SaveThread();
+
         return true;
     }
     catch (const py::error_already_set& ex) {
         MOBase::log::error("failed to init python: {}", ex.what());
         return false;
     }
-}
-
-void PythonRunner::initPath()
-{
-    static QStringList paths = {QCoreApplication::applicationDirPath() +
-                                    "/pythoncore.zip",
-                                QCoreApplication::applicationDirPath() + "/pythoncore",
-                                IOrganizer::getPluginDataPath()};
-
-    Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
 void PythonRunner::ensureFolderInPath(QString folder)
@@ -404,6 +391,16 @@ void PythonRunner::ensureFolderInPath(QString folder)
     if (!currentPath.contains(folder, Qt::CaseInsensitive)) {
         sysPath.insert(0, folder);
     }
+}
+
+void PythonRunner::initPath()
+{
+    static QStringList paths = {QCoreApplication::applicationDirPath() +
+                                    "/pythoncore.zip",
+                                QCoreApplication::applicationDirPath() + "/pythoncore",
+                                IOrganizer::getPluginDataPath()};
+
+    Py_SetPath(paths.join(';').toStdWString().c_str());
 }
 
 QList<QObject*> PythonRunner::load(const QString& identifier)
@@ -428,11 +425,14 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
         py::dict moduleDict;
 
         if (identifier.endsWith(".py")) {
-            py::object mainModule    = py::module_::import("__main__");
-            py::dict moduleNamespace = mainModule.attr("__dict__");
+            py::object mainModule = py::module_::import("__main__");
+
+            // make a copy, otherwise we might end up calling the createPlugin() or
+            // createPlugins() function multiple time
+            py::dict moduleNamespace = mainModule.attr("__dict__").attr("copy")();
 
             std::string temp = ToString(identifier);
-            py::eval_file(temp.c_str(), moduleNamespace).is_none();
+            py::eval_file(temp, moduleNamespace).is_none();
             moduleDict = moduleNamespace;
         }
         else {
@@ -442,7 +442,15 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
             ensureFolderInPath(parts.join("/"));
 
             // check if the module is already loaded
-            moduleDict = py::module_::import(moduleName.c_str()).attr("__dict__");
+            py::dict modules = py::module_::import("sys").attr("modules");
+            if (modules.contains(moduleName)) {
+                py::module_ prev = modules[py::str(moduleName)];
+                py::module_(prev).reload();
+                moduleDict = prev.attr("__dict__");
+            }
+            else {
+                moduleDict = py::module_::import(moduleName.c_str()).attr("__dict__");
+            }
         }
 
         if (py::len(moduleDict) == 0) {
@@ -455,9 +463,6 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
 
         if (moduleDict.contains("createPlugin")) {
             plugins.push_back(moduleDict["createPlugin"]());
-
-            // Clear for future call
-            // PyDict_DelItemString(moduleDict.ptr(), "createPlugin");
         }
         else if (moduleDict.contains("createPlugins")) {
             py::object pyPlugins = moduleDict["createPlugins"]();
@@ -472,9 +477,6 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
                     plugins.push_back(pyList[i]);
                 }
             }
-
-            // Clear for future call
-            // PyDict_DelItemString(moduleDict.ptr(), "createPlugins");
         }
         else {
             MOBase::log::error("Plugin {}: missing a createPlugin(s) function.",
@@ -491,7 +493,7 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
 
         for (py::object pluginObj : plugins) {
 
-            // Add the plugin to keep it alive:
+            // save to be able to unload it
             m_PythonObjects[identifier].push_back(pluginObj);
 
             QList<QObject*> interfaceList = mo2::python::extract_plugins(pluginObj);
@@ -499,6 +501,11 @@ QList<QObject*> PythonRunner::load(const QString& identifier)
             if (interfaceList.isEmpty()) {
                 MOBase::log::error("Plugin {}: no plugin interface implemented.",
                                    identifier);
+            }
+
+            // tie the lifetime of the Python object to the lifetime of the QObject
+            for (auto* object : interfaceList) {
+                py::qt::set_owner(object, pluginObj);
             }
 
             // Append the plugins to the main list:

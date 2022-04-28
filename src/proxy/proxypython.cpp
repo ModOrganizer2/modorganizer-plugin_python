@@ -169,12 +169,7 @@ QList<QObject*> ProxyPython::load(const QString& identifier)
     if (!m_Runner) {
         return {};
     }
-
-    auto plugins = m_Runner->load(identifier);
-    for (auto* plugin : plugins) {
-        plugin->setParent(this);
-    }
-    return plugins;
+    return m_Runner->load(identifier);
 }
 
 void ProxyPython::unload(const QString& identifier)

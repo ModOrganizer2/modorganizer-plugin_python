@@ -11,6 +11,33 @@
 namespace pybind11::qt {
 
     /**
+     * @brief Tie the lifetime of the Python object to the lifetime of the given
+     * QObject.
+     *
+     * @param owner QObject that will own the python object.
+     * @param child Python object that the QObject will own.
+     */
+    inline void set_owner(QObject* owner, object child)
+    {
+        new detail::qt::qobject_holder{owner, child};
+    }
+
+    /**
+     * @brief Tie the lifetime of the given object to the lifetime of the corresponding
+     * Python object.
+     *
+     * This object must have been created from Python and must inherit QObject.
+     *
+     * @param object Object to tie.
+     */
+    template <typename Class>
+    void set_owner(Class* object)
+    {
+        static_assert(std::is_base_of_v<QObject, Class>);
+        new detail::qt::qobject_holder{object};
+    }
+
+    /**
      * @brief Add Qt "delegate" to the given class.
      *
      * This function defines two methods: __getattr__ and name, where name will

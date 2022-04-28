@@ -11,10 +11,18 @@ namespace pybind11::detail::qt {
         object p_;
 
     public:
+        /**
+         * @brief Construct a new qobject holder linked to the given QObject and
+         * maintaining the given python object alive.
+         *
+         * @param p Parent of this holder.
+         * @param o Python object to keep alive.
+         */
+        qobject_holder(QObject* p, object o) : p_{o} { setParent(p); }
+
         template <class U>
-        qobject_holder(U* p) : p_{reinterpret_borrow<object>(cast(p))}
+        qobject_holder(U* p) : qobject_holder{p, reinterpret_borrow<object>(cast(p))}
         {
-            setParent(p);
         }
 
         ~qobject_holder()
