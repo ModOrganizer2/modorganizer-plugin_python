@@ -1,4 +1,4 @@
-#include "pybind11_qt_sip.h"
+#include "pybind11_qt/details/pybind11_qt_sip.h"
 
 #include <stdexcept>
 

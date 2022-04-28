@@ -1,10 +1,10 @@
-#include "pybind11_qt_basic.h"
+#include "pybind11_qt/pybind11_qt_basic.h"
 
 #include <type_traits>
 
 #include <pybind11/stl/filesystem.h>
 
-#include "details/pybind11_qt_utils.h"
+#include "pybind11_qt/details/pybind11_qt_utils.h"
 
 namespace pybind11::detail {
 

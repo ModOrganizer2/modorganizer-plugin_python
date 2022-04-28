@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-pybind11_add_module(pythonrunner SHARED)
+add_library(pythonrunner SHARED)
 mo2_configure_library(pythonrunner
 	SOURCE_TREE
 	WARNINGS OFF
@@ -8,12 +8,7 @@ mo2_configure_library(pythonrunner
 	TRANSLATIONS OFF
 	PRIVATE_DEPENDS uibase Qt::Core
 )
-set_target_properties(pythonrunner
-	PROPERTIES
-	OUTPUT_NAME "pythonrunner"
-	PREFIX ""
-	SUFFIX ".dll")
-target_link_libraries(pythonrunner PRIVATE pybind11::embed)
+target_link_libraries(pythonrunner PRIVATE pybind11::embed pybind11::qt)
 target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
 
 # this is kind of broken but it only works with this...

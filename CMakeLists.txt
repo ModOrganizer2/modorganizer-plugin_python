@@ -14,13 +14,18 @@ set(PYTHON_EXECUTABLE ${PYTHON_BUILD_PATH}/python.exe)
 set(PYTHON_INCLUDE_DIRS ${PYTHON_ROOT}/Include)
 set(PYTHON_LIBRARIES ${MO2_INSTALL_LIBS_PATH}/python${PYVERSION}.lib)
 
-add_subdirectory(pybind11)
+add_subdirectory(${MO2_BUILD_PATH}/pybind11 ${CMAKE_CURRENT_BINARY_DIR}/pybind11)
 
 project(plugin_python)
 
 # order matters!
-add_subdirectory(src/runner-pybind11)
+add_subdirectory(src/pybind11-qt)
+add_subdirectory(src/mobase)
+add_subdirectory(src/runner)
 add_subdirectory(src/proxy)
+
+# force plugin_python to build mobase
+add_dependencies(plugin_python mobase)
 
 # add_subdirectory(tests)
 

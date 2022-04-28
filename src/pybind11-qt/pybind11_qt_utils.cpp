@@ -1,4 +1,4 @@
-#include "pybind11_qt_utils.h"
+#include "pybind11_qt/details/pybind11_qt_utils.h"
 
 namespace pybind11::detail::qt {
 

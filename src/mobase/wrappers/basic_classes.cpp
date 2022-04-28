@@ -20,7 +20,7 @@
 #include <pluginsetting.h>
 #include <versioninfo.h>
 
-#include "../pythonutils.h"
+#include "../deprecation.h"
 #include "pyfiletree.h"
 
 using namespace MOBase;

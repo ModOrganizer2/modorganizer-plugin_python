@@ -8,19 +8,6 @@
 namespace mo2::python {
 
     /**
-     * @brief Configure Python stdout and stderr to log to MO2.
-     *
-     */
-    void configure_python_stream();
-
-    /**
-     * @brief Configure logging for MO2 python plugin.
-     *
-     * @param mobase The mobase module.
-     */
-    void configure_python_logging(pybind11::module_ mobase);
-
-    /**
      * @brief Show a deprecation warning.
      *
      * This methods will print a warning in MO2 log containing the location of

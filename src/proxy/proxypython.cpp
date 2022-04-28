@@ -134,16 +134,20 @@ bool ProxyPython::init(IOrganizer* moInfo)
 
     if (m_MOInfo) {
         m_MOInfo->setPersistent(name(), "tryInit", true);
-
-        m_Runner = std::unique_ptr<IPythonRunner>{createPythonRunner()};
     }
 
-    if (!m_Runner->initialize(pluginFolder / "libs")) {
-        m_LoadFailure = FailureType::INITIALIZATION;
+    m_Runner = std::unique_ptr<IPythonRunner>{createPythonRunner()};
+
+    if (m_Runner) {
+        m_Runner->initialize(pluginFolder / "libs");
     }
 
     if (m_MOInfo) {
         m_MOInfo->setPersistent(name(), "tryInit", false);
+    }
+
+    if (!m_Runner || !m_Runner->isInitialized()) {
+        m_LoadFailure = FailureType::INITIALIZATION;
     }
 
     // reset DLL directory
