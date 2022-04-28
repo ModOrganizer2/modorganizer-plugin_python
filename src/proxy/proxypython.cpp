@@ -116,20 +116,23 @@ bool ProxyPython::init(IOrganizer* moInfo)
     }
 
     if (m_MOInfo && m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
-        // m_LoadFailure = FailureType::INITIALIZATION;
-        // if (QMessageBox::question(parentWidget(), tr("Python Initialization failed"),
-        //   tr("On a previous start the Python Plugin failed to initialize.\n"
-        //      "Do you want to try initializing python again (at the risk of another
-        //      crash)?\n" "Suggestion: Select \"no\", and click the warning sign for
-        //      further help. Afterwards you have to re-enable the python plugin."),
-        //   QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No) {
-
-        //   // we force enabled here (note: this is a persistent settings since MO2 2.4
-        //   or something), plugin
-        //   // usually should not handle enabled/disabled themselves but this is a base
-        //   plugin so... m_MOInfo->setPersistent(name(), "enabled", false, true);
-        //   return true;
-        // }
+        m_LoadFailure = FailureType::INITIALIZATION;
+        if (QMessageBox::question(
+                parentWidget(), tr("Python Initialization failed"),
+                tr("On a previous start the Python Plugin failed to initialize.\n"
+                   "Do you want to try initializing python again (at the risk of "
+                   "another crash)?\n "
+                   "Suggestion: Select \"no\", and click the warning sign for further "
+                   "help.Afterwards you have to re-enable the python plugin."),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) == QMessageBox::No) {
+            // we force enabled here (note: this is a persistent settings since MO2 2.4
+            // or something), plugin
+            // usually should not handle enabled/disabled themselves but this is a base
+            // plugin so...
+            m_MOInfo->setPersistent(name(), "enabled", false, true);
+            return true;
+        }
     }
 
     if (m_MOInfo) {
