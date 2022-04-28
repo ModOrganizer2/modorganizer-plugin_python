@@ -1,30 +1,28 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(pythonrunner)
-set(project_type plugin)
-set(enable_warnings OFF)
-set(enable_bigobj ON)
-set(install_dir bin/plugins/data)
-set(create_translations OFF)
+# need to find Boost here with a dummy component to get Boost_LIBRARY_DIRS
+find_package(Boost COMPONENTS thread REQUIRED)
 
-add_compile_definitions(
-	QT_NO_KEYWORDS
-	PYTHONRUNNER_LIBRARY)
+add_library(pythonrunner SHARED)
+mo2_configure_library(pythonrunner
+	WARNINGS OFF
+	BIGOBJ ON
+	AUTOMOC ON
+	TRANSLATIONS OFF
+	PRIVATE_DEPENDS uibase boost Qt::Core
+)
+target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
 
-# appveyor does not build modorganizer in its standard location, so use
-# DEPENDENCIES_DIR to find cmake_common
-if(DEFINED DEPENDENCIES_DIR)
-	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/project.cmake)
-	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/src.cmake)
-else()
-	include(../../../cmake_common/project.cmake)
-	include(../../../cmake_common/src.cmake)
-endif()
+# this is kind of broken but it only works with this...
+target_link_directories(pythonrunner
+	PRIVATE
+	${MO2_INSTALL_LIBS_PATH}
+	${Boost_LIBRARY_DIRS})
+target_compile_definitions(pythonrunner
+	PRIVATE QT_NO_KEYWORDS PYTHONRUNNER_LIBRARY)
+mo2_install_target(pythonrunner INSTALLDIR bin/plugins/data)
 
-requires_project(game_features)
-requires_library(python)
-
-add_filter(NAME src/converters GROUPS
+mo2_add_filter(NAME src/converters GROUPS
 	converters
 	pythonutils
 	shared_ptr_converter
@@ -32,19 +30,19 @@ add_filter(NAME src/converters GROUPS
 	variant_helper
 )
 
-add_filter(NAME src/runner GROUPS
+mo2_add_filter(NAME src/runner GROUPS
 	pythonrunner
 	pylogger
 	widgets
 )
 
-add_filter(NAME src/utils GROUPS
+mo2_add_filter(NAME src/utils GROUPS
 	error
 	gilock
 	sipapiaccess
 )
 
-add_filter(NAME src/wrappers GROUPS
+mo2_add_filter(NAME src/wrappers GROUPS
 	gamefeatureswrappers
 	proxypluginwrappers
 	pythonwrapperutilities
