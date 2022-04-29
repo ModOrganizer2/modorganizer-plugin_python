@@ -291,7 +291,7 @@ namespace mo2::python {
                                int nexusID) override
         {
             PYBIND11_OVERRIDE_PURE(EInstallResult, IPluginInstallerCustom, install,
-                                   modName, gameName, archiveName, version, nexusID);
+                                   &modName, gameName, archiveName, version, nexusID);
         }
     };
 
@@ -312,11 +312,11 @@ namespace mo2::python {
         {
             const auto result = [&, this]() {
                 PYBIND11_OVERRIDE_PURE(py_install_return_type, IPluginInstallerSimple,
-                                       install, modName, tree, version, nexusID);
+                                       install, &modName, tree, version, nexusID);
             }();
 
             return std::visit(
-                [&modName, &tree, &version, &nexusID](auto const& t) {
+                [&tree, &version, &nexusID](auto const& t) {
                     using type = std::decay_t<decltype(t)>;
                     if constexpr (std::is_same_v<type, EInstallResult>) {
                         return t;
