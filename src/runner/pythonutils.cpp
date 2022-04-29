@@ -4,6 +4,7 @@
 #include <set>
 #include <sstream>
 
+#include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
 
 #include "log.h"
@@ -67,8 +68,18 @@ namespace mo2::python {
         sys.attr("stdout") = printWrapper();
         sys.attr("stderr") = errorWrapper();
 
-        // not sure if still needed for pybind11?
-        sys.attr("excepthook") = sys.attr("__excepthook__");
+        // this is required to handle exception in Python code OUTSIDE of pybind11 call,
+        // typically on Qt classes with methods overridden on the Python side
+        //
+        // without this, the application will crash instead of properly handling the
+        // exception as it would do with a py::error_already_set{}
+        //
+        // IMPORTANT: sys.attr("excepthook") = sys.attr("__excepthook__") DOES NOT WORK,
+        // and I have no clue why since the attribute does not seem to get updated (at
+        // least a print does not show it)
+        //
+        sys.attr("excepthook") =
+            py::eval("lambda x, y, z: sys.__excepthook__(x, y, z)");
     }
 
     // Small structure to hold the levels - There are copy paste from
