@@ -174,8 +174,7 @@ namespace pybind11::detail::qt {
                 return Py_None;
             }
 
-            if (policy == return_value_policy::take_ownership &&
-                std::is_copy_constructible_v<QClass>) {
+            if (policy == return_value_policy::take_ownership) {
                 // ensure Python deletes the C++ component
                 qt::sipAPI()->api_transfer_back(sipObj);
             }

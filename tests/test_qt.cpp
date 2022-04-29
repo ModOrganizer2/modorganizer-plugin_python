@@ -2,6 +2,8 @@
 
 #include <pybind11/pybind11.h>
 
+using namespace pybind11::literals;
+
 PYBIND11_MODULE(qt, m)
 {
     // QString
@@ -29,4 +31,29 @@ PYBIND11_MODULE(qt, m)
     m.def("qstringlist_at", [](QStringList const& values, int index) {
         return values.at(index);
     });
+
+    // QMap
+    m.def("qmap_to_length", [](QMap<QString, QString> const& map) {
+        QMap<QString, int> res;
+        for (auto it = map.begin(); it != map.end(); ++it) {
+            res[it.key()] = it.value().size();
+        }
+        return res;
+    });
+
+    // QDateTime
+
+    m.def(
+        "datetime_from_string",
+        [](QString const& date, Qt::DateFormat format) {
+            return QDateTime::fromString(date, format);
+        },
+        "string"_a, "format"_a = Qt::DateFormat::ISODate);
+
+    m.def(
+        "datetime_to_string",
+        [](QDateTime const& datetime, Qt::DateFormat format) {
+            return datetime.toString(format);
+        },
+        "datetime"_a, "format"_a = Qt::DateFormat::ISODate);
 }

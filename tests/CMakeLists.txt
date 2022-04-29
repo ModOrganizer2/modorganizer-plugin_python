@@ -8,7 +8,7 @@ else()
 	set(UIBASE_PATH "${MO2_INSTALL_PATH}/bin/uibase.dll")
 endif()
 
-add_custom_target(pytest EXCLUDE_FROM_ALL
+add_custom_target(pytest
 	${CMAKE_COMMAND} -E env
 		PYTHONPATH="${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>"
 		"UIBASE_PATH=${UIBASE_PATH}" "QT_ROOT=${QT_ROOT}"
@@ -22,7 +22,7 @@ mo2_python_pip_install(pytest
 add_dependencies(pytest mobase)
 
 
-file(GLOB test_files "test_*.cpp")
+file(GLOB test_files CONFIGURE_DEPENDS "test_*.cpp")
 foreach (test_file ${test_files})
 	get_filename_component(target ${test_file} NAME_WLE)
 	string(REPLACE "test_" "" pymodule ${target})

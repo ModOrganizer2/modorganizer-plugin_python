@@ -114,53 +114,6 @@ PYBIND11_MODULE(mobase, m)
         }
     });
 
-    py::detail::type_caster<QString> t1;
-    py::detail::type_caster<QVariant> t2;
-
-    m.def("testQStringList", [](QStringList const& list) {
-        QStringList res = list;
-        for (QString& value : res) {
-            value = value + "_CPP";
-        }
-        return res;
-    });
-
-    m.def("testGuessedString", [](GuessedValue<QString> const& value) {
-        return std::make_tuple(value.operator const QString&(), value.variants());
-    });
-
-    m.def("testQStringList", [](QStringList const& list) {
-        QStringList res = list;
-        for (QString& value : res) {
-            value = value + "_CPP";
-        }
-        return res;
-    });
-
-    m.def("testQMap1", [](QMap<QString, QString> const& map) {
-        QMap<QString, int> res;
-        for (auto it = map.begin(); it != map.end(); ++it) {
-            res[it.key()] = it.value().size();
-        }
-        return res;
-    });
-
-    m.def("testQMap2", [](QMap<QString, int> const& map) {
-        QMap<QString, QString> res;
-        for (auto it = map.begin(); it != map.end(); ++it) {
-            res[it.key()] = QString::number(it.value());
-        }
-        return res;
-    });
-
-    m.def("testDateTime1", []() {
-        return QDateTime::fromString("2022-02-15T12:33:45", Qt::ISODate);
-    });
-
-    m.def("testDateTime2", [](QDateTime const& datetime) {
-        return datetime.toString();
-    });
-
     m.def("testEnum0", []() {
         return Qt::GlobalColor::darkRed;
     });
