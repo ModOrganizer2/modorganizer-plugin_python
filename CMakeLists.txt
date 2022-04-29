@@ -27,6 +27,8 @@ add_subdirectory(src/proxy)
 # force plugin_python to build mobase
 add_dependencies(plugin_python mobase)
 
-# add_subdirectory(tests)
+if (PLUGIN_PYTHON_TESTS)
+	add_subdirectory(tests)
+endif()
 
 set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT plugin_python)

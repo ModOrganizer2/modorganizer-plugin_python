@@ -82,6 +82,11 @@ PYBIND11_MODULE(mobase, m)
 
     // == BEGIN TESTS ==
 
+#ifdef MOBASE_TESTS
+    py::module_ motests(
+        py::reinterpret_borrow<py::module_>(PyImport_AddModule("mobase.tests")));
+    m.attr("tests") = motests;
+
     m.def("testPlugin", [](py::object pyobj) {
         py::scoped_ostream_redirect s{std::cout};
         std::cout << "type: " << pyobj.get_type().attr("__name__").cast<std::string>()
@@ -266,4 +271,6 @@ PYBIND11_MODULE(mobase, m)
         }
         return res;
     });
+
+#endif
 }
