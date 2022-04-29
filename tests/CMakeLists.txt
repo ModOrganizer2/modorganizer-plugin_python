@@ -2,14 +2,25 @@ cmake_minimum_required(VERSION 3.16)
 
 set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
 
-add_custom_target(pytest
-	${CMAKE_COMMAND} -E env PYTHONPATH=${PYLIB_DIR}
+if (TARGET uibase)
+	set(UIBASE_PATH $<TARGET_FILE:uibase>)
+else()
+	set(UIBASE_PATH "${MO2_INSTALL_PATH}/bin/uibase.dll")
+endif()
+
+add_custom_target(pytest EXCLUDE_FROM_ALL
+	${CMAKE_COMMAND} -E env
+		PYTHONPATH="${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>"
+		"UIBASE_PATH=${UIBASE_PATH}" "QT_ROOT=${QT_ROOT}"
 		${CMAKE_CURRENT_BINARY_DIR}/pylibs/bin/pytest.exe ${CMAKE_CURRENT_SOURCE_DIR}/../tests -s
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	WORKING_DIRECTORY ${MO2_INSTALL_PATH}
+
 )
 mo2_python_pip_install(pytest
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
 	PACKAGES pytest PyQt6==6.3.0)
+add_dependencies(pytest mobase)
+
 
 file(GLOB test_files "test_*.cpp")
 foreach (test_file ${test_files})
