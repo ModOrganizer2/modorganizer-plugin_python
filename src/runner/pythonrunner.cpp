@@ -48,9 +48,6 @@ private:
     // list of python objects - this does not keep the objects alive, it simply used to
     // unload plugins
     std::unordered_map<QString, std::vector<py::handle>> m_PythonObjects;
-
-    // handle to extract_plugins() from mobase.private
-    std::function<QList<QObject*>(py::object)> m_extract_plugins;
 };
 
 IPythonRunner* CreatePythonRunner()
@@ -108,10 +105,6 @@ bool PythonRunner::initialize(QStringList const& paths)
 
         mo2::python::configure_python_stream();
         mo2::python::configure_python_logging(mainNamespace["mobase"]);
-
-        m_extract_plugins = py::module_::import("mobase.private")
-                                .attr("extract_plugins")
-                                .cast<decltype(m_extract_plugins)>();
 
         // we need to release the GIL here - which is what this does
         //

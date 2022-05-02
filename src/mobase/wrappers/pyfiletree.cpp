@@ -232,7 +232,6 @@ namespace mo2::python {
                 if (result == nullptr) {
                     throw std::logic_error("addDirectory failed");
                 }
-                MOBase::log::warn("{}", result->fileType());
                 return result;
             },
             py::arg("path"));
