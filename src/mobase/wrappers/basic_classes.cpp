@@ -116,13 +116,13 @@ namespace mo2::python {
 
     void add_modinterface_classes(py::module_ m)
     {
-        py::enum_<EndorsedState>(m, "EndorsedState")
+        py::enum_<EndorsedState>(m, "EndorsedState", py::arithmetic())
             .value("ENDORSED_FALSE", EndorsedState::ENDORSED_FALSE)
             .value("ENDORSED_TRUE", EndorsedState::ENDORSED_TRUE)
             .value("ENDORSED_UNKNOWN", EndorsedState::ENDORSED_UNKNOWN)
             .value("ENDORSED_NEVER", EndorsedState::ENDORSED_NEVER);
 
-        py::enum_<TrackedState>(m, "TrackedState")
+        py::enum_<TrackedState>(m, "TrackedState", py::arithmetic())
             .value("TRACKED_FALSE", TrackedState::TRACKED_FALSE)
             .value("TRACKED_TRUE", TrackedState::TRACKED_TRUE)
             .value("TRACKED_UNKNOWN", TrackedState::TRACKED_UNKNOWN);
@@ -295,7 +295,7 @@ namespace mo2::python {
 
     void add_ipluginlist_classes(py::module_ m)
     {
-        py::enum_<IPluginList::PluginState>(m, "PluginState")
+        py::enum_<IPluginList::PluginState>(m, "PluginState", py::arithmetic())
             .value("missing", IPluginList::STATE_MISSING)
             .value("inactive", IPluginList::STATE_INACTIVE)
             .value("active", IPluginList::STATE_ACTIVE)
@@ -344,7 +344,7 @@ namespace mo2::python {
 
     void add_imodlist_classes(py::module_ m)
     {
-        py::enum_<IModList::ModState>(m, "ModState")
+        py::enum_<IModList::ModState>(m, "ModState", py::arithmetic())
             .value("exists", IModList::STATE_EXISTS)
             .value("active", IModList::STATE_ACTIVE)
             .value("essential", IModList::STATE_ESSENTIAL)
