@@ -520,7 +520,11 @@ namespace mo2::python {
                     DWORD returnCode;
                     bool result =
                         o->waitForApplication((HANDLE)handle, refresh, &returnCode);
-                    return std::make_tuple(result, returnCode);
+
+                    // we force signed return code because it's probably what's expected
+                    // in Python
+                    return std::make_tuple(
+                        result, static_cast<std::make_signed_t<DWORD>>(returnCode));
                 },
                 "handle"_a, "refresh"_a = true)
 

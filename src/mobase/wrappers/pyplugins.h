@@ -479,6 +479,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QString, IPluginGame, getLauncherName, );
         }
+        QString getSupportURL() const override
+        {
+            PYBIND11_OVERRIDE(QString, IPluginGame, getSupportURL, );
+        }
 
     protected:
         std::map<std::type_index, std::any> featureList() const override;

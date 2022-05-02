@@ -5,8 +5,6 @@
 #include <QMap>
 #include <QWidget>
 
-#include <iostream>
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 

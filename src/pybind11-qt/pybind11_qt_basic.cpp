@@ -139,9 +139,8 @@ namespace pybind11::detail {
             return type_caster<QStringList>::cast(var.toStringList(), policy, parent);
         case QVariant::List:
             return type_caster<QVariantList>::cast(var.toList(), policy, parent);
-        case QVariant::Map:  // return
-                             // type_caster<QVariantMap>::cast(var.toList(),
-                             // policy, parent);
+        case QVariant::Map:
+            return type_caster<QVariantMap>::cast(var.toMap(), policy, parent);
         default: {
             PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.type());
             throw pybind11::error_already_set();

@@ -89,7 +89,8 @@ namespace mo2::python {
             .def("nexusGameID", &IPluginGame::nexusGameID)
             .def("looksValid", &IPluginGame::looksValid, "directory"_a)
             .def("gameVersion", &IPluginGame::gameVersion)
-            .def("getLauncherName", &IPluginGame::getLauncherName);
+            .def("getLauncherName", &IPluginGame::getLauncherName)
+            .def("getSupportURL", &IPluginGame::getSupportURL);
     }
 
     // multiple installers
