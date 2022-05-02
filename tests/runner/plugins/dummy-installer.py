@@ -5,25 +5,10 @@ from typing import Union, cast
 import mobase
 
 
+# we do not implement everything since this will do fine if we do not call anything
+# from the C++ side
+#
 class DummyInstaller(mobase.IPluginInstallerSimple):
-    def init(self, organizer: mobase.IOrganizer) -> bool:
-        return True
-
-    def author(self) -> str:
-        return ""
-
-    def name(self) -> str:
-        return ""
-
-    def description(self) -> str:
-        return ""
-
-    def version(self) -> mobase.VersionInfo:
-        return mobase.VersionInfo("0.0.0")
-
-    def settings(self) -> list[mobase.PluginSetting]:
-        return []
-
     def isManualInstaller(self) -> bool:
         return False
 
@@ -58,4 +43,4 @@ class DummyInstaller(mobase.IPluginInstallerSimple):
 
 
 def createPlugin() -> mobase.IPlugin:
-    return DummyInstaller()
+    return DummyInstaller()  # type: ignore
