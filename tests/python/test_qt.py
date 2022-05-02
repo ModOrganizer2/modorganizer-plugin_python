@@ -1,6 +1,5 @@
 import pytest
 from PyQt6.QtCore import QDateTime, Qt
-from PyQt6.QtWidgets import QWidget
 
 m = pytest.importorskip("mobase_tests.qt")
 
@@ -48,3 +47,46 @@ def test_qdatetime():
     assert m.datetime_to_string(date, Qt.DateFormat.TextDate) == date.toString(
         Qt.DateFormat.TextDate
     )
+
+
+def test_qvariant():
+
+    # Python -> C++
+
+    assert m.qvariant_from_none(None) == (True, False)
+
+    assert m.qvariant_from_int(-52) == (True, -52)
+    assert m.qvariant_from_int(0) == (True, 0)
+    assert m.qvariant_from_int(33) == (True, 33)
+
+    assert m.qvariant_from_bool(True) == (True, True)
+    assert m.qvariant_from_bool(False) == (True, False)
+
+    assert m.qvariant_from_str("a string") == (True, "a string")
+
+    assert m.qvariant_from_list([]) == (True, [])
+    assert m.qvariant_from_list([1, "hello", False]) == (True, [1, "hello", False])
+
+    assert m.qvariant_from_map({"a": 33, "b": False, "c": ["a", "b"]}) == (
+        True,
+        {"a": 33, "b": False, "c": ["a", "b"]},
+    )
+
+    # C++ -> Python (see .cpp file for the value)
+
+    assert m.qvariant_none() is None
+    assert m.qvariant_int() == 42
+    assert m.qvariant_bool() is True
+    assert m.qvariant_str() == "hello world"
+
+    assert m.qvariant_map() == {"baz": "world hello", "bar": 42, "moo": True}
+
+    assert m.qvariant_list() == [
+        33,
+        [4, "foo"],
+        False,
+        "hello",
+        None,
+        {"bar": 42, "moo": [44, True]},
+        45,
+    ]

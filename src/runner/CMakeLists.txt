@@ -6,10 +6,12 @@ mo2_configure_library(pythonrunner
 	WARNINGS OFF
 	AUTOMOC ON
 	TRANSLATIONS OFF
-	PRIVATE_DEPENDS uibase Qt::Core
+	PUBLIC_DEPENDS uibase Qt::Core
 )
 target_link_libraries(pythonrunner PRIVATE pybind11::embed pybind11::qt)
-target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
+target_include_directories(pythonrunner
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+	PRIVATE ${PYTHON_ROOT}/Include)
 
 # this is kind of broken but it only works with this...
 target_compile_definitions(pythonrunner

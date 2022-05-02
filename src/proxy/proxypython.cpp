@@ -142,7 +142,11 @@ bool ProxyPython::init(IOrganizer* moInfo)
     m_Runner = std::unique_ptr<IPythonRunner>{createPythonRunner()};
 
     if (m_Runner) {
-        m_Runner->initialize(pluginFolder / "libs");
+        const auto libpath = pluginFolder / "libs";
+        const QStringList paths{
+            QFileInfo(libpath / "pythoncore.zip").absoluteFilePath(),
+            QFileInfo(libpath).absoluteFilePath(), IOrganizer::getPluginDataPath()};
+        m_Runner->initialize(paths);
     }
 
     if (m_MOInfo) {

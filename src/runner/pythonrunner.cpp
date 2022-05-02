@@ -34,7 +34,7 @@ public:
     QList<QObject*> load(const QString& identifier) override;
     void unload(const QString& identifier) override;
 
-    bool initialize(std::filesystem::path const& libpath) override;
+    bool initialize(QStringList const& paths) override;
     bool isInitialized() const override;
 
 private:
@@ -58,7 +58,7 @@ IPythonRunner* CreatePythonRunner()
     return new PythonRunner();
 }
 
-bool PythonRunner::initialize(std::filesystem::path const& libpath)
+bool PythonRunner::initialize(QStringList const& paths)
 {
     // we only initialize Python once for the whole lifetime of the program, even if MO2
     // is restarted and the proxy or PythonRunner objects are deleted and recreated,
@@ -81,10 +81,9 @@ bool PythonRunner::initialize(std::filesystem::path const& libpath)
 
         // initialize the core Path of Python, this must be done before initialization
         //
-        const QStringList paths{
-            QFileInfo(libpath / "pythoncore.zip").absoluteFilePath(),
-            QFileInfo(libpath).absoluteFilePath(), IOrganizer::getPluginDataPath()};
-        Py_SetPath(paths.join(';').toStdWString().c_str());
+        if (!paths.isEmpty()) {
+            Py_SetPath(paths.join(';').toStdWString().c_str());
+        }
 
         Py_OptimizeFlag = 2;
         Py_NoSiteFlag   = 1;

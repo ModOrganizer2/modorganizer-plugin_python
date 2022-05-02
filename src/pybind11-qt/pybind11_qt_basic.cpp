@@ -6,6 +6,9 @@
 
 #include "pybind11_qt/details/pybind11_qt_utils.h"
 
+// need to import containers to get QVariantList and QVariantMap
+#include "pybind11_qt/pybind11_qt_containers.h"
+
 namespace pybind11::detail {
 
     template <class CharT>
@@ -83,11 +86,20 @@ namespace pybind11::detail {
 
     bool type_caster<QVariant>::load(handle src, bool implicit)
     {
-        if (PyList_Check(src.ptr())) {
+        // test for string first otherwise PyList_Check also works
+        if (PyBytes_Check(src.ptr()) || PyUnicode_Check(src.ptr())) {
+            value = src.cast<QString>();
+            return true;
+        }
+        else if (PySequence_Check(src.ptr())) {
             // we could check if all the elements can be converted to QString
             // and store a QStringList in the QVariant but I am not sure that is
             // really useful.
             value = src.cast<QVariantList>();
+            return true;
+        }
+        else if (PyMapping_Check(src.ptr())) {
+            value = src.cast<QVariantMap>();
             return true;
         }
         else if (src == Py_None) {
@@ -96,10 +108,6 @@ namespace pybind11::detail {
         }
         else if (PyDict_Check(src.ptr())) {
             value = src.cast<QVariantMap>();
-            return true;
-        }
-        else if (PyBytes_Check(src.ptr()) || PyUnicode_Check(src.ptr())) {
-            value = src.cast<QString>();
             return true;
         }
         // PyBool will also return true for PyLong_Check but not the other way

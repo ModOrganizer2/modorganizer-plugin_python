@@ -2,6 +2,8 @@
 
 #include <pybind11/pybind11.h>
 
+#include <tuple>
+
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(qt, m)
@@ -33,6 +35,7 @@ PYBIND11_MODULE(qt, m)
     });
 
     // QMap
+
     m.def("qmap_to_length", [](QMap<QString, QString> const& map) {
         QMap<QString, int> res;
         for (auto it = map.begin(); it != map.end(); ++it) {
@@ -56,4 +59,61 @@ PYBIND11_MODULE(qt, m)
             return datetime.toString(format);
         },
         "datetime"_a, "format"_a = Qt::DateFormat::ISODate);
+
+    // QVariant
+
+    m.def("qvariant_from_none", [](QVariant const& variant) {
+        return std::make_tuple(variant.userType() == QVariant::Invalid,
+                               variant.isValid());
+    });
+    m.def("qvariant_from_int", [](QVariant const& variant) {
+        return std::make_tuple(variant.userType() == QVariant::Int, variant.toInt());
+    });
+    m.def("qvariant_from_bool", [](QVariant const& variant) {
+        return std::make_tuple(variant.userType() == QVariant::Bool, variant.toBool());
+    });
+    m.def("qvariant_from_str", [](QVariant const& variant) {
+        return std::make_tuple(variant.userType() == QVariant::String,
+                               variant.toString());
+    });
+    m.def("qvariant_from_list", [](QVariant const& variant) {
+        return std::make_tuple(variant.userType() == QVariant::List, variant.toList());
+    });
+    m.def("qvariant_from_map", [](QVariant const& variant) {
+        return std::make_tuple(variant.userType() == QVariant::Map, variant.toMap());
+    });
+
+    m.def("qvariant_none", []() {
+        return QVariant();
+    });
+    m.def("qvariant_int", []() {
+        return QVariant(42);
+    });
+    m.def("qvariant_bool", []() {
+        return QVariant(true);
+    });
+    m.def("qvariant_str", []() {
+        return QVariant("hello world");
+    });
+    m.def("qvariant_list", [] {
+        QVariantMap subMap;
+        subMap["bar"] = 42;
+        subMap["moo"] = QVariantList{44, true};
+        QVariantList list;
+        list.push_back(33);
+        list.push_back(QVariantList{4, "foo"});
+        list.push_back(false);
+        list.push_back("hello");
+        list.push_back(QVariant());
+        list.push_back(subMap);
+        list.push_back(45);
+        return QVariant(list);
+    });
+    m.def("qvariant_map", []() {
+        QVariantMap map;
+        map["bar"] = 42;
+        map["moo"] = true;
+        map["baz"] = "world hello";
+        return map;
+    });
 }

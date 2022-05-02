@@ -26,11 +26,10 @@ add_subdirectory(src/proxy)
 
 # force plugin_python to build mobase
 add_dependencies(plugin_python mobase)
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT plugin_python)
 
 set(PLUGIN_PYTHON_TESTS ${PLUGIN_PYTHON_TESTS} CACHE BOOL "build tests for plugin_python")
-
 if (PLUGIN_PYTHON_TESTS)
+	enable_testing()
 	add_subdirectory(tests)
 endif()
-
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT plugin_python)

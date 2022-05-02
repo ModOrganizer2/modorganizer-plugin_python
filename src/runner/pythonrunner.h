@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 
 #include <dllimport.h>
 #include <imoinfo.h>
@@ -17,9 +18,11 @@ public:
 
     // initialize Python
     //
-    // libpath should be the folder containing the Python library (pythonxxx.zip, etc.)
+    // paths contains the list of built-in paths for the Python library (pythonxxx.zip,
+    // etc.), an empty list uses the default Python paths (e.g., the PYTHONPATH
+    // environment variable)
     //
-    virtual bool initialize(std::filesystem::path const& libpath) = 0;
+    virtual bool initialize(QStringList const& paths = {}) = 0;
 
     // check if the runner has been initialized, i.e., initialize() has been called and
     // succeeded

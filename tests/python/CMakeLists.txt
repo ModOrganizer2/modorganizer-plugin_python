@@ -24,7 +24,6 @@ mo2_python_pip_install(pytest
 	PACKAGES pytest PyQt6==6.3.0)
 add_dependencies(pytest mobase)
 
-
 file(GLOB test_files CONFIGURE_DEPENDS "test_*.cpp")
 foreach (test_file ${test_files})
 	get_filename_component(target ${test_file} NAME_WLE)
