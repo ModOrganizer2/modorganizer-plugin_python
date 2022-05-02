@@ -4,120 +4,78 @@
 #include <QString>
 
 #include <fmt/format.h>
+#include <pybind11/pybind11.h>
 
-#include <sstream>
 #include <utility.h>
-
-struct ErrWrapper
-{
-  static ErrWrapper& instance();
-
-  void write(const char* message);
-
-  void startRecordingExceptionMessage();
-
-  void stopRecordingExceptionMessage();
-
-  QString getLastExceptionMessage();
-
-  std::stringstream buffer;
-  bool recordingExceptionMessage;
-  std::stringstream lastException;
-};
 
 namespace pyexcept {
 
-  /**
-   * @brief Exception to throw when a python implementation does not implement
-   *     a pure virtual function.
-   */
-  class MissingImplementation : public MOBase::Exception {
-  public:
-    MissingImplementation(std::string const& className, std::string const& methodName) :
-      Exception(QString::fromStdString(
-        fmt::format("Python class implementing \"{}\" has no implementation of method \"{}\".",
-          className, methodName))) { }
-
-  };
-
-  /**
-   * @brief Exception to throw when a python error occurs.
-   */
-  class PythonError : public MOBase::Exception {
-  public:
+    /**
+     * @brief Exception to throw when a python implementation does not implement
+     *     a pure virtual function.
+     */
+    class MissingImplementation : public MOBase::Exception {
+    public:
+        MissingImplementation(std::string const& className,
+                              std::string const& methodName)
+            : Exception(QString::fromStdString(
+                  fmt::format("Python class implementing \"{}\" has no "
+                              "implementation of method \"{}\".",
+                              className, methodName)))
+        {
+        }
+    };
 
     /**
-     * @brief Create a new PythonError, fetching the error message from python. If the message
-     *     cannot be retrieved, `defaultErrorMessage()` is used instead.
+     * @brief Exception to throw when a python error occurs.
      */
-    PythonError() : Exception(getPythonErrorMessage()) { }
+    class PythonError : public MOBase::Exception {
+    public:
+        /**
+         * @brief Create a new PythonError, fetching the error message from
+         * python. If the message cannot be retrieved, `defaultErrorMessage()`
+         * is used instead.
+         */
+        PythonError(pybind11::error_already_set const& ex) : Exception(ex.what()) {}
+
+        /**
+         * @brief Create a new PythonError with the given message.
+         *
+         * @param message Message for the exception.
+         */
+        PythonError(QString message) : Exception(message) {}
+    };
 
     /**
-     * @brief Create a new PythonError with the given message.
-     *
-     * @param message Message for the exception.
+     * @brief Exception to throw when an unknown error occured. This is
+     * typically thrown from a catch(...) block.
      */
-    PythonError(QString message) : Exception(message) { }
+    class UnknownException : public MOBase::Exception {
+    public:
+        /**
+         * @brief Create a new UnknownException with the default message.
+         *
+         * @see defaultErrorMessage
+         */
+        UnknownException() : Exception(defaultErrorMessage()) {}
 
-  protected:
+        /**
+         * @brief Create a new UnknownException with the given message.
+         *
+         * @param message Message for the exception.
+         */
+        UnknownException(QString message) : Exception(message) {}
 
-    /**
-     *
-     */
-    static QString defaultErrorMessage() {
-      return QObject::tr("An unexpected C++ exception was thrown in python code.");
-    }
+    protected:
+        /**
+         *
+         */
+        static QString defaultErrorMessage()
+        {
+            return QObject::tr("An unknown exception was thrown in python code.");
+        }
+    };
 
-    /**
-     *
-     */
-    static QString getPythonErrorMessage() {
-      if (PyErr_Occurred()) {
-        ErrWrapper& errWrapper = ErrWrapper::instance();
+}  // namespace pyexcept
 
-        errWrapper.startRecordingExceptionMessage();
-        PyErr_Print();
-        errWrapper.stopRecordingExceptionMessage();
-
-        return errWrapper.getLastExceptionMessage();
-      }
-      else {
-        return defaultErrorMessage();
-      }
-    }
-  };
-
-  /**
-   * @brief Exception to throw when an unknown error occured. This is typically thrown
-   *     from a catch(...) block.
-   */
-  class UnknownException : public MOBase::Exception {
-  public:
-
-    /**
-     * @brief Create a new UnknownException with the default message.
-     *
-     * @see defaultErrorMessage
-     */
-    UnknownException() : Exception(defaultErrorMessage()) { }
-
-    /**
-     * @brief Create a new UnknownException with the given message.
-     *
-     * @param message Message for the exception.
-     */
-    UnknownException(QString message) : Exception(message) { }
-
-  protected:
-
-    /**
-     *
-     */
-    static QString defaultErrorMessage() {
-      return QObject::tr("An unknown exception was thrown in python code.");
-    }
-  };
-
-}
-
-#endif // ERROR_H
+#endif  // ERROR_H

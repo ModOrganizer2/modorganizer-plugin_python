@@ -1,50 +1,40 @@
 cmake_minimum_required(VERSION 3.16)
 
-# need to find Boost here with a dummy component to get Boost_LIBRARY_DIRS
-find_package(Boost COMPONENTS thread REQUIRED)
-
 add_library(pythonrunner SHARED)
 mo2_configure_library(pythonrunner
+	SOURCE_TREE
 	WARNINGS OFF
-	BIGOBJ ON
 	AUTOMOC ON
 	TRANSLATIONS OFF
-	PRIVATE_DEPENDS uibase boost Qt::Core
+	PUBLIC_DEPENDS uibase Qt::Core
 )
-target_include_directories(pythonrunner PRIVATE ${PYTHON_ROOT}/Include)
+target_link_libraries(pythonrunner PRIVATE pybind11::embed pybind11::qt)
+target_include_directories(pythonrunner
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+	PRIVATE ${PYTHON_ROOT}/Include)
 
 # this is kind of broken but it only works with this...
-target_link_directories(pythonrunner
-	PRIVATE
-	${MO2_INSTALL_LIBS_PATH}
-	${Boost_LIBRARY_DIRS})
 target_compile_definitions(pythonrunner
 	PRIVATE QT_NO_KEYWORDS PYTHONRUNNER_LIBRARY)
-mo2_install_target(pythonrunner INSTALLDIR bin/plugins/data)
+mo2_install_target(pythonrunner INSTALLDIR bin/plugins/plugin_python)
 
-mo2_add_filter(NAME src/converters GROUPS
-	converters
-	pythonutils
-	shared_ptr_converter
-	tuple_helper
-	variant_helper
-)
+# install DLLs files needed
+set(DLL_DIRS ${MO2_INSTALL_PATH}/bin/plugins/plugin_python/dlls)
+file(GLOB dlls_to_install
+	${PYTHON_BUILD_PATH}/libffi*.dll
+	${PYTHON_BUILD_PATH}/python${PYVERSION}.dll)
+install(FILES ${dlls_to_install} DESTINATION ${DLL_DIRS})
 
-mo2_add_filter(NAME src/runner GROUPS
-	pythonrunner
-	pylogger
-	widgets
-)
+# install Python files
+set(PYLIB_DIR ${MO2_INSTALL_PATH}/bin/plugins/plugin_python/libs)
+file(GLOB libs_to_install ${PYTHON_BUILD_PATH}/pythoncore/*.pyd)
+install(FILES ${libs_to_install} DESTINATION ${PYLIB_DIR})
+install(FILES ${PYTHON_BUILD_PATH}/pythoncore/python${PYVERSION}.zip
+	DESTINATION ${PYLIB_DIR} RENAME pythoncore.zip)
 
-mo2_add_filter(NAME src/utils GROUPS
-	error
-	gilock
-	sipapiaccess
-)
-
-mo2_add_filter(NAME src/wrappers GROUPS
-	gamefeatureswrappers
-	proxypluginwrappers
-	pythonwrapperutilities
-	uibasewrappers
-)
+# install PyQt6
+file(GLOB PYQT_DIR ${MO2_BUILD_PATH}/PyQt${QT_MAJOR_VERSION}*)
+set(PYQT_LIB_DIR ${PYQT_DIR}/Lib/site-packages/PyQt${QT_MAJOR_VERSION})
+set(PYQT_TARGET_DIR ${PYLIB_DIR}/PyQt${QT_MAJOR_VERSION})
+file(GLOB pyqt_files ${PYQT_LIB_DIR}/*.py ${PYQT_LIB_DIR}/*.pyd ${PYQT_LIB_DIR}/*.pyi)
+install(FILES ${pyqt_files} DESTINATION ${PYQT_TARGET_DIR})
