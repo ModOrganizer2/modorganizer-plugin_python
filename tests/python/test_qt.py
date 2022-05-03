@@ -90,3 +90,23 @@ def test_qvariant():
         {"bar": 42, "moo": [44, True]},
         45,
     ]
+
+
+def test_qflags():
+    v0, v1, v2 = m.SimpleEnum.Value0, m.SimpleEnum.Value1, m.SimpleEnum.Value2
+
+    assert m.qflags_explode(v0 | v1) == (0x3, True, True, False)
+    assert m.qflags_explode(v0 | v2) == (0x5, True, False, True)
+    assert m.qflags_explode(0) == (0, False, False, False)
+
+    assert not (m.qflags_create(False, False, False) & v0)
+    assert not (m.qflags_create(False, False, False) & v1)
+    assert not (m.qflags_create(False, False, False) & v2)
+
+    assert m.qflags_create(True, False, False) & v0
+    assert m.qflags_create(True, True, False) & v0
+    assert m.qflags_create(True, True, False) & v1
+    assert not (m.qflags_create(True, True, False) & v2)
+
+    assert m.qflags_create(True, False, False) | v0 == v0
+    assert m.qflags_create(True, False, False) | v0 | v2 == v0 | v2

@@ -4,6 +4,7 @@
 
 #include <tuple>
 
+namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(qt, m)
@@ -115,5 +116,30 @@ PYBIND11_MODULE(qt, m)
         map["moo"] = true;
         map["baz"] = "world hello";
         return map;
+    });
+
+    // QFlags
+
+    enum SimpleEnum { Value0 = 0x1, Value1 = 0x2, Value2 = 0x4 };
+    Q_DECLARE_FLAGS(SimpleEnumFlags, SimpleEnum);
+
+    py::enum_<SimpleEnum>(m, "SimpleEnum", py::arithmetic())
+        .value("Value0", Value0)
+        .value("Value1", Value1)
+        .value("Value2", Value2);
+
+    m.def("qflags_explode", [](SimpleEnumFlags const& flags) {
+        return std::make_tuple(flags.toInt(), flags.testFlag(Value0),
+                               flags.testFlag(Value1), flags.testFlag(Value2));
+    });
+    m.def("qflags_create", [](bool v0, bool v1, bool v2) {
+        SimpleEnumFlags r;
+        if (v0)
+            r.setFlag(Value0);
+        if (v1)
+            r.setFlag(Value1);
+        if (v2)
+            r.setFlag(Value2);
+        return r;
     });
 }
