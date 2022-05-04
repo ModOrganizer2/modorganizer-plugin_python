@@ -80,6 +80,15 @@ namespace pybind11::detail::qt {
                 }
             }
 
+            const sipTypeDef* type =
+                qt::sipAPI()->api_find_type(MetaData<QClass>::class_name);
+            if (type == nullptr) {
+                return false;
+            }
+            if (!qt::sipAPI()->api_can_convert_to_type(src.ptr(), type, 0)) {
+                return false;
+            }
+
             // this would transfer responsibility for deconstructing the
             // object to C++, but pybind11 assumes l-value converters (such
             // as this) don't do that instead, this should be called within
