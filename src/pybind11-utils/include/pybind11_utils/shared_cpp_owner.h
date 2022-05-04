@@ -1,6 +1,8 @@
 #ifndef PYTHON_PYBIND11_SHARED_CPP_OWNER_H
 #define PYTHON_PYBIND11_SHARED_CPP_OWNER_H
 
+#include <pybind11/pybind11.h>
+
 // pybind11 has some issues when a Python classes extend a C++ wrapper since the Python
 // object is not kept alive alongside the returned object
 //
@@ -11,10 +13,8 @@
 // definition in mo2::python::detail below
 //
 // IMPORTANT: this only works for classes that are managed by shared_ptr on the C++
-// side, not Qt object
+// side, not Qt object (see pybind11-qt holder for that)
 //
-
-// TODO: WIP for Qt object
 
 namespace mo2::python::detail {
 
@@ -88,11 +88,5 @@ namespace mo2::python::detail {
                   Type, std::shared_ptr<const Type>> {                                 \
         };                                                                             \
     }
-
-#include <isavegame.h>
-#include <pluginrequirements.h>
-
-MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::IPluginRequirement)
-MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::ISaveGame)
 
 #endif

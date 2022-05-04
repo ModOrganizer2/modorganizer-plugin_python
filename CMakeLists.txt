@@ -20,6 +20,7 @@ project(plugin_python)
 
 # order matters!
 add_subdirectory(src/pybind11-qt)
+add_subdirectory(src/pybind11-utils)
 add_subdirectory(src/mobase)
 add_subdirectory(src/runner)
 add_subdirectory(src/proxy)

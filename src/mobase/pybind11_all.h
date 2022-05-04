@@ -12,4 +12,10 @@
 
 #include "pybind11_utils/shared_cpp_owner.h"
 
+#include <isavegame.h>
+#include <pluginrequirements.h>
+
+MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::IPluginRequirement)
+MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::ISaveGame)
+
 #endif
