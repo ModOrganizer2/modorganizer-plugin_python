@@ -94,7 +94,7 @@ namespace mo2::python {
 
     // This is the function we are going to use as our Handler .emit
     // method.
-    void emit_function(py::object self, py::object record)
+    void emit_function(py::object record)
     {
 
         // There are other parameters that could be used, but this is minimal
@@ -148,6 +148,9 @@ namespace mo2::python {
         // set mobase attributes
         mobase.attr("LogHandler") = MO2Handler;
         mobase.attr("logger")     = logger;
+
+        logging.attr("root").attr("setLevel")(PyLogLevel::DEBUG);
+        logging.attr("root").attr("addHandler")(handler);
     }
 
 }  // namespace mo2::python
