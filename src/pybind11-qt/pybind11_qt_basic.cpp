@@ -39,19 +39,7 @@ namespace pybind11::detail {
         PyObject* objPtr = src.ptr();
 
         if (!PyBytes_Check(objPtr) && !PyUnicode_Check(objPtr)) {
-#ifndef PYBIND11_QT_QSTRING_NOFS
-            // try converting from os.PathLike
-            type_caster<std::filesystem::path> path_caster;
-            if (!path_caster.load(src, implicit)) {
-                return false;
-            }
-
-            value = qstring_from_stdstring((*path_caster).native());
-            return true;
-#else
-            // do not try to convert from os.PathLike
             return false;
-#endif
         }
 
         // Ensure the string uses 8-bit characters
