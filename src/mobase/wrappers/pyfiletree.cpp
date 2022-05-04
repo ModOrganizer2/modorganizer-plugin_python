@@ -85,10 +85,15 @@ namespace mo2::python {
     void add_ifiletree_bindings(pybind11::module_& m)
     {
 
-        // FileTreeEntry Scope:
+        // FileTreeEntry class:
         auto fileTreeEntryClass =
             py::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>>(m,
                                                                       "FileTreeEntry");
+
+        // IFileTree class:
+        auto iFileTreeClass =
+            py::class_<IFileTree, FileTreeEntry, std::shared_ptr<IFileTree>>(
+                m, "IFileTree", py::multiple_inheritance());
 
         // we do not use the enum directly, we will mostly bind the FileTypes
         // (with an S)
@@ -130,12 +135,7 @@ namespace mo2::python {
 
             .def("isFile", &FileTreeEntry::isFile)
             .def("isDir", &FileTreeEntry::isDir)
-            // Forcing the conversion to FileTypeS to avoid having to expose
-            // FileType in python:
             .def("fileType", &FileTreeEntry::fileType)
-            // This should probably not be exposed in python since we provide
-            // automatic downcast: .def("getTree",
-            // static_cast<std::shared_ptr<IFileTree>(FileTreeEntry::*)()>(&FileTreeEntry::astree))
             .def("name", &FileTreeEntry::name)
             .def("suffix", &FileTreeEntry::suffix)
             .def(
@@ -150,7 +150,7 @@ namespace mo2::python {
                     return entry->hasSuffix(suffix);
                 },
                 py::arg("suffix"))
-            .def("parent", py::overload_cast<>(&FileTreeEntry::parent), "[optional]")
+            .def("parent", py::overload_cast<>(&FileTreeEntry::parent))
             .def("path", &FileTreeEntry::path, py::arg("sep") = "\\")
             .def("pathFrom", &FileTreeEntry::pathFrom, py::arg("tree"),
                  py::arg("sep") = "\\")
@@ -173,11 +173,6 @@ namespace mo2::python {
             .def("__repr__", [](const FileTreeEntry* entry) {
                 return "FileTreeEntry(\"" + entry->name() + "\")";
             });
-
-        // IFileTree scope:
-        auto iFileTreeClass =
-            py::class_<IFileTree, FileTreeEntry, std::shared_ptr<IFileTree>>(
-                m, "IFileTree", py::multiple_inheritance());
 
         py::enum_<IFileTree::InsertPolicy>(iFileTreeClass, "InsertPolicy")
             .value("FAIL_IF_EXISTS", IFileTree::InsertPolicy::FAIL_IF_EXISTS)
