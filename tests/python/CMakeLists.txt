@@ -44,8 +44,7 @@ foreach (test_file ${test_files})
 	endif()
 
 	mo2_add_dependencies(${target} PRIVATE uibase Qt::Core Qt::Widgets)
-	# set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
-	target_link_libraries(${target} PRIVATE pybind11::qt GTest::gmock)
+	target_link_libraries(${target} PRIVATE pybind11::qt pybind11::utils GTest::gmock)
 
 	target_include_directories(${target}
     	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../mocks)

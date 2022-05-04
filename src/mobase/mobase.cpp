@@ -56,9 +56,12 @@ PYBIND11_MODULE(mobase, m)
 
     // functions
     //
-    m.def("getFileVersion", &MOBase::getFileVersion, py::arg("filepath"));
-    m.def("getProductVersion", &MOBase::getProductVersion, py::arg("executable"));
-    m.def("getIconForExecutable", &MOBase::iconForExecutable, py::arg("executable"));
+    m.def("getFileVersion", wrap_for_filepath(&MOBase::getFileVersion),
+          py::arg("filepath"));
+    m.def("getProductVersion", wrap_for_filepath(&MOBase::getProductVersion),
+          py::arg("executable"));
+    m.def("getIconForExecutable", wrap_for_filepath(&MOBase::iconForExecutable),
+          py::arg("executable"));
 
     // expose MoVariant - MoVariant is a fake object whose only purpose is to be
     // used as a type-hint on the python side (e.g., def foo(x:

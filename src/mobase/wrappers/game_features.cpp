@@ -155,12 +155,12 @@ namespace mo2::python {
     public:
         QString BinaryName() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, ScriptExtender, BinaryName, );
+            PYBIND11_OVERRIDE_PURE(FileWrapper, ScriptExtender, BinaryName, );
         }
 
         QString PluginPath() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, ScriptExtender, PluginPath, );
+            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, ScriptExtender, PluginPath, );
         }
 
         QString loaderName() const override
@@ -170,7 +170,7 @@ namespace mo2::python {
 
         QString loaderPath() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, ScriptExtender, loaderPath, );
+            PYBIND11_OVERRIDE_PURE(FileWrapper, ScriptExtender, loaderPath, );
         }
 
         QString savegameExtension() const override
@@ -206,11 +206,15 @@ namespace mo2::python {
         }
         QFileInfo referenceFile(const QString& modName) const override
         {
-            PYBIND11_OVERRIDE_PURE(QFileInfo, UnmanagedMods, referenceFile, modName);
+            PYBIND11_OVERRIDE_PURE(FileWrapper, UnmanagedMods, referenceFile, modName);
         }
         QStringList secondaryFiles(const QString& modName) const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, UnmanagedMods, secondaryFiles, modName);
+            auto result = [&] {
+                PYBIND11_OVERRIDE_PURE(QList<FileWrapper>, UnmanagedMods,
+                                       secondaryFiles, modName);
+            }();
+            return QList<QString>(result.begin(), result.end());
         }
     };
 

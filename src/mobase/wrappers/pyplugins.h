@@ -28,11 +28,6 @@ namespace mo2::python {
     public:
         using PluginBase::PluginBase;
 
-        ~PyPluginBaseNoFinal()
-        {
-            std::cout << "~PyPluginBaseNoFinal() " << typeid(this).name() << std::endl;
-        }
-
         bool init(IOrganizer* organizer) override
         {
             PYBIND11_OVERRIDE_PURE(bool, PluginBase, init, organizer);
@@ -102,7 +97,7 @@ namespace mo2::python {
     public:
         MappingType mappings() const override
         {
-            PYBIND11_OVERRIDE_PURE(MappingType, IPluginFileMapper, mappings, );
+            PYBIND11_OVERRIDE_PURE(MappingType, IPyPluginFileMapper, mappings, );
         }
     };
 
@@ -112,28 +107,28 @@ namespace mo2::python {
     public:
         std::vector<unsigned int> activeProblems() const
         {
-            PYBIND11_OVERRIDE_PURE(std::vector<unsigned int>, IPluginDiagnose,
+            PYBIND11_OVERRIDE_PURE(std::vector<unsigned int>, IPyPluginDiagnose,
                                    activeProblems, );
         }
 
         QString shortDescription(unsigned int key) const
         {
-            PYBIND11_OVERRIDE_PURE(QString, IPluginDiagnose, shortDescription, key);
+            PYBIND11_OVERRIDE_PURE(QString, IPyPluginDiagnose, shortDescription, key);
         }
 
         QString fullDescription(unsigned int key) const
         {
-            PYBIND11_OVERRIDE_PURE(QString, IPluginDiagnose, fullDescription, key);
+            PYBIND11_OVERRIDE_PURE(QString, IPyPluginDiagnose, fullDescription, key);
         }
 
         bool hasGuidedFix(unsigned int key) const
         {
-            PYBIND11_OVERRIDE_PURE(bool, IPluginDiagnose, hasGuidedFix, key);
+            PYBIND11_OVERRIDE_PURE(bool, IPyPluginDiagnose, hasGuidedFix, key);
         }
 
         void startGuidedFix(unsigned int key) const
         {
-            PYBIND11_OVERRIDE_PURE(void, IPluginDiagnose, startGuidedFix, key);
+            PYBIND11_OVERRIDE_PURE(void, IPyPluginDiagnose, startGuidedFix, key);
         }
 
         // we need to bring this in public scope
@@ -375,11 +370,11 @@ namespace mo2::python {
         }
         QDir gameDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, gameDirectory, );
+            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, gameDirectory, );
         }
         QDir dataDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, dataDirectory, );
+            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, dataDirectory, );
         }
         void setGamePath(const QString& path) override
         {
@@ -387,11 +382,11 @@ namespace mo2::python {
         }
         QDir documentsDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, documentsDirectory, );
+            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, documentsDirectory, );
         }
         QDir savesDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, savesDirectory, );
+            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, savesDirectory, );
         }
         QList<ExecutableInfo> executables() const override
         {

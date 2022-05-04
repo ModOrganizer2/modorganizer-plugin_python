@@ -33,7 +33,7 @@ namespace mo2::python {
     public:
         QString getFilepath() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, ISaveGame, getFilepath, );
+            PYBIND11_OVERRIDE_PURE(FileWrapper, ISaveGame, getFilepath, );
         }
 
         QDateTime getCreationTime() const override

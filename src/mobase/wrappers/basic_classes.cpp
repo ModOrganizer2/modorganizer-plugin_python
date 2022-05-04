@@ -30,6 +30,7 @@ namespace mo2::python {
     namespace py = pybind11;
 
     using namespace pybind11::literals;
+    using namespace mo2::python;
 
     void add_versioninfo_classes(py::module_ m)
     {
@@ -90,9 +91,10 @@ namespace mo2::python {
     void add_executable_classes(py::module_ m)
     {
         py::class_<ExecutableInfo>(m, "ExecutableInfo")
-            .def(py::init<const QString&, const QFileInfo&>(), "title"_a, "binary"_a)
+            .def(py::init<const QString&, const FileWrapper&>(), "title"_a, "binary"_a)
             .def("withArgument", &ExecutableInfo::withArgument, "argument"_a)
-            .def("withWorkingDirectory", &ExecutableInfo::withWorkingDirectory,
+            .def("withWorkingDirectory",
+                 wrap_for_directory(&ExecutableInfo::withWorkingDirectory),
                  "directory"_a)
             .def("withSteamAppId", &ExecutableInfo::withSteamAppId, "app_id"_a)
             .def("asCustom", &ExecutableInfo::asCustom)
@@ -448,16 +450,17 @@ namespace mo2::python {
             .def("setPersistent", &IOrganizer::setPersistent, "plugin_name"_a, "key"_a,
                  "value"_a, "sync"_a = true)
             .def("pluginDataPath", &IOrganizer::pluginDataPath)
-            .def("installMod", &IOrganizer::installMod,
+            .def("installMod", wrap_for_filepath<1>(&IOrganizer::installMod),
                  py::return_value_policy::reference, "filename"_a,
                  "name_suggestion"_a = "")
-            .def("resolvePath", &IOrganizer::resolvePath, "filename"_a)
+            .def("resolvePath", wrap_for_filepath(&IOrganizer::resolvePath),
+                 "filename"_a)
             .def("listDirectories", &IOrganizer::listDirectories, "directory"_a)
 
             // "provide multiple overloads of findFiles
             .def(
                 "findFiles",
-                [](const IOrganizer* o, QString const& p,
+                [](const IOrganizer* o, DirectoryWrapper const& p,
                    std::function<bool(QString const&)> const& f) {
                     return o->findFiles(p, f);
                 },
@@ -474,19 +477,21 @@ namespace mo2::python {
             // single-character strings:
             .def(
                 "findFiles",
-                [](const IOrganizer* o, QString const& p, const QStringList& gf) {
+                [](const IOrganizer* o, DirectoryWrapper const& p,
+                   const QStringList& gf) {
                     return o->findFiles(p, gf);
                 },
                 "path"_a, "patterns"_a)
             .def(
                 "findFiles",
-                [](const IOrganizer* o, QString const& p, const QString& f) {
+                [](const IOrganizer* o, DirectoryWrapper const& p, const QString& f) {
                     return o->findFiles(p, QStringList{f});
                 },
                 "path"_a, "pattern"_a)
 
             .def("getFileOrigins", &IOrganizer::getFileOrigins, "filename"_a)
-            .def("findFileInfos", &IOrganizer::findFileInfos, "path"_a, "filter"_a)
+            .def("findFileInfos", wrap_for_directory(&IOrganizer::findFileInfos),
+                 "path"_a, "filter"_a)
 
             .def("virtualFileTree", &IOrganizer::virtualFileTree)
 
@@ -503,9 +508,9 @@ namespace mo2::python {
             // argument to a return-tuple for waitForApplication
             .def(
                 "startApplication",
-                [](IOrganizer* o, const QString& executable, const QStringList& args,
-                   const QString& cwd, const QString& profile,
-                   const QString& forcedCustomOverwrite,
+                [](IOrganizer* o, const FileWrapper& executable,
+                   const QStringList& args, const DirectoryWrapper& cwd,
+                   const QString& profile, const QString& forcedCustomOverwrite,
                    bool ignoreCustomOverwrite) -> std::uintptr_t {
                     return (std::uintptr_t)o->startApplication(
                         executable, args, cwd, profile, forcedCustomOverwrite,
@@ -659,7 +664,7 @@ namespace mo2::python {
             .def(
                 "installArchive",
                 [](IInstallationManager* m, GuessedValue<QString> modName,
-                   QString archive, int modId) {
+                   FileWrapper archive, int modId) {
                     auto result = m->installArchive(modName, archive, modId);
                     return std::make_tuple(result, static_cast<QString>(modName),
                                            modId);
