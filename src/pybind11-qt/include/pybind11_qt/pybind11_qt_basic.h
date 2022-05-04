@@ -24,7 +24,7 @@ namespace pybind11::detail {
     template <>
     struct type_caster<QVariant> {
     public:
-        PYBIND11_TYPE_CASTER(QVariant, const_name("MOVariant"));
+        PYBIND11_TYPE_CASTER(QVariant, const_name("MoVariant"));
 
         bool load(handle src, bool);
 
