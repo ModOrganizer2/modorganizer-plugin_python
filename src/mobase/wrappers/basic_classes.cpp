@@ -63,6 +63,7 @@ namespace mo2::python {
             .value("LITERAL", MOBase::VersionInfo::SCHEME_LITERAL);
 
         py::class_<VersionInfo>(m, "VersionInfo")
+            .def(py::init<>())
             .def(py::init<QString, VersionInfo::VersionScheme>(), "value"_a,
                  "scheme"_a = VersionInfo::SCHEME_DISCOVER)
             // note: order of the two init<> below is important because
