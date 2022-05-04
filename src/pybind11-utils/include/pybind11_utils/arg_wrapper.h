@@ -126,11 +126,11 @@ namespace mo2::python {
 
 }  // namespace mo2::python
 
-#define MO2_PYBIND11_WRAP_ARGUMENT_CASTER(Type, ...)                                   \
+#define MO2_PYBIND11_WRAP_ARGUMENT_CASTER(Type, Name, ...)                             \
     namespace pybind11::detail {                                                       \
         template <>                                                                    \
         struct type_caster<Type> {                                                     \
-            PYBIND11_TYPE_CASTER(Type, const_name(#Type));                             \
+            PYBIND11_TYPE_CASTER(Type, const_name(Name));                              \
             bool load(handle src, bool convert)                                        \
             {                                                                          \
                 return mo2::python::detail::load_wrapped_argument_helper<              \

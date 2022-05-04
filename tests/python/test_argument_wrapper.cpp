@@ -28,7 +28,7 @@ public:
     operator std::string() const { return value; }
 };
 
-MO2_PYBIND11_WRAP_ARGUMENT_CASTER(Wrapper, int, std::string);
+MO2_PYBIND11_WRAP_ARGUMENT_CASTER(Wrapper, "Wrapper", int, std::string);
 
 template <std::size_t... Is, class Fn>
 auto wrap(Fn&& fn)

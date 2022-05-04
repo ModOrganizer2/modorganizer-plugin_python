@@ -83,9 +83,9 @@ namespace mo2::python {
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::IPluginRequirement)
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::ISaveGame)
 
-MO2_PYBIND11_WRAP_ARGUMENT_CASTER(mo2::python::FileWrapper, QFileInfo,
+MO2_PYBIND11_WRAP_ARGUMENT_CASTER(mo2::python::FileWrapper, "FileWrapper", QFileInfo,
                                   std::filesystem::path, QString);
-MO2_PYBIND11_WRAP_ARGUMENT_CASTER(mo2::python::DirectoryWrapper, QDir,
-                                  std::filesystem::path, QString);
+MO2_PYBIND11_WRAP_ARGUMENT_CASTER(mo2::python::DirectoryWrapper, "DirectoryWrapper",
+                                  QDir, std::filesystem::path, QString);
 
 #endif
