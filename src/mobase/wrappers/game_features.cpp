@@ -234,8 +234,8 @@ namespace mo2::python {
             .def(py::init<>())
             .def("vanillaArchives", &DataArchives::vanillaArchives)
             .def("archives", &DataArchives::archives, "profile"_a)
-            .def("addArchive", &DataArchives::addArchive,
-                 ("profile"_a, "index", "name"))
+            .def("addArchive", &DataArchives::addArchive, "profile"_a, "index"_a,
+                 "name"_a)
             .def("removeArchive", &DataArchives::removeArchive, "profile"_a, "name"_a);
 
         // GamePlugins
