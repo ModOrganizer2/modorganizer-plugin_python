@@ -308,16 +308,19 @@ namespace mo2::python {
             .value("ACTIVE", IPluginList::STATE_ACTIVE);
 
         py::class_<IPluginList>(m, "IPluginList")
-            .def("state", &MOBase::IPluginList::state, "name"_a)
-            .def("priority", &MOBase::IPluginList::priority, "name"_a)
-            .def("setPriority", &MOBase::IPluginList::setPriority, "name"_a,
-                 "priority"_a)
-            .def("loadOrder", &MOBase::IPluginList::loadOrder, "name"_a)
-            .def("isMaster", &MOBase::IPluginList::isMaster, "name"_a)
-            .def("masters", &MOBase::IPluginList::masters, "name"_a)
-            .def("origin", &MOBase::IPluginList::origin, "name"_a)
-            .def("onRefreshed", &MOBase::IPluginList::onRefreshed, "callback"_a)
-            .def("onPluginMoved", &MOBase::IPluginList::onPluginMoved, "callback"_a)
+            .def("state", &IPluginList::state, "name"_a)
+            .def("priority", &IPluginList::priority, "name"_a)
+            .def("setPriority", &IPluginList::setPriority, "name"_a, "priority"_a)
+            .def("loadOrder", &IPluginList::loadOrder, "name"_a)
+            .def("masters", &IPluginList::masters, "name"_a)
+            .def("origin", &IPluginList::origin, "name"_a)
+            .def("onRefreshed", &IPluginList::onRefreshed, "callback"_a)
+            .def("onPluginMoved", &IPluginList::onPluginMoved, "callback"_a)
+
+            .def("isMasterFlagged", &IPluginList::isMasterFlagged, "name"_a)
+            .def("hasMasterExtension", &IPluginList::hasMasterExtension, "name"_a)
+            .def("isLightFlagged", &IPluginList::isLightFlagged, "name"_a)
+            .def("hasLightExtension", &IPluginList::hasLightExtension, "name"_a)
 
             // Kept but deprecated for backward compatibility:
             .def(
@@ -338,10 +341,20 @@ namespace mo2::python {
                     });
                 },
                 "callback"_a)
+            .def(
+                "isMaster",
+                [](IPluginList* modList, QString const& name) {
+                    mo2::python::show_deprecation_warning(
+                        "isMaster",
+                        "isMaster(str) is deprecated, use isMasterFlagged() or "
+                        "hasMasterExtension() instead.");
+                    return modList->isMasterFlagged(name);
+                },
+                "name"_a)
             .def("onPluginStateChanged", &MOBase::IPluginList::onPluginStateChanged,
                  "callback"_a)
             .def("pluginNames", &MOBase::IPluginList::pluginNames)
-            .def("setState", &MOBase::IPluginList::setState, ("name"_a, "state"))
+            .def("setState", &MOBase::IPluginList::setState, "name"_a, "state"_a)
             .def("setLoadOrder", &MOBase::IPluginList::setLoadOrder, "loadorder"_a);
     }
 
