@@ -15,6 +15,7 @@
 #include <isavegameinfowidget.h>
 #include <pluginrequirements.h>
 
+using namespace pybind11::literals;
 namespace py = pybind11;
 using namespace MOBase;
 
@@ -91,9 +92,8 @@ namespace mo2::python {
         py::class_<ISaveGameInfoWidget, PySaveGameInfoWidget,
                    py::qt::qholder<ISaveGameInfoWidget>>
             iSaveGameInfoWidget(m, "ISaveGameInfoWidget");
-        iSaveGameInfoWidget.def(py::init<>())
-            .def(py::init<QWidget*>(), py::arg("parent"))
-            .def("setSave", &ISaveGameInfoWidget::setSave, py::arg("save"));
+        iSaveGameInfoWidget.def(py::init<QWidget*>(), "parent"_a = (QWidget*)nullptr)
+            .def("setSave", &ISaveGameInfoWidget::setSave, "save"_a);
         py::qt::add_qt_delegate<QWidget>(iSaveGameInfoWidget, "_widget");
 
         // IPluginRequirement - custom type_caster<> for shared_ptr<> to keep the Python
@@ -104,13 +104,12 @@ namespace mo2::python {
             iPluginRequirementClass(m, "IPluginRequirement");
 
         py::class_<IPluginRequirement::Problem>(iPluginRequirementClass, "Problem")
-            .def(py::init<QString, QString>(), py::arg("short_description"),
-                 py::arg("long_description") = "")
+            .def(py::init<QString, QString>(), "short_description"_a,
+                 "long_description"_a = "")
             .def("shortDescription", &IPluginRequirement::Problem::shortDescription)
             .def("longDescription", &IPluginRequirement::Problem::longDescription);
 
-        iPluginRequirementClass.def("check", &IPluginRequirement::check,
-                                    py::arg("organizer"));
+        iPluginRequirementClass.def("check", &IPluginRequirement::check, "organizer"_a);
     }
 
 }  // namespace mo2::python

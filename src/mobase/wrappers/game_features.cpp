@@ -291,7 +291,7 @@ namespace mo2::python {
             .def(py::init<>())
             .def("getMissingAssets", &SaveGameInfo::getMissingAssets, "save"_a)
             .def("getSaveGameWidget", &SaveGameInfo::getSaveGameWidget,
-                 py::return_value_policy::reference, "parent"_a, "[optional]");
+                 py::return_value_policy::reference, "parent"_a);
 
         // ScriptExtender
 

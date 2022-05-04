@@ -699,16 +699,16 @@ namespace mo2::python {
             .def_static("pluginDependency",
                         py::overload_cast<QString const&>(
                             &PluginRequirementFactory::pluginDependency),
-                        "plugins"_a)
+                        "plugin"_a)
             // gameDependency
             .def_static("gameDependency",
                         py::overload_cast<QStringList const&>(
                             &PluginRequirementFactory::gameDependency),
-                        "plugins"_a)
+                        "games"_a)
             .def_static("gameDependency",
                         py::overload_cast<QString const&>(
                             &PluginRequirementFactory::gameDependency),
-                        "plugins"_a)
+                        "game"_a)
             // diagnose
             .def_static("diagnose", &PluginRequirementFactory::diagnose, "diagnose"_a)
             // basic

@@ -97,26 +97,13 @@ namespace mo2::python {
 
         // we do not use the enum directly, we will mostly bind the FileTypes
         // (with an S)
-        py::enum_<FileTreeEntry::FileType>(fileTreeEntryClass, "FileType",
-                                           py::arithmetic{});
-        py::class_<FileTreeEntry::FileTypes>(fileTreeEntryClass, "FileTypes")
-            .def_property_readonly_static("FILE",
-                                          [](py::object) {
-                                              return FileTreeEntry::FILE;
-                                          })
-            .def_property_readonly_static("DIRECTORY",
-                                          [](py::object) {
-                                              return FileTreeEntry::DIRECTORY;
-                                          })
-            .def_property_readonly_static("FILE_OR_DIRECTORY",
-                                          [](py::object) {
-                                              return FileTreeEntry::FILE_OR_DIRECTORY;
-                                          })
-
-            .def(py::self == py::self)
-            .def(py::self != py::self)
-            .def(py::self | py::self);
-        py::implicitly_convertible<FileTreeEntry::FileType, FileTreeEntry::FileTypes>();
+        py::enum_<FileTreeEntry::FileType>(fileTreeEntryClass, "FileTypes",
+                                           py::arithmetic{})
+            .value("FILE", FileTreeEntry::FileType::FILE)
+            .value("DIRECTORY", FileTreeEntry::FileType::DIRECTORY)
+            .value("FILE_OR_DIRECTORY", static_cast<FileTreeEntry::FileType>(
+                                            FileTreeEntry::FILE_OR_DIRECTORY.toInt()))
+            .export_values();
 
         fileTreeEntryClass
             .def_property_readonly_static("FILE",
@@ -194,8 +181,7 @@ namespace mo2::python {
                            py::arg("type") = IFileTree::FILE_OR_DIRECTORY);
         iFileTreeClass.def(
             "find", py::overload_cast<QString, IFileTree::FileTypes>(&IFileTree::find),
-            py::arg("path"), py::arg("type") = IFileTree::FILE_OR_DIRECTORY,
-            "[optional]");
+            py::arg("path"), py::arg("type") = IFileTree::FILE_OR_DIRECTORY);
         iFileTreeClass.def("pathTo", &IFileTree::pathTo, py::arg("entry"),
                            py::arg("sep") = "\\");
 
