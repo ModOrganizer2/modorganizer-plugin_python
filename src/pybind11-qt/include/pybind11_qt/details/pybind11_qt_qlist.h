@@ -41,7 +41,9 @@ namespace pybind11::detail::qt {
                                                            parent);
         }
 
-        PYBIND11_TYPE_CASTER(Type, const_name("Iterable[") + value_conv::name +
+        // we type these as "Sequence" even if these can be constructed from Iterable,
+        // otherwise the return type will be typed as "Iterable" which is problematic
+        PYBIND11_TYPE_CASTER(Type, const_name("Sequence[") + value_conv::name +
                                        const_name("]"));
     };
 

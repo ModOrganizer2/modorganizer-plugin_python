@@ -665,6 +665,14 @@ namespace mo2::python {
 
     void add_iinstallation_manager_classes(py::module_ m)
     {
+        // add this here to get proper typing
+        py::enum_<IPluginInstaller::EInstallResult>(m, "InstallResult")
+            .value("SUCCESS", IPluginInstaller::RESULT_SUCCESS)
+            .value("FAILED", IPluginInstaller::RESULT_FAILED)
+            .value("CANCELED", IPluginInstaller::RESULT_CANCELED)
+            .value("MANUAL_REQUESTED", IPluginInstaller::RESULT_MANUALREQUESTED)
+            .value("NOT_ATTEMPTED", IPluginInstaller::RESULT_NOTATTEMPTED);
+
         py::class_<IInstallationManager>(m, "IInstallationManager")
             .def("getSupportedExtensions",
                  &IInstallationManager::getSupportedExtensions)

@@ -96,13 +96,6 @@ namespace mo2::python {
     // multiple installers
     void add_iplugininstaller_bindings(pybind11::module_ m)
     {
-        py::enum_<IPluginInstaller::EInstallResult>(m, "InstallResult")
-            .value("SUCCESS", IPluginInstaller::RESULT_SUCCESS)
-            .value("FAILED", IPluginInstaller::RESULT_FAILED)
-            .value("CANCELED", IPluginInstaller::RESULT_CANCELED)
-            .value("MANUAL_REQUESTED", IPluginInstaller::RESULT_MANUALREQUESTED)
-            .value("NOT_ATTEMPTED", IPluginInstaller::RESULT_NOTATTEMPTED);
-
         // this is bind but should not be inherited in Python - does not make sense,
         // having it makes it simpler to bind the Simple and Custom installers
         py::class_<IPluginInstaller, PyPluginInstallerBase<IPluginInstaller>, IPlugin,
