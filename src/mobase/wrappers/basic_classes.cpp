@@ -30,7 +30,6 @@ namespace mo2::python {
     namespace py = pybind11;
 
     using namespace pybind11::literals;
-    using namespace mo2::python;
 
     void add_versioninfo_classes(py::module_ m)
     {

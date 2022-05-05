@@ -344,7 +344,7 @@ namespace mo2::python {
     pybind11::object extract_feature(IPluginGame const& game, pybind11::object type)
     {
         py::object py_feature = py::none();
-        GameFeaturesHelper::apply([&]<class Feature>(Feature* feature) {
+        GameFeaturesHelper::apply([&]<class Feature>(Feature*) {
             if (py::type::of<Feature>().is(type)) {
                 py_feature = py::cast(game.feature<Feature>(),
                                       py::return_value_policy::reference);
@@ -357,7 +357,7 @@ namespace mo2::python {
     {
         // constructing a dict from class name to actual object
         py::dict dict;
-        GameFeaturesHelper::apply([&]<class Feature>(Feature* feature) {
+        GameFeaturesHelper::apply([&]<class Feature>(Feature*) {
             dict[py::type::of<Feature>()] =
                 py::cast(game.feature<Feature>(), py::return_value_policy::reference);
         });
@@ -368,7 +368,7 @@ namespace mo2::python {
     convert_feature_list(py::dict const& py_features)
     {
         std::map<std::type_index, std::any> features;
-        GameFeaturesHelper::apply([&]<class Feature>(Feature* feature) {
+        GameFeaturesHelper::apply([&]<class Feature>(Feature*) {
             const auto py_type = py::type::of<Feature>();
             if (py_features.contains(py_type)) {
                 features[std::type_index(typeid(Feature))] =

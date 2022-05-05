@@ -49,9 +49,8 @@ namespace mo2::detail {
             return std::make_shared<PyFileTree>(parent, name, m_Callback);
         }
 
-        bool
-        doPopulate(std::shared_ptr<const IFileTree> parent,
-                   std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override
+        bool doPopulate(std::shared_ptr<const IFileTree> parent,
+                        std::vector<std::shared_ptr<FileTreeEntry>>&) const override
         {
             return true;
         }

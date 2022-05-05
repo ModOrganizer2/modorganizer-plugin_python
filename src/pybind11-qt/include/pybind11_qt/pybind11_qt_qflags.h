@@ -19,7 +19,7 @@ namespace pybind11::detail {
          * instance or return false upon failure. The second argument
          * indicates whether implicit conversions should be applied.
          */
-        bool load(handle src, bool implicit)
+        bool load(handle src, bool)
         {
             PyObject* tmp = PyNumber_Long(src.ptr());
 

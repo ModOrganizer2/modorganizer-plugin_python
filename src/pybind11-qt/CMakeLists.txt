@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 add_library(pybind11-qt STATIC)
 mo2_configure_library(pybind11-qt
 	SOURCE_TREE
-	WARNINGS OFF
+	WARNINGS 4
 	AUTOMOC OFF
 	TRANSLATIONS OFF
 	PRIVATE_DEPENDS Qt::Core Qt::Widgets

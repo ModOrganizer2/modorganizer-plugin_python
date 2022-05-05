@@ -33,7 +33,7 @@ namespace pybind11::detail {
      * instance or return false upon failure. The second argument
      * indicates whether implicit conversions should be applied.
      */
-    bool type_caster<QString>::load(handle src, bool implicit)
+    bool type_caster<QString>::load(handle src, bool)
     {
 
         PyObject* objPtr = src.ptr();
@@ -72,7 +72,7 @@ namespace pybind11::detail {
                                          src.length());
     }
 
-    bool type_caster<QVariant>::load(handle src, bool implicit)
+    bool type_caster<QVariant>::load(handle src, bool)
     {
         // test for string first otherwise PyList_Check also works
         if (PyBytes_Check(src.ptr()) || PyUnicode_Check(src.ptr())) {
@@ -90,7 +90,7 @@ namespace pybind11::detail {
             value = src.cast<QVariantMap>();
             return true;
         }
-        else if (src == Py_None) {
+        else if (src.is(pybind11::none())) {
             value = QVariant();
             return true;
         }
@@ -118,27 +118,27 @@ namespace pybind11::detail {
     handle type_caster<QVariant>::cast(QVariant var, return_value_policy policy,
                                        handle parent)
     {
-        switch (var.type()) {
-        case QVariant::Invalid:
+        switch (var.typeId()) {
+        case QMetaType::UnknownType:
             return Py_None;
-        case QVariant::Int:
+        case QMetaType::Int:
             return PyLong_FromLong(var.toInt());
-        case QVariant::UInt:
+        case QMetaType::UInt:
             return PyLong_FromUnsignedLong(var.toUInt());
-        case QVariant::Bool:
+        case QMetaType::Bool:
             return PyBool_FromLong(var.toBool());
-        case QVariant::String:
+        case QMetaType::QString:
             return type_caster<QString>::cast(var.toString(), policy, parent);
         // We need to check for StringList here because these are not considered
         // List since List is QList<QVariant> will StringList is QList<QString>:
-        case QVariant::StringList:
+        case QMetaType::QStringList:
             return type_caster<QStringList>::cast(var.toStringList(), policy, parent);
-        case QVariant::List:
+        case QMetaType::QVariantList:
             return type_caster<QVariantList>::cast(var.toList(), policy, parent);
-        case QVariant::Map:
+        case QMetaType::QVariantMap:
             return type_caster<QVariantMap>::cast(var.toMap(), policy, parent);
         default: {
-            PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.type());
+            PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.userType());
             throw pybind11::error_already_set();
         }
         }

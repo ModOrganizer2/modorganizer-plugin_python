@@ -28,7 +28,7 @@ namespace mo2::python {
 
         template <class T, std::size_t... Is, std::size_t... AIs, class Fn, class R,
                   class... Args>
-        auto wrap_fn_impl(std::index_sequence<Is...>, Fn&& fn, R (*sg)(Args...),
+        auto wrap_fn_impl(std::index_sequence<Is...>, Fn&& fn, R (*)(Args...),
                           std::index_sequence<AIs...>)
         {
             return [fn = std::forward<Fn>(fn)](
@@ -63,10 +63,7 @@ namespace mo2::python {
 
         template <class Type>
         struct load_wrapped_argument_helper<Type> {
-            static bool load(Type& value, pybind11::handle src, bool convert)
-            {
-                return false;
-            }
+            static bool load(Type&, pybind11::handle, bool) { return false; }
         };
 
         template <class Type, class WrappedType, class... WrappedTypes>

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 add_library(pythonrunner SHARED)
 mo2_configure_library(pythonrunner
 	SOURCE_TREE
-	WARNINGS OFF
+	WARNINGS 4
 	AUTOMOC ON
 	TRANSLATIONS OFF
 	PUBLIC_DEPENDS uibase Qt::Core

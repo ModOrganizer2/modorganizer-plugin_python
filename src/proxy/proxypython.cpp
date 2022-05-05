@@ -294,9 +294,9 @@ QString ProxyPython::fullDescription(unsigned int key) const
     }
 }
 
-bool ProxyPython::hasGuidedFix(unsigned int key) const
+bool ProxyPython::hasGuidedFix(unsigned int) const
 {
     return false;
 }
 
-void ProxyPython::startGuidedFix(unsigned int key) const {}
+void ProxyPython::startGuidedFix(unsigned int) const {}
