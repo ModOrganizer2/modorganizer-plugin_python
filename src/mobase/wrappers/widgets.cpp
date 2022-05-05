@@ -19,7 +19,10 @@ namespace mo2::python {
             .def(py::init<QString, QString, QMessageBox::StandardButton>(),
                  py::arg("text"), py::arg("description"), py::arg("button"))
             .def(py::init<QString, QMessageBox::StandardButton>(), py::arg("text"),
-                 py::arg("button"));
+                 py::arg("button"))
+            .def_readwrite("text", &TaskDialogButton::text)
+            .def_readwrite("description", &TaskDialogButton::description)
+            .def_readwrite("button", &TaskDialogButton::button);
 
         py::class_<TaskDialog>(m, "TaskDialog")
             .def(py::init([](QWidget* parent, QString const& title, QString const& main,
@@ -66,7 +69,7 @@ namespace mo2::python {
             .def("addButton", &TaskDialog::button, py::arg("button"))
             .def("setRemember", &TaskDialog::remember, py::arg("action"),
                  py::arg("file") = "")
-            .def("setWidth", &TaskDialog::setWidth, py::arg("widget"))
+            .def("setWidth", &TaskDialog::setWidth, py::arg("width"))
             .def("addContent", &TaskDialog::addContent, py::arg("widget"))
             .def("exec", &TaskDialog::exec);
     }
