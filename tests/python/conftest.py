@@ -9,7 +9,7 @@ def pytest_configure():
     global app
 
     os.add_dll_directory(Path(os.getenv("QT_ROOT")).joinpath("bin"))
-    os.add_dll_directory(Path(os.getenv("UIBASE_PATH")).parent)
+    os.add_dll_directory(Path(os.getenv("UIBASE_PATH")))
 
     from PyQt6.QtWidgets import QApplication
 

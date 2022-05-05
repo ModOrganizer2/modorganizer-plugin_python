@@ -6,23 +6,32 @@ find_package(GTest REQUIRED)
 set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
 
 if (TARGET uibase)
-	set(UIBASE_PATH $<TARGET_FILE:uibase>)
+	set(UIBASE_PATH $<TARGET_FILE_DIR:uibase>)
 else()
-	set(UIBASE_PATH "${MO2_INSTALL_PATH}/bin/uibase.dll")
+	set(UIBASE_PATH "${MO2_INSTALL_PATH}/bin")
 endif()
 
-add_custom_target(pytest
-	${CMAKE_COMMAND} -E env
-		PYTHONPATH="${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>"
-		"UIBASE_PATH=${UIBASE_PATH}" "QT_ROOT=${QT_ROOT}"
-		${CMAKE_CURRENT_BINARY_DIR}/pylibs/bin/pytest.exe ${CMAKE_CURRENT_SOURCE_DIR} -s
-	WORKING_DIRECTORY ${MO2_INSTALL_PATH}
+add_custom_target(pytest-deps)
 
+add_test(NAME pytest
+	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/pylibs/bin/pytest.exe ${CMAKE_CURRENT_SOURCE_DIR} -s
 )
-mo2_python_pip_install(pytest
+
+set(extra_paths "${UIBASE_PATH}\\;${MO2_INSTALL_PATH}/bin/dlls")
+set_tests_properties(pytest
+	PROPERTIES
+	DEPENDS pytest-deps
+	WORKING_DIRECTORY ${MO2_INSTALL_PATH}/bin
+	ENVIRONMENT_MODIFICATION
+	"PYTHONPATH=set:${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>;\
+UIBASE_PATH=set:${UIBASE_PATH};\
+QT_ROOT=set:${QT_ROOT}"
+)
+
+mo2_python_pip_install(pytest-deps
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
 	PACKAGES pytest PyQt6==6.3.0)
-add_dependencies(pytest mobase)
+add_dependencies(pytest-deps mobase)
 
 file(GLOB test_files CONFIGURE_DEPENDS "test_*.cpp")
 foreach (test_file ${test_files})
@@ -48,5 +57,5 @@ foreach (test_file ${test_files})
 
 	target_include_directories(${target}
     	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../mocks)
-	add_dependencies(pytest ${target})
+	add_dependencies(pytest-deps ${target})
 endforeach()
