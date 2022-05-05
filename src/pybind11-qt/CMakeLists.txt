@@ -4,6 +4,7 @@ add_library(pybind11-qt STATIC)
 mo2_configure_library(pybind11-qt
 	SOURCE_TREE
 	WARNINGS 4
+	EXTERNAL_WARNINGS 4
 	AUTOMOC OFF
 	TRANSLATIONS OFF
 	PRIVATE_DEPENDS Qt::Core Qt::Widgets

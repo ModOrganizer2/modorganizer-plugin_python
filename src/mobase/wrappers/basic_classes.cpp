@@ -2,8 +2,11 @@
 
 #include "../pybind11_all.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4459)
 #include <fmt/format.h>
 #include <fmt/xchar.h>
+#pragma warning(pop)
 
 #include <executableinfo.h>
 #include <filemapping.h>
