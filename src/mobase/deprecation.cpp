@@ -25,9 +25,10 @@ namespace mo2::python {
         auto inspect                = py::module_::import("inspect");
         auto current_frame          = inspect.attr("currentframe")();
         py::sequence callable_frame = inspect.attr("getouterframes")(current_frame, 2);
-        auto filename = callable_frame[-1].attr("filename").cast<std::string>();
-        auto function = callable_frame[-1].attr("function").cast<std::string>();
-        auto lineno   = callable_frame[-1].attr("lineno").cast<int>();
+        auto last_frame             = callable_frame[py::int_(-1)];
+        auto filename               = last_frame.attr("filename").cast<std::string>();
+        auto function               = last_frame.attr("function").cast<std::string>();
+        auto lineno                 = last_frame.attr("lineno").cast<int>();
 
         // Only show once if requested:
         if (show_once && DeprecatedLines.contains({filename, lineno})) {

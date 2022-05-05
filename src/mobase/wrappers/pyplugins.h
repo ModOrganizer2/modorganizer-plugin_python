@@ -28,6 +28,11 @@ namespace mo2::python {
     public:
         using PluginBase::PluginBase;
 
+        PyPluginBaseNoFinal(PyPluginBaseNoFinal const&)            = delete;
+        PyPluginBaseNoFinal(PyPluginBaseNoFinal&&)                 = delete;
+        PyPluginBaseNoFinal& operator=(PyPluginBaseNoFinal const&) = delete;
+        PyPluginBaseNoFinal& operator=(PyPluginBaseNoFinal&&)      = delete;
+
         bool init(IOrganizer* organizer) override
         {
             PYBIND11_OVERRIDE_PURE(bool, PluginBase, init, organizer);

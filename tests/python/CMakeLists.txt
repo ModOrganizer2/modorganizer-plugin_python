@@ -38,7 +38,7 @@ foreach (test_file ${test_files})
 	get_filename_component(target ${test_file} NAME_WLE)
 
 	string(REPLACE "test_" "" pymodule ${target})
-	pybind11_add_module(${target} THIN_LTO ${test_file})
+	pybind11_add_module(${target} EXCLUDE_FROM_ALL THIN_LTO ${test_file})
 	set_target_properties(${target}
 		PROPERTIES
 		OUTPUT_NAME ${pymodule}

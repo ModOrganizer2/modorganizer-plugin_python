@@ -268,7 +268,7 @@ void PythonRunner::unload(const QString& identifier)
             for (std::size_t i = 0; i < py::len(keys); ++i) {
                 py::object mod = modules[keys[i]];
                 if (PyObject_HasAttrString(mod.ptr(), "__path__")) {
-                    QString mpath = mod.attr("__path__")[0].cast<QString>();
+                    QString mpath = mod.attr("__path__")[py::int_(0)].cast<QString>();
 
                     if (!folder.relativeFilePath(mpath).startsWith("..")) {
                         // If the path is under identifier, we need to unload
