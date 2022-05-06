@@ -34,7 +34,7 @@ namespace pybind11::qt {
      */
     inline void set_qt_owner(QObject* owner, object child)
     {
-        new detail::qt::qobject_holder{owner, child};
+        new detail::qt::qobject_holder_impl{owner, child};
     }
 
     /**
@@ -49,7 +49,7 @@ namespace pybind11::qt {
     void set_qt_owner(Class* object)
     {
         static_assert(std::is_base_of_v<QObject, Class>);
-        new detail::qt::qobject_holder{object};
+        new detail::qt::qobject_holder_impl{object};
     }
 
     /**

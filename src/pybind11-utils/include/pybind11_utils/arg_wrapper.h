@@ -39,7 +39,7 @@ namespace mo2::python {
         template <class T, class... Args, std::size_t... Is>
         auto make_convertible_index_sequence(std::index_sequence<Is...>)
         {
-            return std::index_sequence<(std::is_convertible_v<Args, T> ? Is : -1)...>{};
+            return std::index_sequence<(std::is_convertible_v<T, Args> ? Is : -1)...>{};
         }
 
         template <class T, std::size_t... Is, class Fn, class R, class... Args>
@@ -56,6 +56,47 @@ namespace mo2::python {
                                        std::forward<Fn>(fn), sg,
                                        std::make_index_sequence<sizeof...(Args)>{});
             }
+        }
+
+        // list of wrap_fn_impl for possible function types, the set of overload is from
+        // pybind11::cpp_function
+
+        template <class T, std::size_t... Is, class R, class... Args>
+        auto wrap_fn_impl(R (*fn)(Args...))
+        {
+            return wrap_fn_impl<T, Is...>(fn, fn);
+        }
+
+        template <class T, std::size_t... Is, class R, class C, class... Args>
+        auto wrap_fn_impl(R (C::*fn)(Args...))
+        {
+            return wrap_fn_impl<T, Is...>(fn, (R(*)(C*, Args...)) nullptr);
+        }
+
+        template <class T, std::size_t... Is, class R, class C, class... Args>
+        auto wrap_fn_impl(R (C::*fn)(Args...) &)
+        {
+            return wrap_fn_impl<T, Is...>(fn, (R(*)(C*, Args...)) nullptr);
+        }
+
+        template <class T, std::size_t... Is, class R, class C, class... Args>
+        auto wrap_fn_impl(R (C::*fn)(Args...) const)
+        {
+            return wrap_fn_impl<T, Is...>(fn, (R(*)(const C*, Args...)) nullptr);
+        }
+
+        template <class T, std::size_t... Is, class R, class C, class... Args>
+        auto wrap_fn_impl(R (C::*fn)(Args...) const&)
+        {
+            return wrap_fn_impl<T, Is...>(fn, (R(*)(const C*, Args...)) nullptr);
+        }
+
+        template <class T, std::size_t... Is, class Fn>
+        auto wrap_fn_impl(Fn&& fn)
+        {
+            return wrap_fn_impl<T, Is...>(
+                std::forward<Fn>(fn),
+                (pybind11::detail::function_signature_t<Fn>*)nullptr);
         }
 
         template <class Type, class... WrappedTypes>
@@ -84,41 +125,16 @@ namespace mo2::python {
 
     }  // namespace detail
 
+    // wrap the given function-like object to accept T instead of the specified
+    // arguments at the specified positions
+    //
+    // if the list of positions is empty, replace all arguments that can be converted to
+    // T
+    //
     template <class T, std::size_t... Is, class Fn>
     auto wrap_arguments(Fn&& fn)
     {
-        return detail::wrap_fn_impl<T, Is...>(
-            std::forward<Fn>(fn), (pybind11::detail::function_signature_t<Fn>*)nullptr);
-    }
-
-    template <class T, std::size_t... Is, class R, class... Args>
-    auto wrap_arguments(R (*fn)(Args...))
-    {
-        return detail::wrap_fn_impl<T, Is...>(fn, fn);
-    }
-
-    template <class T, std::size_t... Is, class R, class C, class... Args>
-    auto wrap_arguments(R (C::*fn)(Args...))
-    {
-        return detail::wrap_fn_impl<T, Is...>(fn, (R(*)(C*, Args...)) nullptr);
-    }
-
-    template <class T, std::size_t... Is, class R, class C, class... Args>
-    auto wrap_arguments(R (C::*fn)(Args...) &)
-    {
-        return detail::wrap_fn_impl<T, Is...>(fn, (R(*)(C*, Args...)) nullptr);
-    }
-
-    template <class T, std::size_t... Is, class R, class C, class... Args>
-    auto wrap_arguments(R (C::*fn)(Args...) const)
-    {
-        return detail::wrap_fn_impl<T, Is...>(fn, (R(*)(const C*, Args...)) nullptr);
-    }
-
-    template <class T, std::size_t... Is, class R, class C, class... Args>
-    auto wrap_arguments(R (C::*fn)(Args...) const&)
-    {
-        return detail::wrap_fn_impl<T, Is...>(fn, (R(*)(const C*, Args...)) nullptr);
+        return detail::wrap_fn_impl<T, Is...>(std::forward<Fn>(fn));
     }
 
 }  // namespace mo2::python

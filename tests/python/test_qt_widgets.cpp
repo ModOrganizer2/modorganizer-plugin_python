@@ -35,7 +35,7 @@ PYBIND11_MODULE(qt_widgets, m)
 {
     s_Parent = new QWidget();
 
-    py::class_<CustomWidget, PyCustomWidget, py::qt::qholder<CustomWidget>>
+    py::class_<CustomWidget, PyCustomWidget, py::qt::qobject_holder<CustomWidget>>
         pyCustomWidget(m, "CustomWidget");
     pyCustomWidget
         .def(py::init<QString, QWidget*>(), "name"_a, "parent"_a = (QWidget*)nullptr)

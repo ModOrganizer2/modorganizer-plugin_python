@@ -7,7 +7,7 @@
 
 namespace pybind11::detail::qt {
 
-    class qobject_holder : public QObject {
+    class qobject_holder_impl : public QObject {
         object p_;
 
     public:
@@ -18,14 +18,15 @@ namespace pybind11::detail::qt {
          * @param p Parent of this holder.
          * @param o Python object to keep alive.
          */
-        qobject_holder(QObject* p, object o) : p_{o} { setParent(p); }
+        qobject_holder_impl(QObject* p, object o) : p_{o} { setParent(p); }
 
         template <class U>
-        qobject_holder(U* p) : qobject_holder{p, reinterpret_borrow<object>(cast(p))}
+        qobject_holder_impl(U* p)
+            : qobject_holder_impl{p, reinterpret_borrow<object>(cast(p))}
         {
         }
 
-        ~qobject_holder()
+        ~qobject_holder_impl()
         {
             gil_scoped_acquire s;
             p_ = std::move(none());
@@ -37,19 +38,22 @@ namespace pybind11::detail::qt {
 namespace pybind11::qt {
 
     template <class Type>
-    class qholder {
+    class qobject_holder {
         using type = Type;
 
         type* qobj_;
 
     public:
-        qholder(type* qobj) : qobj_{qobj} { new detail::qt::qobject_holder(qobj_); }
+        qobject_holder(type* qobj) : qobj_{qobj}
+        {
+            new detail::qt::qobject_holder_impl(qobj_);
+        }
 
         type* get() { return qobj_; }
     };
 
 }  // namespace pybind11::qt
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, ::pybind11::qt::qholder<T>)
+PYBIND11_DECLARE_HOLDER_TYPE(T, ::pybind11::qt::qobject_holder<T>)
 
 #endif

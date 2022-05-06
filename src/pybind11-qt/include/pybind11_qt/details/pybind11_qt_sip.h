@@ -112,7 +112,7 @@ namespace pybind11::detail::qt {
                     sipAPI()->api_transfer_to(src.ptr(), Py_None);
 
                     // tie the py::object to the C++ one
-                    new pybind11::detail::qt::qobject_holder(value);
+                    new pybind11::detail::qt::qobject_holder_impl(value);
                 }
                 else {
                     value = *reinterpret_cast<QClass*>(data);
@@ -183,9 +183,14 @@ namespace pybind11::detail::qt {
                 return Py_None;
             }
 
-            if (policy == return_value_policy::take_ownership) {
-                // ensure Python deletes the C++ component
+            // ensure Python deletes the C++ component
+            if constexpr (!is_pointer) {
                 qt::sipAPI()->api_transfer_back(sipObj);
+            }
+            else {
+                if (policy == return_value_policy::take_ownership) {
+                    qt::sipAPI()->api_transfer_back(sipObj);
+                }
             }
 
             return sipObj;
