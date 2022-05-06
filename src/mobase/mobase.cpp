@@ -4,6 +4,8 @@
 #include <tuple>
 #include <variant>
 
+#include <pybind11/embed.h>
+
 #include "pybind11_all.h"
 
 #include "wrappers/pyfiletree.h"
@@ -34,8 +36,10 @@ PYBIND11_MODULE(mobase, m)
 {
     using namespace mo2::python;
 
-    py::module_::import("PyQt6.QtCore");
-    py::module_::import("PyQt6.QtWidgets");
+    m.add_object("PyQt6", py::module_::import("PyQt6"));
+    m.add_object("PyQt6.QtCore", py::module_::import("PyQt6.QtCore"));
+    m.add_object("PyQt6.QtGui", py::module_::import("PyQt6.QtGui"));
+    m.add_object("PyQt6.QtWidgets", py::module_::import("PyQt6.QtWidgets"));
 
     // bindings
     //
@@ -49,9 +53,7 @@ PYBIND11_MODULE(mobase, m)
 
     // widgets
     //
-    py::module_ widgets(
-        py::reinterpret_borrow<py::module_>(PyImport_AddModule("mobase.widgets")));
-    m.attr("widgets") = widgets;
+    py::module_ widgets = m.def_submodule("widgets");
     mo2::python::add_widget_bindings(widgets);
 
     // functions
@@ -63,20 +65,34 @@ PYBIND11_MODULE(mobase, m)
     m.def("getIconForExecutable", wrap_for_filepath(&MOBase::iconForExecutable),
           py::arg("executable"));
 
-    // expose MoVariant - MoVariant is a fake object whose only purpose is to be
-    // used as a type-hint on the python side (e.g., def foo(x:
-    // mobase.MoVariant))
-    //
-    // the real MoVariant is defined in the generated stubs, since it's only
-    // relevant when doing type-checking, but this needs to be defined,
-    // otherwise MoVariant is not found when actually running plugins through
-    // MO2, making them crash
-    m.attr("MoVariant") = py::none();
+    // typing stuff to be consistent with stubs and allow plugin developers to properly
+    // type their code if they want
+    {
+        m.add_object("Path", py::module_::import("pathlib").attr("Path"));
+
+        auto s = m.attr("__dict__");
+
+        // expose MoVariant - MoVariant is a fake object whose only purpose is to be
+        // used as a type-hint on the python side (e.g., def foo(x:
+        // mobase.MoVariant))
+        //
+        // the real MoVariant is defined in the generated stubs, since it's only
+        // relevant when doing type-checking, but this needs to be defined,
+        // otherwise MoVariant is not found when actually running plugins through
+        // MO2, making them crash
+        //
+        m.add_object(
+            "MoVariant",
+            py::eval("None | bool | int | str | list[object] | dict[str, object]"));
+
+        // same things for FileWrapper and DirectoryWrapper
+        //
+        m.add_object("FileWrapper", py::eval("str | PyQt6.QtCore.QFileInfo | Path", s));
+        m.add_object("DirectoryWrapper", py::eval("str | PyQt6.QtCore.QDir | Path", s));
+    }
 
     // private stuff for debugging/test
-    py::module_ moprivate(
-        py::reinterpret_borrow<py::module_>(PyImport_AddModule("mobase.private")));
-    m.attr("private") = moprivate;
+    py::module_ moprivate = m.def_submodule("private");
 
     // expose a function to create a particular tree, only for debugging
     // purpose, not in mobase.
