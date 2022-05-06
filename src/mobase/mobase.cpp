@@ -69,17 +69,15 @@ PYBIND11_MODULE(mobase, m)
     // type their code if they want
     {
         m.add_object("Path", py::module_::import("pathlib").attr("Path"));
+        m.add_object("TypeVar", py::module_::import("typing").attr("TypeVar"));
 
         auto s = m.attr("__dict__");
 
-        // expose MoVariant - MoVariant is a fake object whose only purpose is to be
-        // used as a type-hint on the python side (e.g., def foo(x:
-        // mobase.MoVariant))
+        // expose MoVariant
         //
-        // the real MoVariant is defined in the generated stubs, since it's only
-        // relevant when doing type-checking, but this needs to be defined,
-        // otherwise MoVariant is not found when actually running plugins through
-        // MO2, making them crash
+        // this needs to be defined, otherwise MoVariant is not found when actually
+        // running plugins through MO2, making them crash (if plugins use MoVariant in
+        // their own code)
         //
         m.add_object(
             "MoVariant",
@@ -89,6 +87,10 @@ PYBIND11_MODULE(mobase, m)
         //
         m.add_object("FileWrapper", py::eval("str | PyQt6.QtCore.QFileInfo | Path", s));
         m.add_object("DirectoryWrapper", py::eval("str | PyQt6.QtCore.QDir | Path", s));
+
+        // same thing for GameFeatureType
+        //
+        m.add_object("GameFeatureType", py::eval("TypeVar('GameFeatureType')", s));
     }
 
     // private stuff for debugging/test
