@@ -20,13 +20,15 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <filesystem>
 
+#include <Windows.h>
+
 #include <QCoreApplication>
 #include <QDirIterator>
 #include <QMessageBox>
 #include <QWidget>
 #include <QtPlugin>
 
-#include "log.h"
+#include <log.h>
 #include <utility.h>
 #include <versioninfo.h>
 
@@ -52,15 +54,12 @@ fs::path getPluginFolder()
 }
 
 ProxyPython::ProxyPython()
-    : m_MOInfo{nullptr}, m_RunnerLib{nullptr}, m_Runner{nullptr},
-      m_LoadFailure(FailureType::NONE)
+    : m_MOInfo{nullptr}, m_Runner{nullptr}, m_LoadFailure(FailureType::NONE)
 {
 }
 
 bool ProxyPython::init(IOrganizer* moInfo)
 {
-    using CreatePythonRunner_func = IPythonRunner* (*)();
-
     m_MOInfo = moInfo;
 
     if (m_MOInfo && !m_MOInfo->isPluginEnabled(this)) {
@@ -92,29 +91,6 @@ bool ProxyPython::init(IOrganizer* moInfo)
         return false;
     }
 
-    const auto runnerPath = pluginFolder / "pythonrunner.dll";
-    m_RunnerLib           = ::LoadLibraryW(runnerPath.c_str());
-
-    if (!m_RunnerLib) {
-        DWORD error = ::GetLastError();
-        log::error("failed to load python runner ({}): {}", error,
-                   qUtf8Printable(windowsErrorString(error)));
-        if (error == ERROR_MOD_NOT_FOUND) {
-            m_LoadFailure = FailureType::DLL_NOT_FOUND;
-        }
-        else {
-            m_LoadFailure = FailureType::INVALID_DLL;
-        }
-        return true;
-    }
-
-    const CreatePythonRunner_func createPythonRunner =
-        (CreatePythonRunner_func)::GetProcAddress(m_RunnerLib, "CreatePythonRunner");
-    if (!createPythonRunner) {
-        m_LoadFailure = FailureType::INVALID_DLL;
-        return true;
-    }
-
     if (m_MOInfo && m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
         m_LoadFailure = FailureType::INITIALIZATION;
         if (QMessageBox::question(
@@ -139,7 +115,7 @@ bool ProxyPython::init(IOrganizer* moInfo)
         m_MOInfo->setPersistent(name(), "tryInit", true);
     }
 
-    m_Runner = std::unique_ptr<IPythonRunner>{createPythonRunner()};
+    m_Runner = mo2::python::createPythonRunner();
 
     if (m_Runner) {
         const auto libpath = pluginFolder / "libs";

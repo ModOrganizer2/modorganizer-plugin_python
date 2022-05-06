@@ -23,8 +23,6 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 
-#include <Windows.h>
-
 #include <iplugindiagnose.h>
 #include <ipluginproxy.h>
 
@@ -35,9 +33,7 @@ class ProxyPython : public QObject,
                     public MOBase::IPluginDiagnose {
     Q_OBJECT
     Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy MOBase::IPluginDiagnose)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     Q_PLUGIN_METADATA(IID "org.mo2.ProxyPython")
-#endif
 
 public:
     ProxyPython();
@@ -63,8 +59,7 @@ public:  // IPluginDiagnose
 
 private:
     MOBase::IOrganizer* m_MOInfo;
-    HMODULE m_RunnerLib;
-    std::unique_ptr<IPythonRunner> m_Runner;
+    std::unique_ptr<mo2::python::IPythonRunner> m_Runner;
 
     enum class FailureType : unsigned int {
         NONE           = 0,

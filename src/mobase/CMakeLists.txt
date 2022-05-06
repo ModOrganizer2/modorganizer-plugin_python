@@ -10,6 +10,3 @@ mo2_configure_library(mobase
 	PRIVATE_DEPENDS uibase Qt::Core
 )
 target_link_libraries(mobase PRIVATE pybind11::qt pybind11::utils)
-target_include_directories(mobase PRIVATE ${PYTHON_ROOT}/Include)
-
-install(TARGETS mobase DESTINATION bin/plugins/plugin_python/libs)

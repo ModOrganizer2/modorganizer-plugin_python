@@ -9,7 +9,7 @@ TEST(Lifetime, Plugins)
 {
     const auto plugins_folder = QString(std::getenv("PLUGIN_DIR"));
 
-    std::unique_ptr<IPythonRunner> runner(CreatePythonRunner());
+    auto runner = mo2::python::createPythonRunner();
     runner->initialize();
 
     {

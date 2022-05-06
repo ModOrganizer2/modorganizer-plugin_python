@@ -10,8 +10,7 @@ mo2_configure_library(pybind11-qt
 	PRIVATE_DEPENDS Qt::Core Qt::Widgets
 )
 target_link_libraries(pybind11-qt PUBLIC pybind11::pybind11)
-target_include_directories(pybind11-qt
-	PUBLIC ${PYTHON_ROOT}/Include ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(pybind11-qt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # this is kind of broken but it only works with this...
 target_compile_definitions(pybind11-qt PUBLIC QT_NO_KEYWORDS)
