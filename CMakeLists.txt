@@ -18,15 +18,8 @@ add_subdirectory(${MO2_BUILD_PATH}/pybind11 ${CMAKE_CURRENT_BINARY_DIR}/pybind11
 
 project(plugin_python)
 
-# order matters!
-add_subdirectory(src/pybind11-qt)
-add_subdirectory(src/pybind11-utils)
-add_subdirectory(src/mobase)
-add_subdirectory(src/runner)
-add_subdirectory(src/proxy)
+add_subdirectory(src)
 
-# force plugin_python to build mobase
-add_dependencies(plugin_python mobase)
 set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT plugin_python)
 
 set(PLUGIN_PYTHON_TESTS ${PLUGIN_PYTHON_TESTS} CACHE BOOL "build tests for plugin_python")
