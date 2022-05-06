@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2013 Sebastian Herbord. All rights reserved.
+Copyright (C) 2022 Sebastian Herbord & MO2 Team. All rights reserved.
 
 This file is part of python proxy plugin for MO
 

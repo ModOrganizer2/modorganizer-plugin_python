@@ -90,7 +90,7 @@ namespace mo2::python {
         // the widget
 
         py::class_<ISaveGameInfoWidget, PySaveGameInfoWidget,
-                   py::qt::qholder<ISaveGameInfoWidget>>
+                   py::qt::qobject_holder<ISaveGameInfoWidget>>
             iSaveGameInfoWidget(m, "ISaveGameInfoWidget");
         iSaveGameInfoWidget.def(py::init<QWidget*>(), "parent"_a = (QWidget*)nullptr)
             .def("setSave", &ISaveGameInfoWidget::setSave, "save"_a);

@@ -13,21 +13,22 @@ This repository is part of MO2 main repositories and should usually be build usi
 This repositories contains 5 sub-projects in `src`.
 The interface between Python and C++ is done using the
 [`pybind11`](https://github.com/pybind/pybind11) library.
+See the `README` in the subfolder (when there is one) for more details.
 
-- [`src/proxy`](src/proxy/) contains the actual proxy plugin. This project is a simple
-  interface between MO2 and the runner (see below).
-  - This project generates the `plugin_python.dll` library.
-  - TODO: this project generates the translation file (-> moved the file).
-  - TODO: this project install necessary files for the plugin (Python DLL, Python
-    libraries, etc), INCLUDING `mobase`.
+- [`src/proxy`](src/proxy/) contains the actual proxy plugin.
+  This project is a simple interface between MO2 and the runner (see below).
+  The CMake code:
+  - generates the `plugin_python.dll` library,
+  - generates the translation file (under `src/`),
+  - installs necessary files for the plugin (Python DLL, Python libraries, etc),
+    including `mobase`.
 - [`src/runner`](src/runner/) contains the Python runner. This is the project that
   instantiates a Python interpreter and load/unload Python plugins.
-  - TODO: static library
-- [`src/pybind11-qt](src/pybind11-qt/) contains many utility stuff to interface
+- [`src/pybind11-qt`](src/pybind11-qt/) contains many utility stuff to interface
   pybind11 with Qt and PyQt.
 - [`src/pybind11-utils`](src/pybind11-utils/) contains some utility stuff pybind11.
   This project is header-only.
-- [`src/mobase](src/mobase) contains the Python plugin interface.
+- [`src/mobase`](src/mobase) contains the Python plugin interface.
   - This projects generates the `mobase` Python library.
 
 Some (woefully incomplete) tests are available under `tests`, split in three
