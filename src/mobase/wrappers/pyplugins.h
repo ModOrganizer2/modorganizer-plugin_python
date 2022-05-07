@@ -375,11 +375,11 @@ namespace mo2::python {
         }
         QDir gameDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, gameDirectory, );
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, gameDirectory, );
         }
         QDir dataDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, dataDirectory, );
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, dataDirectory, );
         }
         void setGamePath(const QString& path) override
         {
@@ -387,11 +387,11 @@ namespace mo2::python {
         }
         QDir documentsDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, documentsDirectory, );
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, documentsDirectory, );
         }
         QDir savesDirectory() const override
         {
-            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, IPluginGame, savesDirectory, );
+            PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, savesDirectory, );
         }
         QList<ExecutableInfo> executables() const override
         {

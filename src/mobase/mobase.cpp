@@ -68,7 +68,6 @@ PYBIND11_MODULE(mobase, m)
     // typing stuff to be consistent with stubs and allow plugin developers to properly
     // type their code if they want
     {
-        m.add_object("Path", py::module_::import("pathlib").attr("Path"));
         m.add_object("TypeVar", py::module_::import("typing").attr("TypeVar"));
 
         auto s = m.attr("__dict__");
@@ -82,11 +81,6 @@ PYBIND11_MODULE(mobase, m)
         m.add_object(
             "MoVariant",
             py::eval("None | bool | int | str | list[object] | dict[str, object]"));
-
-        // same things for FileWrapper and DirectoryWrapper
-        //
-        m.add_object("FileWrapper", py::eval("str | PyQt6.QtCore.QFileInfo | Path", s));
-        m.add_object("DirectoryWrapper", py::eval("str | PyQt6.QtCore.QDir | Path", s));
 
         // same thing for GameFeatureType
         //

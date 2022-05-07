@@ -155,12 +155,12 @@ namespace mo2::python {
     public:
         QString BinaryName() const override
         {
-            PYBIND11_OVERRIDE_PURE(FileWrapper, ScriptExtender, BinaryName, );
+            PYBIND11_OVERRIDE_PURE(QString, ScriptExtender, binaryName, );
         }
 
         QString PluginPath() const override
         {
-            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, ScriptExtender, PluginPath, );
+            PYBIND11_OVERRIDE_PURE(DirectoryWrapper, ScriptExtender, pluginPath, );
         }
 
         QString loaderName() const override
@@ -210,11 +210,10 @@ namespace mo2::python {
         }
         QStringList secondaryFiles(const QString& modName) const override
         {
-            auto result = [&] {
+            return toQStringList([&] {
                 PYBIND11_OVERRIDE_PURE(QList<FileWrapper>, UnmanagedMods,
                                        secondaryFiles, modName);
-            }();
-            return QList<QString>(result.begin(), result.end());
+            }());
         }
     };
 
@@ -297,10 +296,10 @@ namespace mo2::python {
 
         py::class_<ScriptExtender, PyScriptExtender>(m, "ScriptExtender")
             .def(py::init<>())
-            .def("BinaryName", &ScriptExtender::BinaryName)
-            .def("PluginPath", &ScriptExtender::PluginPath)
+            .def("binaryName", &ScriptExtender::BinaryName)
+            .def("pluginPath", wrap_return_for_directory(&ScriptExtender::PluginPath))
             .def("loaderName", &ScriptExtender::loaderName)
-            .def("loaderPath", &ScriptExtender::loaderPath)
+            .def("loaderPath", wrap_return_for_filepath(&ScriptExtender::loaderPath))
             .def("savegameExtension", &ScriptExtender::savegameExtension)
             .def("isInstalled", &ScriptExtender::isInstalled)
             .def("getExtenderVersion", &ScriptExtender::getExtenderVersion)
@@ -312,8 +311,15 @@ namespace mo2::python {
             .def(py::init<>())
             .def("mods", &UnmanagedMods::mods, "official_only"_a)
             .def("displayName", &UnmanagedMods::displayName, "mod_name"_a)
-            .def("referenceFile", &UnmanagedMods::referenceFile, "mod_name"_a)
-            .def("secondaryFiles", &UnmanagedMods::secondaryFiles, "mod_name"_a);
+            .def("referenceFile",
+                 wrap_return_for_filepath(&UnmanagedMods::referenceFile), "mod_name"_a)
+            .def(
+                "secondaryFiles",
+                [](UnmanagedMods* m, const QString& modName) -> QList<FileWrapper> {
+                    auto result = m->secondaryFiles(modName);
+                    return {result.begin(), result.end()};
+                },
+                "mod_name"_a);
     }
 
 }  // namespace mo2::python

@@ -54,7 +54,9 @@ namespace mo2::python {
 
         QStringList allFiles() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, ISaveGame, allFiles, );
+            return toQStringList([&] {
+                PYBIND11_OVERRIDE_PURE(QList<FileWrapper>, ISaveGame, allFiles, );
+            }());
         }
 
         ~PySaveGame() { std::cout << "~PySaveGame()" << std::endl; }
@@ -80,11 +82,14 @@ namespace mo2::python {
 
         py::class_<ISaveGame, PySaveGame, std::shared_ptr<ISaveGame>>(m, "ISaveGame")
             .def(py::init<>())
-            .def("getFilepath", &ISaveGame::getFilepath)
+            .def("getFilepath", wrap_return_for_filepath(&ISaveGame::getFilepath))
             .def("getCreationTime", &ISaveGame::getCreationTime)
             .def("getName", &ISaveGame::getName)
             .def("getSaveGroupIdentifier", &ISaveGame::getSaveGroupIdentifier)
-            .def("allFiles", &ISaveGame::allFiles);
+            .def("allFiles", [](ISaveGame* s) -> QList<FileWrapper> {
+                const auto result = s->allFiles();
+                return {result.begin(), result.end()};
+            });
 
         // ISaveGameInfoWidget - custom holder to keep the Python object alive alongside
         // the widget

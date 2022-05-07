@@ -44,3 +44,25 @@ sub-directories:
 - [`tests/runner`](tests/runner/) contains C++ tests, using GTest
   Tests in this project instantiate a Python runner and then use it to check that
   plugins implemented in Python can be used properly on the C++ side.
+
+## Building & Running tests
+
+Tests are not built by default with `mob`, so you will need to run `cmake` manually
+with the proper arguments.
+
+You need to define `PLUGIN_PYTHON_TESTS` with `-DPLUGIN_PYTHON_TESTS` when running
+the configure step of cmake.
+
+You can then build the tests
+
+```bash
+# replace vsbuild with your build folder
+cmake --build vsbuild --config RelWithDebInfo --target "python-tests" "runner-tests"
+```
+
+To run the tests, use `ctest`
+
+```bash
+# replace vsbuild with your build folder
+ctest.exe --test-dir vsbuild -C RelWithDebInfo
+```

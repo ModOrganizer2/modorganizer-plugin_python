@@ -2,12 +2,12 @@
 
 This library contains some utility stuff for `pybind11`
 
-## arg_wrapper.h
+## smart_variant_wrapper.h
 
-Expose a function `mo2::python::wrap_arguments` and a macro
-`MO2_PYBIND11_WRAP_ARGUMENT_CASTER`.
-These can be used to convert C++ function when exposing them to Python to accept more
-type than the C++ one.
+Expose a function `mo2::python::wrap_arguments` and a template
+`mo2::python::smart_variant` that can be used to expose more interesting types Python
+than the C++ one, e.g., accept `os.PathLike` and `QFileInfo` when a simple `QString` is
+expected.
 
 A toy example can be found in the test folder at
 [`tests/python/test_argument_wrapper.cpp`](../../tests/python/test_argument_wrapper.cpp).

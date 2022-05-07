@@ -1,34 +1,26 @@
-#include "pybind11_utils/arg_wrapper.h"
+#include "pybind11_utils/smart_variant_wrapper.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include <string>
 
+namespace mo2::python::detail {
+
+    template <>
+    struct smart_variant_converter<std::string> {
+        static std::string from(int const& value) { return std::to_string(value); }
+    };
+
+    template <>
+    struct smart_variant_converter<int> {
+        static int from(std::string const& value) { return std::stoi(value); }
+    };
+
+}  // namespace mo2::python::detail
+
 // wrapper that can be constructed from
-class Wrapper {
-    std::string value;
-
-public:
-    Wrapper() = default;
-
-    Wrapper(Wrapper const&)            = default;
-    Wrapper(Wrapper&&)                 = default;
-    Wrapper& operator=(Wrapper const&) = default;
-    Wrapper& operator=(Wrapper&&)      = default;
-
-    template <class U, std::enable_if_t<std::is_convertible_v<U, std::string>, int> = 0>
-    Wrapper(U&& u) : value{std::forward<U>(u)}
-    {
-    }
-
-    Wrapper(int u) : value{std::to_string(u)} {}
-
-    operator int() const { return std::stoi(value); }
-    operator std::string() const { return value; }
-};
-
-MO2_PYBIND11_WRAP_ARGUMENT_CASTER(Wrapper, "Wrapper", int, std::string);
+using Wrapper = mo2::python::smart_variant<int, std::string>;
 
 template <std::size_t... Is, class Fn>
 auto wrap(Fn&& fn)
