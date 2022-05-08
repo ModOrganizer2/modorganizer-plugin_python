@@ -33,6 +33,7 @@ set(PYTHONPATH "${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>\\;${pythoncore}\\;${pyt
 
 set(extra_paths "${MO2_INSTALL_PATH}/bin/dlls")
 string(APPEND extra_paths "\\;${PYTHON_ROOT}/PCbuild/amd64")
+string(APPEND extra_paths "\\;$<TARGET_FILE_DIR:runner>")
 set_tests_properties(${runner-tests_gtests}
     PROPERTIES
     WORKING_DIRECTORY "${MO2_INSTALL_PATH}/bin"

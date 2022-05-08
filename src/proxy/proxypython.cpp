@@ -54,7 +54,8 @@ fs::path getPluginFolder()
 }
 
 ProxyPython::ProxyPython()
-    : m_MOInfo{nullptr}, m_Runner{nullptr}, m_LoadFailure(FailureType::NONE)
+    : m_MOInfo{nullptr}, m_RunnerLib{nullptr}, m_Runner{nullptr},
+      m_LoadFailure(FailureType::NONE)
 {
 }
 
@@ -77,16 +78,6 @@ bool ProxyPython::init(IOrganizer* moInfo)
         DWORD error   = ::GetLastError();
         m_LoadFailure = FailureType::DLL_NOT_FOUND;
         log::error("failed to resolve Python proxy directory ({}): {}", error,
-                   qUtf8Printable(windowsErrorString(::GetLastError())));
-        return false;
-    }
-
-    // load the pythonrunner library
-    const auto dllPaths = pluginFolder / "dlls";
-    if (SetDllDirectoryW(dllPaths.c_str()) == 0) {
-        DWORD error   = ::GetLastError();
-        m_LoadFailure = FailureType::DLL_NOT_FOUND;
-        log::error("failed to add python DLL directory ({}): {}", error,
                    qUtf8Printable(windowsErrorString(::GetLastError())));
         return false;
     }
@@ -115,6 +106,25 @@ bool ProxyPython::init(IOrganizer* moInfo)
         m_MOInfo->setPersistent(name(), "tryInit", true);
     }
 
+    // load the pythonrunner library, this is done in multiple steps:
+    //
+    // 1. we set the dlls/ subfolder (from the plugin) as the DLL directory so Windows
+    // will look for DLLs in it, this is required to find the Python and libffi DLL, but
+    // also the runner DLL
+    //
+    const auto dllPaths = pluginFolder / "dlls";
+    if (SetDllDirectoryW(dllPaths.c_str()) == 0) {
+        DWORD error   = ::GetLastError();
+        m_LoadFailure = FailureType::DLL_NOT_FOUND;
+        log::error("failed to add python DLL directory ({}): {}", error,
+                   qUtf8Printable(windowsErrorString(::GetLastError())));
+        return false;
+    }
+
+    // 2. we create the Python runner, we do not need to use ::LinkLibrary and
+    // ::GetProcAddress because we use delayed load for the runner DLL (see the
+    // CMakeLists.txt)
+    //
     m_Runner = mo2::python::createPythonRunner();
 
     if (m_Runner) {

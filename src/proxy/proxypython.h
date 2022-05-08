@@ -59,6 +59,7 @@ public:  // IPluginDiagnose
 
 private:
     MOBase::IOrganizer* m_MOInfo;
+    HMODULE m_RunnerLib;
     std::unique_ptr<mo2::python::IPythonRunner> m_Runner;
 
     enum class FailureType : unsigned int {

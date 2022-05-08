@@ -8,6 +8,12 @@
 #include <QString>
 #include <QStringList>
 
+#ifdef RUNNER_BUILD
+#define RUNNER_DLL_EXPORT Q_DECL_EXPORT
+#else
+#define RUNNER_DLL_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace mo2::python {
 
     // python runner interface
@@ -34,7 +40,7 @@ namespace mo2::python {
 
     // create the Python runner
     //
-    std::unique_ptr<IPythonRunner> createPythonRunner();
+    RUNNER_DLL_EXPORT std::unique_ptr<IPythonRunner> createPythonRunner();
 
 }  // namespace mo2::python
 
