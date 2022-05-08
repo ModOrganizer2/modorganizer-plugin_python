@@ -32,6 +32,7 @@ mo2_python_pip_install(python-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
 	PACKAGES pytest PyQt6==6.3.0)
 add_dependencies(python-tests mobase)
+set_target_properties(python-tests PROPERTIES FOLDER tests/python)
 
 file(GLOB test_files CONFIGURE_DEPENDS "test_*.cpp")
 foreach (test_file ${test_files})
@@ -42,6 +43,7 @@ foreach (test_file ${test_files})
 	set_target_properties(${target}
 		PROPERTIES
 		OUTPUT_NAME ${pymodule}
+		FOLDER tests/python
 		LIBRARY_OUTPUT_DIRECTORY "${PYLIB_DIR}/mobase_tests")
 
 	if(DEFINED CMAKE_CONFIGURATION_TYPES)
