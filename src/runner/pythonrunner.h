@@ -1,6 +1,7 @@
 #ifndef PYTHONRUNNER_H
 #define PYTHONRUNNER_H
 
+#include <filesystem>
 #include <memory>
 
 #include <QList>
@@ -25,14 +26,19 @@ namespace mo2::python {
 
         // initialize Python
         //
-        // paths contains the list of built-in paths for the Python library
+        // pythonPaths contains the list of built-in paths for the Python library
         // (pythonxxx.zip, etc.), an empty list uses the default Python paths (e.g., the
         // PYTHONPATH environment variable)
         //
-        virtual bool initialize(QStringList const& paths = {}) = 0;
+        virtual bool
+        initialize(std::vector<std::filesystem::path> const& pythonPaths = {}) = 0;
 
-        // check if the runner has been initialized, i.e., initialize() has been called
-        // and succeeded
+        // add a DLL search path
+        //
+        virtual void addDllSearchPath(std::filesystem::path const& dllPath) = 0;
+
+        // check if the runner has been initialized, i.e., initialize() has been
+        // called and succeeded
         virtual bool isInitialized() const = 0;
 
         virtual ~IPythonRunner() {}
