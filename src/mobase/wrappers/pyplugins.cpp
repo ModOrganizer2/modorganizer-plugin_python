@@ -201,7 +201,7 @@ namespace mo2::python {
             .def("genFilePreview", &IPluginPreview::genFilePreview, "filename"_a,
                  "max_size"_a);
 
-        py::class_<IPluginModPage, PyPluginModPage, IPluginModPage,
+        py::class_<IPluginModPage, PyPluginModPage, IPlugin,
                    std::unique_ptr<IPluginModPage, py::nodelete>>(
             m, "IPluginModPage", py::multiple_inheritance())
             .def(py::init<>())
