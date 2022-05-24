@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PLUGIN_NAME "plugin_python")
+set(PROXY_NAME "python")
 
 add_library(proxy SHARED)
 mo2_configure_plugin(proxy
@@ -12,14 +12,14 @@ mo2_configure_plugin(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../mobase
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
 target_link_libraries(proxy PRIVATE runner)
-set_target_properties(proxy PROPERTIES OUTPUT_NAME ${PLUGIN_NAME})
-mo2_install_target(proxy FOLDER)
+set_target_properties(proxy PROPERTIES OUTPUT_NAME "python_proxy")
+mo2_install_target(proxy INSTALLDIR "bin/proxies/python")
 
-set(PLUGIN_PYTHON_DIR ${MO2_INSTALL_PATH}/bin/plugins/${PLUGIN_NAME})
+set(PROXY_PYTHON_DIR ${MO2_INSTALL_PATH}/bin/proxies/python)
 
 # install runner
 target_link_options(proxy PRIVATE "/DELAYLOAD:runner.dll")
-mo2_install_target(runner INSTALLDIR ${PLUGIN_PYTHON_DIR}/dlls)
+mo2_install_target(runner INSTALLDIR ${PROXY_PYTHON_DIR}/dlls)
 
 # translations (custom location)
 mo2_add_translations(proxy
@@ -31,14 +31,14 @@ mo2_add_translations(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
 
 # install DLLs files needed
-set(DLL_DIRS ${PLUGIN_PYTHON_DIR}/dlls)
+set(DLL_DIRS ${PROXY_PYTHON_DIR}/dlls)
 file(GLOB dlls_to_install
 	${PYTHON_BUILD_PATH}/libffi*.dll
 	${PYTHON_BUILD_PATH}/python${Python_VERSION_SHORT}.dll)
 install(FILES ${dlls_to_install} DESTINATION ${DLL_DIRS})
 
 # install Python files
-set(PYLIB_DIR ${PLUGIN_PYTHON_DIR}/libs)
+set(PYLIB_DIR ${PROXY_PYTHON_DIR}/libs)
 file(GLOB libs_to_install ${PYTHON_BUILD_PATH}/pythoncore/*.pyd)
 install(FILES ${libs_to_install} DESTINATION ${PYLIB_DIR})
 install(FILES ${PYTHON_BUILD_PATH}/pythoncore/python${Python_VERSION_SHORT}.zip

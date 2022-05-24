@@ -23,45 +23,26 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 
-#include <iplugindiagnose.h>
-#include <ipluginproxy.h>
+#include <Windows.h>
+
+#include <ipluginloader.h>
 
 #include <pythonrunner.h>
 
-class ProxyPython : public QObject,
-                    public MOBase::IPluginProxy,
-                    public MOBase::IPluginDiagnose {
+class ProxyPython : public MOBase::IPluginLoader {
     Q_OBJECT
-    Q_INTERFACES(MOBase::IPlugin MOBase::IPluginProxy MOBase::IPluginDiagnose)
+    Q_INTERFACES(MOBase::IPluginLoader)
     Q_PLUGIN_METADATA(IID "org.mo2.ProxyPython")
 
 public:
     ProxyPython();
 
-    virtual bool init(MOBase::IOrganizer* moInfo);
-    virtual QString name() const override;
-    virtual QString localizedName() const override;
-    virtual QString author() const override;
-    virtual QString description() const override;
-    virtual MOBase::VersionInfo version() const override;
-    virtual QList<MOBase::PluginSetting> settings() const override;
-
-    QStringList pluginList(const QDir& pluginPath) const override;
-    QList<QObject*> load(const QString& identifier) override;
-    void unload(const QString& identifier) override;
-
-public:  // IPluginDiagnose
-    virtual std::vector<unsigned int> activeProblems() const override;
-    virtual QString shortDescription(unsigned int key) const override;
-    virtual QString fullDescription(unsigned int key) const override;
-    virtual bool hasGuidedFix(unsigned int key) const override;
-    virtual void startGuidedFix(unsigned int key) const override;
+    bool initialize(QString& errorMessage) override;
+    QList<QList<QObject*>> load(const MOBase::PluginExtension& extension) override;
+    void unload(const MOBase::PluginExtension& extension) override;
+    void unloadAll() override;
 
 private:
-    MOBase::IOrganizer* m_MOInfo;
-    HMODULE m_RunnerLib;
-    std::unique_ptr<mo2::python::IPythonRunner> m_Runner;
-
     enum class FailureType : unsigned int {
         NONE           = 0,
         SEMICOLON      = 1,
@@ -70,7 +51,14 @@ private:
         INITIALIZATION = 4
     };
 
-    FailureType m_LoadFailure;
+    static QString failureMessage(FailureType failureType);
+
+private:
+    HMODULE m_RunnerLib;
+    std::unique_ptr<mo2::python::IPythonRunner> m_Runner;
+    std::unordered_map<const MOBase::PluginExtension*,
+                       std::vector<std::filesystem::path>>
+        m_ExtensionModules;
 };
 
 #endif  // PROXYPYTHON_H
