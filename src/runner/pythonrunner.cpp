@@ -36,24 +36,12 @@ namespace mo2::python {
         PythonRunner()  = default;
         ~PythonRunner() = default;
 
-        QList<QObject*> load(const QString& identifier) override;
-        void unload(const QString& identifier) override;
+        QList<QList<QObject*>> load(std::filesystem::path const& pythonModule) override;
+        void unload(std::filesystem::path const& pythonModule) override;
 
         bool initialize(std::vector<std::filesystem::path> const& pythonPaths) override;
         void addDllSearchPath(std::filesystem::path const& dllPath) override;
         bool isInitialized() const override;
-
-    private:
-        /**
-         * @brief Ensure that the given folder is in sys.path.
-         */
-        void ensureFolderInPath(QString folder);
-
-    private:
-        // for each "identifier" (python file or python module folder), contains the
-        // list of python objects - this does not keep the objects alive, it simply used
-        // to unload plugins
-        std::unordered_map<QString, std::vector<py::handle>> m_PythonObjects;
     };
 
     std::unique_ptr<IPythonRunner> createPythonRunner()
@@ -162,72 +150,41 @@ namespace mo2::python {
         py::module_::import("os").attr("add_dll_directory")(absolute(dllPath));
     }
 
-    void PythonRunner::ensureFolderInPath(QString folder)
-    {
-        py::module_ sys  = py::module_::import("sys");
-        py::list sysPath = sys.attr("path");
-
-        // Converting to QStringList for Qt::CaseInsensitive and because .index()
-        // raise an exception:
-        const QStringList currentPath = sysPath.cast<QStringList>();
-        if (!currentPath.contains(folder, Qt::CaseInsensitive)) {
-            sysPath.insert(0, folder);
-        }
-    }
-
-    QList<QObject*> PythonRunner::load(const QString& identifier)
+    QList<QList<QObject*>> PythonRunner::load(const std::filesystem::path& pythonModule)
     {
         py::gil_scoped_acquire lock;
 
-        // `pluginName` can either be a python file (single-file plugin or a folder
-        // (whole module).
-        //
-        // For whole module, we simply add the parent folder to path, then we load
-        // the module with a simple py::import, and we retrieve the associated
-        // __dict__ from which we extract either createPlugin or createPlugins.
-        //
-        // For single file, we need to use py::eval_file, and we will use the
-        // context (global variables) from __main__ (already contains mobase, and
-        // other required module). Since the context is shared between called of
-        // `instantiate`, we need to make sure to remove createPlugin(s) from
-        // previous call.
         try {
 
-            // dictionary that will contain createPlugin() or createPlugins().
-            py::dict moduleDict;
+            // some needed import
+            auto sys            = py::module_::import("sys");
+            auto importlib_util = py::module_::import("importlib.util");
 
-            if (identifier.endsWith(".py")) {
-                py::object mainModule = py::module_::import("__main__");
+            // check the file type
+            const auto moduleName =
+                pythonModule.filename() == "__init__.py"
+                    ? pythonModule.parent_path().filename().u8string()
+                    : pythonModule.filename().u8string();
 
-                // make a copy, otherwise we might end up calling the createPlugin() or
-                // createPlugins() function multiple time
-                py::dict moduleNamespace = mainModule.attr("__dict__").attr("copy")();
-
-                std::string temp = ToString(identifier);
-                py::eval_file(temp, moduleNamespace).is_none();
-                moduleDict = moduleNamespace;
+            // check if the module is already loaded
+            py::dict modules = sys.attr("modules");
+            py::module_ pymodule;
+            if (modules.contains(moduleName)) {
+                pymodule = modules[py::str(moduleName)];
+                pymodule.reload();
             }
             else {
-                // Retrieve the module name:
-                QStringList parts      = identifier.split("/");
-                std::string moduleName = ToString(parts.takeLast());
-                ensureFolderInPath(parts.join("/"));
-
-                // check if the module is already loaded
-                py::dict modules = py::module_::import("sys").attr("modules");
-                if (modules.contains(moduleName)) {
-                    py::module_ prev = modules[py::str(moduleName)];
-                    py::module_(prev).reload();
-                    moduleDict = prev.attr("__dict__");
-                }
-                else {
-                    moduleDict =
-                        py::module_::import(moduleName.c_str()).attr("__dict__");
-                }
+                // load the module
+                auto spec = importlib_util.attr("find_spec")(moduleName, pythonModule);
+                pymodule  = importlib_util.attr("module_from_spec")(spec);
+                sys.attr("modules")[py::str(moduleName)] = pymodule;
+                spec.attr("loader").attr("exec_module")(pymodule);
             }
 
+            py::dict moduleDict = pymodule.attr("__dict__");
+
             if (py::len(moduleDict) == 0) {
-                MOBase::log::error("No plugins found in {}.", identifier);
+                MOBase::log::error("no plugins found in {}", pythonModule);
                 return {};
             }
 
@@ -240,8 +197,8 @@ namespace mo2::python {
             else if (moduleDict.contains("createPlugins")) {
                 py::object pyPlugins = moduleDict["createPlugins"]();
                 if (!py::isinstance<py::sequence>(pyPlugins)) {
-                    MOBase::log::error(
-                        "Plugin {}: createPlugins must return a sequence.", identifier);
+                    MOBase::log::error("{}: createPlugins must return a sequence",
+                                       pythonModule);
                 }
                 else {
                     py::sequence pyList(pyPlugins);
@@ -252,30 +209,26 @@ namespace mo2::python {
                 }
             }
             else {
-                MOBase::log::error("Plugin {}: missing a createPlugin(s) function.",
-                                   identifier);
+                MOBase::log::error("{}: missing createPlugin(s) function",
+                                   pythonModule);
             }
 
-            // If we have no plugins, there was an issue, and we already logged the
-            // problem:
+            // if we have no plugins, there was an issue, and we already logged the
+            // problem
             if (plugins.empty()) {
-                return QList<QObject*>();
+                return {};
             }
 
-            QList<QObject*> allInterfaceList;
+            QList<QList<QObject*>> allInterfaceList;
 
             for (py::object pluginObj : plugins) {
-
-                // save to be able to unload it
-                m_PythonObjects[identifier].push_back(pluginObj);
-
                 QList<QObject*> interfaceList = py::module_::import("mobase.private")
                                                     .attr("extract_plugins")(pluginObj)
                                                     .cast<QList<QObject*>>();
 
                 if (interfaceList.isEmpty()) {
-                    MOBase::log::error("Plugin {}: no plugin interface implemented.",
-                                       identifier);
+                    MOBase::log::error("{}: no plugin interface implemented.",
+                                       pythonModule);
                 }
 
                 // Append the plugins to the main list:
@@ -285,57 +238,37 @@ namespace mo2::python {
             return allInterfaceList;
         }
         catch (const py::error_already_set& ex) {
-            MOBase::log::error("Failed to import plugin from {}.", identifier);
+            MOBase::log::error("failed to import plugin from {}", pythonModule);
             throw pyexcept::PythonError(ex);
         }
     }
 
-    void PythonRunner::unload(const QString& identifier)
+    void PythonRunner::unload(const std::filesystem::path& pythonModule)
     {
-        auto it = m_PythonObjects.find(identifier);
-        if (it != m_PythonObjects.end()) {
+        py::gil_scoped_acquire lock;
 
-            py::gil_scoped_acquire lock;
+        // At this point, the identifier is the full path to the module.
+        QDir folder(pythonModule);
 
-            if (!identifier.endsWith(".py")) {
+        // we want to "unload" (remove from sys.modules) modules that come
+        // from this plugin (whose __path__ points under this module,
+        // including the module of the plugin itself)
+        py::object sys   = py::module_::import("sys");
+        py::dict modules = sys.attr("modules");
+        py::list keys    = modules.attr("keys")();
+        for (std::size_t i = 0; i < py::len(keys); ++i) {
+            py::object mod = modules[keys[i]];
+            if (PyObject_HasAttrString(mod.ptr(), "__path__")) {
+                QString mpath = mod.attr("__path__")[py::int_(0)].cast<QString>();
 
-                // At this point, the identifier is the full path to the module.
-                QDir folder(identifier);
+                if (!folder.relativeFilePath(mpath).startsWith("..")) {
+                    // if the path is under identifier, we need to unload it
+                    log::debug("unloading module {} from {}",
+                               keys[i].cast<std::string>(), mpath);
 
-                // We want to "unload" (remove from sys.modules) modules that come
-                // from this plugin (whose __path__ points under this module,
-                // including the module of the plugin itself).
-                py::object sys   = py::module_::import("sys");
-                py::dict modules = sys.attr("modules");
-                py::list keys    = modules.attr("keys")();
-                for (std::size_t i = 0; i < py::len(keys); ++i) {
-                    py::object mod = modules[keys[i]];
-                    if (PyObject_HasAttrString(mod.ptr(), "__path__")) {
-                        QString mpath =
-                            mod.attr("__path__")[py::int_(0)].cast<QString>();
-
-                        if (!folder.relativeFilePath(mpath).startsWith("..")) {
-                            // If the path is under identifier, we need to unload
-                            // it.
-                            log::debug("Unloading module {} from {} for {}.",
-                                       keys[i].cast<std::string>(), mpath, identifier);
-
-                            PyDict_DelItem(modules.ptr(), keys[i].ptr());
-                        }
-                    }
+                    PyDict_DelItem(modules.ptr(), keys[i].ptr());
                 }
             }
-
-            // Boost.Python does not handle cyclic garbace collection, so we need to
-            // release everything hold by the objects before deleting the objects
-            // themselves (done when erasing from m_PythonObjects).
-            for (auto& obj : it->second) {
-                obj.attr("__dict__").attr("clear")();
-            }
-
-            log::debug("Deleting {} python objects for {}.", it->second.size(),
-                       identifier);
-            m_PythonObjects.erase(it);
         }
     }
 

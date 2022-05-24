@@ -21,7 +21,8 @@ target_link_libraries(runner PUBLIC mo2::uibase PRIVATE pybind11::embed pybind11
 target_include_directories(runner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(runner PRIVATE RUNNER_BUILD)
 
-# proxy will install runner
+# proxy will install runner but we install the PDB
+install(FILES $<TARGET_PDB_FILE:runner> DESTINATION pdb)
 
 # force runner to build mobase
 add_dependencies(runner mobase)
