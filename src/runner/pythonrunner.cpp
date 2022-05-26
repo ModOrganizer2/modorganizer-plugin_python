@@ -36,8 +36,10 @@ namespace mo2::python {
         PythonRunner()  = default;
         ~PythonRunner() = default;
 
-        QList<QList<QObject*>> load(std::filesystem::path const& pythonModule) override;
-        void unload(std::filesystem::path const& pythonModule) override;
+        QList<QList<QObject*>> load(std::string_view moduleName,
+                                    std::filesystem::path const& modulePath) override;
+        void unload(std::string_view moduleName,
+                    std::filesystem::path const& modulePath) override;
 
         bool initialize(std::vector<std::filesystem::path> const& pythonPaths) override;
         void addDllSearchPath(std::filesystem::path const& dllPath) override;
@@ -150,7 +152,8 @@ namespace mo2::python {
         py::module_::import("os").attr("add_dll_directory")(absolute(dllPath));
     }
 
-    QList<QList<QObject*>> PythonRunner::load(const std::filesystem::path& pythonModule)
+    QList<QList<QObject*>> PythonRunner::load(std::string_view name,
+                                              const std::filesystem::path& pythonModule)
     {
         py::gil_scoped_acquire lock;
 
@@ -160,24 +163,19 @@ namespace mo2::python {
             auto sys            = py::module_::import("sys");
             auto importlib_util = py::module_::import("importlib.util");
 
-            // check the file type
-            const auto moduleName =
-                pythonModule.filename() == "__init__.py"
-                    ? pythonModule.parent_path().filename().u8string()
-                    : pythonModule.filename().u8string();
-
             // check if the module is already loaded
             py::dict modules = sys.attr("modules");
             py::module_ pymodule;
-            if (modules.contains(moduleName)) {
-                pymodule = modules[py::str(moduleName)];
+            if (modules.contains(name)) {
+                pymodule = modules[py::str(name)];
                 pymodule.reload();
             }
             else {
                 // load the module
-                auto spec = importlib_util.attr("find_spec")(moduleName, pythonModule);
-                pymodule  = importlib_util.attr("module_from_spec")(spec);
-                sys.attr("modules")[py::str(moduleName)] = pymodule;
+                auto spec =
+                    importlib_util.attr("spec_from_file_location")(name, pythonModule);
+                pymodule = importlib_util.attr("module_from_spec")(spec);
+                sys.attr("modules")[py::str(name)] = pymodule;
                 spec.attr("loader").attr("exec_module")(pymodule);
             }
 
@@ -243,12 +241,13 @@ namespace mo2::python {
         }
     }
 
-    void PythonRunner::unload(const std::filesystem::path& pythonModule)
+    void PythonRunner::unload(std::string_view moduleName,
+                              std::filesystem::path const& modulePath)
     {
         py::gil_scoped_acquire lock;
 
         // At this point, the identifier is the full path to the module.
-        QDir folder(pythonModule);
+        QDir folder(modulePath);
 
         // we want to "unload" (remove from sys.modules) modules that come
         // from this plugin (whose __path__ points under this module,
