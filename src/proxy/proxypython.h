@@ -58,7 +58,7 @@ private:
     HMODULE m_RunnerLib;
     std::unique_ptr<mo2::python::IPythonRunner> m_Runner;
     std::unordered_map<const MOBase::PluginExtension*,
-                       std::vector<std::filesystem::path>>
+                       std::vector<std::pair<std::string, std::filesystem::path>>>
         m_ExtensionModules;
 };
 
