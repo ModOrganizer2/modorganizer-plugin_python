@@ -24,8 +24,9 @@ namespace mo2::python {
     class IPythonRunner {
     public:
         virtual QList<QList<QObject*>>
-        load(std::filesystem::path const& pythonModule)                = 0;
-        virtual void unload(std::filesystem::path const& pythonModule) = 0;
+        load(std::string_view moduleName, std::filesystem::path const& modulePath) = 0;
+        virtual void unload(std::string_view moduleName,
+                            std::filesystem::path const& modulePath)               = 0;
 
         // initialize Python
         //

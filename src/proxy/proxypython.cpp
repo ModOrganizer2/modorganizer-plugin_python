@@ -120,17 +120,18 @@ QList<QList<QObject*>> ProxyPython::load(const PluginExtension& extension)
         return {};
     }
 
-    // currently, only handle __init__.py directly in the folder
-    const auto pyIniFile = extension.directory() / "__init__.py";
-    if (!exists(pyIniFile)) {
+    if (extension.autodetect()) {
+        log::error("{}: automatic plugin detection is not supported for Python plugins",
+                   extension.metadata().name());
         return {};
     }
 
-    m_ExtensionModules[&extension] = {pyIniFile};
+    m_ExtensionModules[&extension] = {};
 
     QList<QList<QObject*>> plugins;
-    for (auto&& pythonModule : m_ExtensionModules[&extension]) {
-        plugins.append(m_Runner->load(pythonModule));
+    for (auto& [moduleName, modulePath] : extension.plugins()) {
+        m_ExtensionModules[&extension].push_back({moduleName, modulePath});
+        plugins.append(m_Runner->load(moduleName, modulePath));
     }
 
     return plugins;
@@ -143,8 +144,8 @@ void ProxyPython::unload(const PluginExtension& extension)
     }
 
     if (auto it = m_ExtensionModules.find(&extension); it != m_ExtensionModules.end()) {
-        for (auto&& pythonModule : it->second) {
-            m_Runner->unload(pythonModule);
+        for (auto& [moduleName, modulePath] : it->second) {
+            m_Runner->unload(moduleName, modulePath);
         }
         m_ExtensionModules.erase(it);
     }
@@ -154,8 +155,8 @@ void ProxyPython::unloadAll()
 {
     if (m_Runner) {
         for (auto& [ext, modules] : m_ExtensionModules) {
-            for (auto& pythonModule : modules) {
-                m_Runner->unload(pythonModule);
+            for (auto& [moduleName, modulePath] : modules) {
+                m_Runner->unload(moduleName, modulePath);
             }
         }
     }
