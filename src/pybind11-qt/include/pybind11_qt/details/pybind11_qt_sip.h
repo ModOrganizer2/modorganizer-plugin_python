@@ -52,16 +52,28 @@ namespace pybind11::detail::qt {
             }
         }
 
-        template <class T,
-                  std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
-        operator T&()
+        // pybind11 requires operator T&() & and operator T&&() && but here we want to
+        // use SFINAE with is_pointer so we need to template the operator
+        //
+        // having a template <class U> operator U&&() does not work since it will not
+        // deduce the proper return type for QClass&& or QClass& so we have two separate
+        // overloads, and in each one, U is actually a reference type (lvalue or rvalue)
+        //
+
+        template <class U,
+                  std::enable_if_t<std::is_same_v<std::remove_reference_t<U>, QClass> &&
+                                       std::is_lvalue_reference_v<U> && !is_pointer,
+                                   int> = 0>
+        operator U()
         {
             return value;
         }
 
-        template <class T,
-                  std::enable_if_t<std::is_same_v<T, QClass> && !is_pointer, int> = 0>
-        operator T&&() &&
+        template <class U,
+                  std::enable_if_t<std::is_same_v<std::remove_reference_t<U>, QClass> &&
+                                       std::is_rvalue_reference_v<U> && !is_pointer,
+                                   int> = 0>
+        operator U() &&
         {
             return std::move(value);
         }
