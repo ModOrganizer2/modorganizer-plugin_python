@@ -129,9 +129,9 @@ bool ProxyPython::init(IOrganizer* moInfo)
 
     if (m_Runner) {
         const auto libpath = pluginFolder / "libs";
-        const QStringList paths{
-            QFileInfo(libpath / "pythoncore.zip").absoluteFilePath(),
-            QFileInfo(libpath).absoluteFilePath(), IOrganizer::getPluginDataPath()};
+        const std::vector<fs::path> paths{
+            libpath / "pythoncore.zip", libpath,
+            std::filesystem::path{IOrganizer::getPluginDataPath().toStdWString()}};
         m_Runner->initialize(paths);
     }
 
@@ -139,12 +139,15 @@ bool ProxyPython::init(IOrganizer* moInfo)
         m_MOInfo->setPersistent(name(), "tryInit", false);
     }
 
+    // reset DLL directory
+    SetDllDirectoryW(NULL);
+
     if (!m_Runner || !m_Runner->isInitialized()) {
         m_LoadFailure = FailureType::INITIALIZATION;
     }
-
-    // reset DLL directory
-    SetDllDirectoryW(NULL);
+    else {
+        m_Runner->addDllSearchPath(pluginFolder / "dlls");
+    }
 
     return true;
 }

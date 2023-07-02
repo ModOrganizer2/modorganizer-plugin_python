@@ -48,8 +48,8 @@ install(FILES ${PYTHON_BUILD_PATH}/pythoncore/python${Python_VERSION_SHORT}.zip
 install(TARGETS mobase DESTINATION ${PYLIB_DIR})
 
 # install PyQt6
-file(GLOB PYQT_DIR ${MO2_BUILD_PATH}/PyQt${QT_MAJOR_VERSION}*)
-set(PYQT_LIB_DIR ${PYQT_DIR}/Lib/site-packages/PyQt${QT_MAJOR_VERSION})
+#file(GLOB PYQT_DIR ${MO2_BUILD_PATH}/PyQt${QT_MAJOR_VERSION}*)
+set(PYQT_LIB_DIR ${PYTHON_ROOT}/Lib/site-packages/PyQt${QT_MAJOR_VERSION})
 set(PYQT_TARGET_DIR ${PYLIB_DIR}/PyQt${QT_MAJOR_VERSION})
 file(GLOB pyqt_files ${PYQT_LIB_DIR}/*.py ${PYQT_LIB_DIR}/*.pyd ${PYQT_LIB_DIR}/*.pyi)
 install(FILES ${pyqt_files} DESTINATION ${PYQT_TARGET_DIR})

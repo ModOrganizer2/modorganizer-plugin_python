@@ -5,6 +5,8 @@
 
 #include <Windows.h>
 
+#include <algorithm>
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -12,6 +14,7 @@
 #include "pybind11_qt/pybind11_qt.h"
 #include <pybind11/embed.h>
 #include <pybind11/functional.h>
+#include <pybind11/stl/filesystem.h>
 
 #include <log.h>
 #include <utility.h>
@@ -36,7 +39,8 @@ namespace mo2::python {
         QList<QObject*> load(const QString& identifier) override;
         void unload(const QString& identifier) override;
 
-        bool initialize(QStringList const& paths) override;
+        bool initialize(std::vector<std::filesystem::path> const& pythonPaths) override;
+        void addDllSearchPath(std::filesystem::path const& dllPath) override;
         bool isInitialized() const override;
 
     private:
@@ -57,7 +61,7 @@ namespace mo2::python {
         return std::make_unique<PythonRunner>();
     }
 
-    bool PythonRunner::initialize(QStringList const& paths)
+    bool PythonRunner::initialize(std::vector<std::filesystem::path> const& pythonPaths)
     {
         // we only initialize Python once for the whole lifetime of the program, even if
         // MO2 is restarted and the proxy or PythonRunner objects are deleted and
@@ -81,7 +85,11 @@ namespace mo2::python {
             // initialize the core Path of Python, this must be done before
             // initialization
             //
-            if (!paths.isEmpty()) {
+            if (!pythonPaths.empty()) {
+                QStringList paths;
+                for (auto const& p : pythonPaths) {
+                    paths.append(QString::fromStdWString(absolute(p).native()));
+                }
                 Py_SetPath(paths.join(';').toStdWString().c_str());
             }
 
@@ -121,6 +129,12 @@ namespace mo2::python {
             MOBase::log::error("failed to init python: {}", ex.what());
             return false;
         }
+    }
+
+    void PythonRunner::addDllSearchPath(std::filesystem::path const& dllPath)
+    {
+        py::gil_scoped_acquire lock;
+        py::module_::import("os").attr("add_dll_directory")(absolute(dllPath));
     }
 
     void PythonRunner::ensureFolderInPath(QString folder)
