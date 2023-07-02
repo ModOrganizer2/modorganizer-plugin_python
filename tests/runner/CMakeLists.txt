@@ -19,7 +19,10 @@ target_link_libraries(runner-tests PUBLIC runner)
 set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
 mo2_python_pip_install(runner-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
-	PACKAGES pytest PyQt6==6.4.0)
+  PACKAGES
+    pytest
+		PyQt${QT_MAJOR_VERSION}==${QT_VERSION}
+		PyQt${QT_MAJOR_VERSION}-Qt${QT_MAJOR_VERSION}==${QT_VERSION})
 
 add_dependencies(runner-tests mobase)
 
