@@ -25,8 +25,7 @@ namespace pybind11::detail::qt {
 
     template <typename T>
     struct MetaData<T, std::enable_if_t<std::is_pointer_v<T>>>
-        : MetaData<std::remove_pointer_t<T>> {
-    };
+        : MetaData<std::remove_pointer_t<T>> {};
 
     // template class for most Qt types that have Python equivalent (QWidget,
     // etc.)

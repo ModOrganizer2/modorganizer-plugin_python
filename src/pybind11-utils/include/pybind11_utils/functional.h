@@ -97,10 +97,7 @@ namespace pybind11::detail {
                     : f(std::move(f_))
                 {
                 }
-                func_handle(const func_handle& f_)
-                {
-                    operator=(f_);
-                }
+                func_handle(const func_handle& f_) { operator=(f_); }
                 func_handle& operator=(const func_handle& f_)
                 {
                     gil_scoped_acquire acq;

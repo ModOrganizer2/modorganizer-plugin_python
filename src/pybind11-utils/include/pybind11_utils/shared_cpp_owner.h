@@ -80,13 +80,11 @@ namespace mo2::python::detail {
         template <>                                                                    \
         struct type_caster<std::shared_ptr<Type>>                                      \
             : mo2::python::detail::shared_cpp_owner_caster<Type,                       \
-                                                           std::shared_ptr<Type>> {    \
-        };                                                                             \
+                                                           std::shared_ptr<Type>> {};  \
         template <>                                                                    \
         struct type_caster<std::shared_ptr<const Type>>                                \
             : mo2::python::detail::shared_cpp_owner_caster<                            \
-                  Type, std::shared_ptr<const Type>> {                                 \
-        };                                                                             \
+                  Type, std::shared_ptr<const Type>> {};                               \
     }
 
 #endif

@@ -173,8 +173,7 @@ namespace pybind11::detail {
 
     template <class... Args>
     struct type_caster<::mo2::python::smart_variant<Args...>>
-        : variant_caster<::mo2::python::smart_variant<Args...>> {
-    };
+        : variant_caster<::mo2::python::smart_variant<Args...>> {};
 
 }  // namespace pybind11::detail
 
