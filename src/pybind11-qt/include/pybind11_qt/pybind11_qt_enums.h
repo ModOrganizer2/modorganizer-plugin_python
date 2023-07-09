@@ -18,8 +18,7 @@
             };                                                                         \
         }                                                                              \
         template <>                                                                    \
-        struct type_caster<QEnum> : qt::qt_enum_caster<QEnum> {                        \
-        };                                                                             \
+        struct type_caster<QEnum> : qt::qt_enum_caster<QEnum> {};                      \
     }
 
 PYQT_ENUM(QtCore, Qt::AlignmentFlag);

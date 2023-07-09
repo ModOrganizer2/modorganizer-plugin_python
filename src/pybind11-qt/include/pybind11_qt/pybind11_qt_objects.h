@@ -30,13 +30,11 @@
         template <>                                                                    \
         struct type_caster<QClass*>                                                    \
             : std::conditional_t<std::is_copy_constructible_v<QClass>,                 \
-                                 type_caster_generic, qt::qt_type_caster<QClass*>> {   \
-        };                                                                             \
+                                 type_caster_generic, qt::qt_type_caster<QClass*>> {}; \
         template <>                                                                    \
         struct type_caster<QClass>                                                     \
             : std::conditional_t<std::is_copy_constructible_v<QClass>,                 \
-                                 qt::qt_type_caster<QClass>, type_caster<QClass*>> {   \
-        };                                                                             \
+                                 qt::qt_type_caster<QClass>, type_caster<QClass*>> {}; \
     }
 
 // add declarations below to create bindings - the first argument is simply

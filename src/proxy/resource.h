@@ -3,4 +3,4 @@
 
 #define IDR_LOADER_DLL 100
 
-#endif // RESOURCE_H
+#endif  // RESOURCE_H
