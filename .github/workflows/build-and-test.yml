@@ -1,5 +1,9 @@
 name: Build Plugin Python
-on: [push]
+on:
+  push:
+    branches: master
+  pull_request:
+    types: [opened, reopened]
 jobs:
   build:
     runs-on: windows-2022
