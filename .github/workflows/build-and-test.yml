@@ -1,9 +1,14 @@
 name: Build Plugin Python
+
 on:
   push:
     branches: master
   pull_request:
     types: [opened, synchronize, reopened]
+
+env:
+  MO_BRANCH: ${{ github.head_ref || github.ref_name }}
+
 jobs:
   build:
     runs-on: windows-2022
@@ -23,7 +28,7 @@ jobs:
           key: ${{ runner.OS }}-mob-cache-${{ hashFiles('mob/.git/refs/heads/master') }}
           restore-keys: |
             ${{ runner.OS }}-mob-cache-
-      - if: ${{ steps.cache-mob.outputs.cache-hit != 'true' }}
+      - if: steps.cache-mob.outputs.cache-hit != 'true'
         name: Build mob
         run: .\mob\bootstrap.ps1
       - name: Install Qt
@@ -44,7 +49,7 @@ jobs:
           key: ${{ runner.OS }}-mo2-dependencies-${{ hashFiles('mob/.git/refs/heads/master') }}
           restore-keys: |
             ${{ runner.OS }}-mo2-dependencies-
-      - if: ${{ steps.cache-dependencies.outputs.cache-hit != 'true' }}
+      - if: steps.cache-dependencies.outputs.cache-hit != 'true'
         name: Build dependencies with mob
         run: .\mob\mob.exe
           -l 4 -d .
@@ -58,7 +63,9 @@ jobs:
             mob.log
       # TODO: cache this?
       - name: Build cmake_common and uibase
-        run: .\mob\mob.exe -l 4 -d . build
+        run: .\mob\mob.exe -l 4 -d .
+          -s task/mo_fallback=master -s task/mo_branch=${{ env.MO_BRANCH }}
+          build
           --ignore-uncommitted-changes
           --redownload --reextract --reconfigure --rebuild
           cmake_common uibase

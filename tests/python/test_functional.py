@@ -1,11 +1,11 @@
-import mobase
 import pytest
+
+import mobase
 
 m = pytest.importorskip("mobase_tests.functional")
 
 
 def test_guessed_string():
-
     # available functions:
     # - fn_0_arg, fn_1_arg, fn_2_arg
     # - fn_0_or_1_arg, fn_1_or_2_or_3_arg

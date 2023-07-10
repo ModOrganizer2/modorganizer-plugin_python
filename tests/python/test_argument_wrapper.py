@@ -1,5 +1,6 @@
-import mobase
 import pytest
+
+import mobase
 
 m = pytest.importorskip("mobase_tests.argument_wrapper")
 

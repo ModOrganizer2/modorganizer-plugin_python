@@ -50,7 +50,6 @@ def test_qdatetime():
 
 
 def test_qvariant():
-
     # Python -> C++
 
     assert m.qvariant_from_none(None) == (True, False)
