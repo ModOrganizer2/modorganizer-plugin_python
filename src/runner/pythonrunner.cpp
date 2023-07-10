@@ -246,12 +246,13 @@ namespace mo2::python {
     {
         py::gil_scoped_acquire lock;
 
-        // At this point, the identifier is the full path to the module.
+        // at this point, the identifier is the full path to the module.
         QDir folder(modulePath);
 
         // we want to "unload" (remove from sys.modules) modules that come
         // from this plugin (whose __path__ points under this module,
         // including the module of the plugin itself)
+        //
         py::object sys   = py::module_::import("sys");
         py::dict modules = sys.attr("modules");
         py::list keys    = modules.attr("keys")();
@@ -268,6 +269,14 @@ namespace mo2::python {
                     PyDict_DelItem(modules.ptr(), keys[i].ptr());
                 }
             }
+        }
+
+        // for simple Python file - not really used anymore, but actually used in
+        // testing - we need to remove using the module name
+        //
+        py::str pyModuleName(moduleName);
+        if (modules.contains(pyModuleName)) {
+            PyDict_DelItem(modules.ptr(), pyModuleName.ptr());
         }
     }
 
