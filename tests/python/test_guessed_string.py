@@ -1,11 +1,11 @@
-import mobase
 import pytest
+
+import mobase
 
 m = pytest.importorskip("mobase_tests.guessed_string")
 
 
 def test_guessed_string():
-
     # empty string
     gs = mobase.GuessedString()
 

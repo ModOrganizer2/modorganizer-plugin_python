@@ -1,13 +1,13 @@
 import sys
 from pathlib import Path
 
-import mobase
 import pytest
 from PyQt6.QtCore import QDir, QFileInfo
 
+import mobase
+
 
 def test_filepath_wrappers():
-
     # TBC that this works everywhere
     version = ".".join(map(str, sys.version_info[:3]))
 

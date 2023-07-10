@@ -1,7 +1,8 @@
 # -*- encoding: utf-8 -*-
 
-import mobase
 from PyQt6.QtWidgets import QWidget
+
+import mobase
 
 
 class DummyModDataChecker(mobase.ModDataChecker):
@@ -26,7 +27,6 @@ class DummySaveGameInfo(mobase.SaveGameInfo):
 # from the C++ side
 #
 class DummyGame(mobase.IPluginGame):
-
     _features: dict[type, object]
 
     def __init__(self):
