@@ -11,17 +11,18 @@ using namespace MOBase;
 
 TEST(IPlugin, Basic)
 {
-    const auto plugins_folder = QString(std::getenv("PLUGIN_DIR"));
+    const auto plugins_folder = std::filesystem::path(std::getenv("PLUGIN_DIR"));
 
     auto runner = mo2::python::createPythonRunner();
     runner->initialize();
 
     // load objects
-    const auto objects = runner->load(plugins_folder + "/dummy-iplugin.py");
+    const auto objects =
+        runner->load("dummy_iplugin", plugins_folder / "dummy-iplugin.py");
     EXPECT_EQ(objects.size(), 1);
 
     // load the IPlugin
-    const IPlugin* plugin = qobject_cast<IPlugin*>(objects[0]);
+    const IPlugin* plugin = qobject_cast<IPlugin*>(objects[0][0]);
     EXPECT_NE(plugin, nullptr);
 
     EXPECT_EQ(plugin->author(), "The Author");
