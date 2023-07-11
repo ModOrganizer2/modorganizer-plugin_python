@@ -17,9 +17,6 @@ jobs:
           mo2-third-parties: fmt gtest python spdlog boost sip pyqt pybind11
           mo2-dependencies: cmake_common uibase
           mo2-cmake-command: -DPLUGIN_PYTHON_TESTS=1 ..
-      - name: Build Plugin Python Tests
-        run: cmake --build vsbuild --config RelWithDebInfo -j4 --target python-tests --target runner-tests
-        working-directory: ${{ steps.build-plugin-python.outputs.working-directory }}
       - name: Test Plugin Python
         run: ctest --test-dir vsbuild -C RelWithDebInfo --output-on-failure
         working-directory: ${{ steps.build-plugin-python.outputs.working-directory }}
