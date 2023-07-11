@@ -18,6 +18,7 @@ TEST(Lifetime, Plugins)
 
         // we found one plugin
         ASSERT_EQ(objects.size(), 1);
+        ASSERT_EQ(objects[0].size(), 1);
 
         // check that deleting the object actually destroys it
         bool destroyed = false;
@@ -38,6 +39,7 @@ TEST(Lifetime, Plugins)
 
         // we found one plugin
         ASSERT_EQ(objects.size(), 1);
+        ASSERT_EQ(objects[0].size(), 1);
         objects[0][0]->setParent(dummy_parent);
 
         // check that deleting the object actually destroys it
