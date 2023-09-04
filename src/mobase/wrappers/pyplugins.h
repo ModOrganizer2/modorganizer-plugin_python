@@ -381,6 +381,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, dataDirectory, );
         }
+        QList<QDir> secondaryDataDirectories() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QList<QDir>, IPluginGame, secondaryDataDirectories, );
+        }
         void setGamePath(const QString& path) override
         {
             PYBIND11_OVERRIDE_PURE(void, IPluginGame, setGamePath, path);
