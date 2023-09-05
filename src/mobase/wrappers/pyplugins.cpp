@@ -66,6 +66,7 @@ namespace mo2::python {
             .def("gameIcon", &IPluginGame::gameIcon)
             .def("gameDirectory", &IPluginGame::gameDirectory)
             .def("dataDirectory", &IPluginGame::dataDirectory)
+            .def("secondaryDataDirectories", &IPluginGame::secondaryDataDirectories)
             .def("setGamePath", &IPluginGame::setGamePath, "path"_a)
             .def("documentsDirectory", &IPluginGame::documentsDirectory)
             .def("savesDirectory", &IPluginGame::savesDirectory)
