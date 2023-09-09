@@ -23,9 +23,11 @@ namespace mo2::python {
     void add_iplugingame_bindings(pybind11::module_ m)
     {
         py::enum_<IPluginGame::LoadOrderMechanism>(m, "LoadOrderMechanism")
+            .value("None", IPluginGame::LoadOrderMechanism::None)
             .value("FileTime", IPluginGame::LoadOrderMechanism::FileTime)
             .value("PluginsTxt", IPluginGame::LoadOrderMechanism::PluginsTxt)
 
+            .value("NONE", IPluginGame::LoadOrderMechanism::None)
             .value("FILE_TIME", IPluginGame::LoadOrderMechanism::FileTime)
             .value("PLUGINS_TXT", IPluginGame::LoadOrderMechanism::PluginsTxt);
 
