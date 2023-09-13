@@ -249,7 +249,8 @@ namespace mo2::python {
             .def("readPluginLists", &GamePlugins::readPluginLists, "plugin_list"_a)
             .def("getLoadOrder", &GamePlugins::getLoadOrder)
             .def("lightPluginsAreSupported", &GamePlugins::lightPluginsAreSupported)
-            .def("overridePluginsAreSupported", &GamePlugins::overridePluginsAreSupported);
+            .def("overridePluginsAreSupported",
+                 &GamePlugins::overridePluginsAreSupported);
 
         // LocalSavegames
 
