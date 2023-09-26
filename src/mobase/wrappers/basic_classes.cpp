@@ -553,10 +553,20 @@ namespace mo2::python {
             .def("managedGame", &IOrganizer::managedGame,
                  py::return_value_policy::reference)
 
-            .def("onAboutToRun", &IOrganizer::onAboutToRun, "callback"_a)
+            .def("onAboutToRun",
+                 py::overload_cast<std::function<bool(QString const&)> const&>(
+                     &IOrganizer::onAboutToRun),
+                 "callback"_a)
+            .def("onAboutToRun",
+                 py::overload_cast<std::function<bool(QString const&, const QDir&,
+                                                      const QString&)> const&>(
+                     &IOrganizer::onAboutToRun),
+                 "callback"_a)
             .def("onFinishedRun", &IOrganizer::onFinishedRun, "callback"_a)
             .def("onUserInterfaceInitialized", &IOrganizer::onUserInterfaceInitialized,
                  "callback"_a)
+            .def("onNextRefresh", &IOrganizer::onNextRefresh, "callback"_a,
+                 "immediate_if_possible"_a = true)
             .def("onProfileCreated", &IOrganizer::onProfileCreated, "callback"_a)
             .def("onProfileRenamed", &IOrganizer::onProfileRenamed, "callback"_a)
             .def("onProfileRemoved", &IOrganizer::onProfileRemoved, "callback"_a)
