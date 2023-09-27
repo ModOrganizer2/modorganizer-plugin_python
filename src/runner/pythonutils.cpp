@@ -143,7 +143,6 @@ namespace mo2::python {
         handler.attr("setLevel")(PyLogLevel::DEBUG);
         auto logger = logging.attr("getLogger")(py::object(mobase.attr("__name__")));
         logger.attr("setLevel")(PyLogLevel::DEBUG);
-        logger.attr("addHandler")(handler);
 
         // set mobase attributes
         mobase.attr("LogHandler") = MO2Handler;
