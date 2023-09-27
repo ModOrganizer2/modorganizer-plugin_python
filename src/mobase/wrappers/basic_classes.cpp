@@ -554,12 +554,12 @@ namespace mo2::python {
                  py::return_value_policy::reference)
 
             .def("onAboutToRun",
-                 py::overload_cast<std::function<bool(QString const&)> const&>(
+                 py::overload_cast<std::function<bool(QString const&, const QDir&,
+                                                      const QString&)> const&>(
                      &IOrganizer::onAboutToRun),
                  "callback"_a)
             .def("onAboutToRun",
-                 py::overload_cast<std::function<bool(QString const&, const QDir&,
-                                                      const QString&)> const&>(
+                 py::overload_cast<std::function<bool(QString const&)> const&>(
                      &IOrganizer::onAboutToRun),
                  "callback"_a)
             .def("onFinishedRun", &IOrganizer::onFinishedRun, "callback"_a)

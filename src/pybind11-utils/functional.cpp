@@ -21,7 +21,8 @@ namespace mo2::python::detail {
         auto required_count = args_count - defaults_count;
 
         return required_count <= arity  // cannot require more parameters than given,
-               && (args_count >= arity || varargs);  // must accept enough parameters.
+               && (args_count >= arity ||
+                   !varargs.is_none());  // must accept enough parameters.
     }
 
 }  // namespace mo2::python::detail
