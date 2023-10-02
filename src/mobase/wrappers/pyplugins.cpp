@@ -76,6 +76,7 @@ namespace mo2::python {
             .def("executableForcedLoads", &IPluginGame::executableForcedLoads)
             .def("steamAPPId", &IPluginGame::steamAPPId)
             .def("primaryPlugins", &IPluginGame::primaryPlugins)
+            .def("enabledPlugins", &IPluginGame::enabledPlugins)
             .def("gameVariants", &IPluginGame::gameVariants)
             .def("setGameVariant", &IPluginGame::setGameVariant, "variant"_a)
             .def("binaryName", &IPluginGame::binaryName)

@@ -416,6 +416,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, primaryPlugins, );
         }
+        QStringList enabledPlugins() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, enabledPlugins, );
+        }
         QStringList gameVariants() const override
         {
             PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, gameVariants, );
