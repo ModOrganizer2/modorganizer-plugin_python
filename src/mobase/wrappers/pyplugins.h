@@ -384,8 +384,7 @@ namespace mo2::python {
         QMap<QString, QDir> secondaryDataDirectories() const override
         {
             using string_dir_map = QMap<QString, QDir>;
-            PYBIND11_OVERRIDE_PURE(string_dir_map, IPluginGame,
-                                   secondaryDataDirectories, );
+            PYBIND11_OVERRIDE(string_dir_map, IPluginGame, secondaryDataDirectories, );
         }
         void setGamePath(const QString& path) override
         {
@@ -401,7 +400,7 @@ namespace mo2::python {
         }
         QList<ExecutableInfo> executables() const override
         {
-            PYBIND11_OVERRIDE_PURE(QList<ExecutableInfo>, IPluginGame, executables, );
+            PYBIND11_OVERRIDE(QList<ExecutableInfo>, IPluginGame, executables, );
         }
         QList<ExecutableForcedLoadSetting> executableForcedLoads() const override
         {
@@ -410,19 +409,19 @@ namespace mo2::python {
         }
         QString steamAPPId() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, steamAPPId, );
+            PYBIND11_OVERRIDE(QString, IPluginGame, steamAPPId, );
         }
         QStringList primaryPlugins() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, primaryPlugins, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, primaryPlugins, );
         }
         QStringList enabledPlugins() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, enabledPlugins, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, enabledPlugins, );
         }
         QStringList gameVariants() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, gameVariants, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, gameVariants, );
         }
         void setGameVariant(const QString& variant) override
         {
@@ -438,40 +437,39 @@ namespace mo2::python {
         }
         QStringList primarySources() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, primarySources, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, primarySources, );
         }
         QStringList validShortNames() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, validShortNames, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, validShortNames, );
         }
         QString gameNexusName() const override
         {
-            PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameNexusName, );
+            PYBIND11_OVERRIDE(QString, IPluginGame, gameNexusName, );
         }
         QStringList iniFiles() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, iniFiles, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, iniFiles, );
         }
         QStringList DLCPlugins() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, DLCPlugins, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, DLCPlugins, );
         }
         QStringList CCPlugins() const override
         {
-            PYBIND11_OVERRIDE_PURE(QStringList, IPluginGame, CCPlugins, );
+            PYBIND11_OVERRIDE(QStringList, IPluginGame, CCPlugins, );
         }
         LoadOrderMechanism loadOrderMechanism() const override
         {
-            PYBIND11_OVERRIDE_PURE(LoadOrderMechanism, IPluginGame,
-                                   loadOrderMechanism, );
+            PYBIND11_OVERRIDE(LoadOrderMechanism, IPluginGame, loadOrderMechanism, );
         }
         SortMechanism sortMechanism() const override
         {
-            PYBIND11_OVERRIDE_PURE(SortMechanism, IPluginGame, sortMechanism, );
+            PYBIND11_OVERRIDE(SortMechanism, IPluginGame, sortMechanism, );
         }
         int nexusModOrganizerID() const override
         {
-            PYBIND11_OVERRIDE_PURE(int, IPluginGame, nexusModOrganizerID, );
+            PYBIND11_OVERRIDE(int, IPluginGame, nexusModOrganizerID, );
         }
         int nexusGameID() const override
         {
