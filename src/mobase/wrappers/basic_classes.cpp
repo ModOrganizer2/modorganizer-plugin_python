@@ -324,6 +324,7 @@ namespace mo2::python {
             .def("isLightFlagged", &IPluginList::isLightFlagged, "name"_a)
             .def("hasLightExtension", &IPluginList::hasLightExtension, "name"_a)
             .def("isOverlayFlagged", &IPluginList::isOverlayFlagged, "name"_a)
+            .def("hasNoRecords", &IPluginList::hasNoRecords, "name"_a)
 
             // Kept but deprecated for backward compatibility:
             .def(
