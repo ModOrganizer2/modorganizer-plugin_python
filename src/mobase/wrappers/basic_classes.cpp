@@ -5,9 +5,11 @@
 #include <format>
 
 #include <executableinfo.h>
+#include <extension.h>
 #include <filemapping.h>
 #include <guessedvalue.h>
 #include <idownloadmanager.h>
+#include <iextensionlist.h>
 #include <igamefeatures.h>
 #include <iinstallationmanager.h>
 #include <imodinterface.h>
@@ -569,6 +571,8 @@ namespace mo2::python {
             .def("downloadManager", &IOrganizer::downloadManager,
                  py::return_value_policy::reference)
             .def("pluginList", &IOrganizer::pluginList,
+                 py::return_value_policy::reference)
+            .def("extensionList", &IOrganizer::extensionList,
                  py::return_value_policy::reference)
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,
