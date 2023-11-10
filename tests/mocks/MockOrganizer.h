@@ -34,6 +34,7 @@ public:
 	MOCK_METHOD(std::shared_ptr<const IFileTree>, virtualFileTree, (), (const, override));
 	MOCK_METHOD(MOBase::IDownloadManager*, downloadManager, (), (const, override));
 	MOCK_METHOD(MOBase::IPluginList*, pluginList, (), (const, override));
+	MOCK_METHOD(MOBase::IExtensionList&, extensionList, (), (const, override));
 	MOCK_METHOD(MOBase::IModList*, modList, (), (const, override));
 	MOCK_METHOD(MOBase::IProfile*, profile, (), (const, override));
 	MOCK_METHOD(HANDLE, startApplication, (const QString &executable, const QStringList &args, const QString &cwd, const QString &profile, const QString &forcedCustomOverwrite, bool ignoreCustomOverwrite), (override));
