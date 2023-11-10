@@ -15,19 +15,20 @@ using ::testing::ElementsAre;
 
 TEST(IPluginDiagnose, Simple)
 {
-    const auto plugins_folder = QString(std::getenv("PLUGIN_DIR"));
+    const auto plugins_folder = std::filesystem::path(std::getenv("PLUGIN_DIR"));
 
     auto runner = mo2::python::createPythonRunner();
     runner->initialize();
 
     // load objects
-    const auto objects = runner->load(plugins_folder + "/dummy-diagnose.py");
-    EXPECT_EQ(objects.size(), 3);
+    const auto objects =
+        runner->load("dummy_diagnose", plugins_folder / "dummy-diagnose.py");
+    ASSERT_EQ(objects.size(), 2);
 
     // load the first IPluginDiagnose
     {
-        IPluginDiagnose* plugin = qobject_cast<IPluginDiagnose*>(objects[0]);
-        EXPECT_NE(plugin, nullptr);
+        IPluginDiagnose* plugin = qobject_cast<IPluginDiagnose*>(objects[0][0]);
+        ASSERT_NE(plugin, nullptr);
 
         ASSERT_THAT(plugin->activeProblems(), ElementsAre(1, 2));
         EXPECT_EQ(plugin->shortDescription(1), "short-1");
@@ -40,8 +41,8 @@ TEST(IPluginDiagnose, Simple)
 
     // load the second one (this is cast before IPluginGame so should be before)
     {
-        IPluginDiagnose* plugin = qobject_cast<IPluginDiagnose*>(objects[1]);
-        EXPECT_NE(plugin, nullptr);
+        IPluginDiagnose* plugin = qobject_cast<IPluginDiagnose*>(objects[1][0]);
+        ASSERT_NE(plugin, nullptr);
 
         ASSERT_THAT(plugin->activeProblems(), ElementsAre(5, 7));
         EXPECT_EQ(plugin->shortDescription(5), "short-5");
@@ -54,7 +55,7 @@ TEST(IPluginDiagnose, Simple)
 
     // load the game plugin
     {
-        IPluginGame* plugin = qobject_cast<IPluginGame*>(objects[2]);
-        EXPECT_NE(plugin, nullptr);
+        IPluginGame* plugin = qobject_cast<IPluginGame*>(objects[1][1]);
+        ASSERT_NE(plugin, nullptr);
     }
 }

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 # things
 
 # first we configure the tests as with other tests
-add_executable(runner-tests EXCLUDE_FROM_ALL)
+add_executable(runner-tests)
 mo2_configure_tests(runner-tests WARNINGS OFF)
 
 set_target_properties(runner-tests PROPERTIES FOLDER tests/runner)
