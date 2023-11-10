@@ -9,7 +9,7 @@ mo2_configure_plugin(proxy
     NO_SOURCES
     WARNINGS 4
     EXTERNAL_WARNINGS 4
-    TRANSLATIONS ON
+    TRANSLATIONS OFF
     EXTRA_TRANSLATIONS
     ${CMAKE_CURRENT_SOURCE_DIR}/../runner
     ${CMAKE_CURRENT_SOURCE_DIR}/../mobase
@@ -21,8 +21,8 @@ set_target_properties(proxy PROPERTIES OUTPUT_NAME "python_proxy")
 set(PROXY_PYTHON_DIR ${MO2_INSTALL_BIN}/proxies/python)
 
 # install runner and proxy
-install(FILES $<TARGET_FILE:proxy> DESTINATION ${PROXY_PYTHON_DIR}/python)
-install(FILES $<TARGET_FILE:runner> DESTINATION ${PROXY_PYTHON_DIR}/python/dlls)
+install(FILES $<TARGET_FILE:proxy> DESTINATION ${PROXY_PYTHON_DIR})
+install(FILES $<TARGET_FILE:runner> DESTINATION ${PROXY_PYTHON_DIR}/dlls)
 
 # install PDB
 install(FILES $<TARGET_PDB_FILE:proxy> DESTINATION pdb)
@@ -32,7 +32,7 @@ target_link_options(proxy PRIVATE "/DELAYLOAD:runner.dll")
 
 # translations (custom location)
 mo2_add_translations(proxy
-    TS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../${PLUGIN_NAME}_en.ts
+    TS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../plugin_python_en.ts
     SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../runner

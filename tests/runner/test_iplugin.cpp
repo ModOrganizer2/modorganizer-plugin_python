@@ -26,10 +26,7 @@ TEST(IPlugin, Basic)
     const IPlugin* plugin = qobject_cast<IPlugin*>(objects[0][0]);
     EXPECT_NE(plugin, nullptr);
 
-    EXPECT_EQ(plugin->author(), "The Author");
     EXPECT_EQ(plugin->name(), "The Name");
-    EXPECT_EQ(plugin->version(), VersionInfo(1, 3, 0));
-    EXPECT_EQ(plugin->description(), "The Description");
 
     // settings
     const auto settings = plugin->settings();

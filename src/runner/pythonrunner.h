@@ -9,7 +9,7 @@
 #include <QString>
 #include <QStringList>
 
-#include <extension.h>
+#include <uibase/extensions/extension.h>
 
 #ifdef RUNNER_BUILD
 #define RUNNER_DLL_EXPORT Q_DECL_EXPORT

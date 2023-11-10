@@ -5,6 +5,8 @@
 #include <format>
 
 #include <uibase/executableinfo.h>
+#include <uibase/extensions/extension.h>
+#include <uibase/extensions/iextensionlist.h>
 #include <uibase/filemapping.h>
 #include <uibase/game_features/igamefeatures.h>
 #include <uibase/guessedvalue.h>
@@ -589,6 +591,8 @@ namespace mo2::python {
             .def("downloadManager", &IOrganizer::downloadManager,
                  py::return_value_policy::reference)
             .def("pluginList", &IOrganizer::pluginList,
+                 py::return_value_policy::reference)
+            .def("extensionList", &IOrganizer::extensionList,
                  py::return_value_policy::reference)
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,
