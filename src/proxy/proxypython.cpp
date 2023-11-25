@@ -174,7 +174,7 @@ QString ProxyPython::description() const
 
 VersionInfo ProxyPython::version() const
 {
-    return VersionInfo(2, 3, 0, VersionInfo::RELEASE_FINAL);
+    return VersionInfo(3, 0, 0, VersionInfo::RELEASE_FINAL);
 }
 
 QList<PluginSetting> ProxyPython::settings() const
@@ -257,15 +257,14 @@ QString ProxyPython::fullDescription(unsigned int key) const
 {
     switch (static_cast<FailureType>(key)) {
     case FailureType::SEMICOLON:
-        return tr("The path to Mod Organizer (%1) contains a semicolon. <br>"
-                  "While this is legal on NTFS drives, many softwares do not handle it "
-                  "correctly.<br>"
+        return tr("The path to Mod Organizer (%1) contains a semicolon.<br>"
+                  "While this is legal on NTFS drives, many applications do not "
+                  "handle it correctly.<br>"
                   "Unfortunately MO depends on libraries that seem to fall into that "
                   "group.<br>"
                   "As a result the python plugin cannot be loaded, and the only "
-                  "solution we can"
-                  "offer is to remove the semicolon or move MO to a path without a "
-                  "semicolon.")
+                  "solution we can offer is to remove the semicolon or move MO to a "
+                  "path without a semicolon.")
             .arg(QCoreApplication::applicationDirPath());
     case FailureType::DLL_NOT_FOUND:
         return tr("The Python plugin DLL was not found, maybe your antivirus deleted "
