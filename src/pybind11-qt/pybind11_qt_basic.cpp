@@ -46,6 +46,10 @@ namespace pybind11::detail {
         PyObject* strPtr =
             PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
 
+        if (!strPtr) {
+            return false;
+        }
+
         // Extract the character data from the python string
         value = QString::fromUtf8(PyBytes_AsString(strPtr));
 
@@ -68,8 +72,7 @@ namespace pybind11::detail {
                                       handle /* parent */)
     {
         static_assert(sizeof(QChar) == 2);
-        return PyUnicode_FromKindAndData(PyUnicode_2BYTE_KIND, src.constData(),
-                                         src.length());
+        return PyUnicode_FromString(src.toStdString().c_str());
     }
 
     bool type_caster<QVariant>::load(handle src, bool)
