@@ -93,10 +93,18 @@ namespace mo2::python {
                 Py_SetPath(paths.join(';').toStdWString().c_str());
             }
 
-            Py_OptimizeFlag = 2;
-            Py_NoSiteFlag   = 1;
+            PyConfig config;
+            PyConfig_InitIsolatedConfig(&config);
 
-            py::initialize_interpreter(false, 1, &argv0);
+            // from PyBind11
+            config.parse_argv              = 0;
+            config.install_signal_handlers = 0;
+
+            // from MO2
+            config.site_import        = 1;
+            config.optimization_level = 2;
+
+            py::initialize_interpreter(&config, 1, &argv0, true);
 
             if (!Py_IsInitialized()) {
                 MOBase::log::error(
