@@ -10,9 +10,18 @@ def test_qstring():
 
     assert m.qstring_to_stdstring("éàüö") == "éàüö"
     assert m.stdstring_to_qstring("éàüö") == "éàüö"
+    assert m.qstring_to_stdstring("خالد") == "خالد"
+    assert m.qstring_to_stdstring("🌎") == "🌎"
 
     assert m.qstring_to_int("2") == 2
     assert m.int_to_qstring(2) == "2"
+
+    emoji = m.create_qstring_with_emoji()
+
+    assert emoji.encode("utf-16be", "surrogatepass") == b"\xd8\x3d\xde\x00"
+    assert m.consume_qstring_with_emoji(emoji) == 2
+
+    assert m.consume_qstring_with_emoji("🌎") == 2
 
 
 def test_qstringlist():

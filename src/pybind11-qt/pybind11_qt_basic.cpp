@@ -35,30 +35,36 @@ namespace pybind11::detail {
      */
     bool type_caster<QString>::load(handle src, bool)
     {
-
         PyObject* objPtr = src.ptr();
 
-        if (!PyBytes_Check(objPtr) && !PyUnicode_Check(objPtr)) {
+        if (PyBytes_Check(objPtr)) {
+            value = QString::fromUtf8(PyBytes_AsString(objPtr));
+            return true;
+        }
+        else if (PyUnicode_Check(objPtr)) {
+            switch (PyUnicode_KIND(objPtr)) {
+            case PyUnicode_1BYTE_KIND:
+                value = QString::fromUtf8(PyUnicode_AsUTF8(objPtr));
+                break;
+            case PyUnicode_2BYTE_KIND:
+                value = QString::fromUtf16(
+                    reinterpret_cast<char16_t*>(PyUnicode_2BYTE_DATA(objPtr)),
+                    PyUnicode_GET_LENGTH(objPtr));
+                break;
+            case PyUnicode_4BYTE_KIND:
+                value = QString::fromUcs4(
+                    reinterpret_cast<char32_t*>(PyUnicode_4BYTE_DATA(objPtr)),
+                    PyUnicode_GET_LENGTH(objPtr));
+                break;
+            default:
+                return false;
+            }
+
+            return true;
+        }
+        else {
             return false;
         }
-
-        // Ensure the string uses 8-bit characters
-        PyObject* strPtr =
-            PyUnicode_Check(objPtr) ? PyUnicode_AsUTF8String(objPtr) : objPtr;
-
-        if (!strPtr) {
-            return false;
-        }
-
-        // Extract the character data from the python string
-        value = QString::fromUtf8(PyBytes_AsString(strPtr));
-
-        // Deallocate local copy if one was made
-        if (strPtr != objPtr) {
-            Py_DecRef(strPtr);
-        }
-
-        return true;
     }
 
     /**
@@ -71,8 +77,8 @@ namespace pybind11::detail {
     handle type_caster<QString>::cast(QString src, return_value_policy /* policy */,
                                       handle /* parent */)
     {
-        static_assert(sizeof(QChar) == 2);
-        return PyUnicode_FromString(src.toStdString().c_str());
+        return PyUnicode_DecodeUTF16(reinterpret_cast<const char*>(src.utf16()),
+                                     2 * src.length(), nullptr, 0);
     }
 
     bool type_caster<QVariant>::load(handle src, bool)

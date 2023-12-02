@@ -11,6 +11,14 @@ PYBIND11_MODULE(qt, m)
 {
     // QString
 
+    m.def("create_qstring_with_emoji", []() {
+        return QString::fromUtf16(u"\U0001F600");
+    });
+
+    m.def("consume_qstring_with_emoji", [](QString const& qstring) {
+        return qstring.length();
+    });
+
     m.def("qstring_to_stdstring", [](QString const& qstring) {
         return qstring.toStdString();
     });
