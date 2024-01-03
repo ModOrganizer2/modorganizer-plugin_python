@@ -31,6 +31,14 @@ namespace mo2::python {
     void add_widget_bindings(pybind11::module_ m);
 
     /**
+     * @brief Add bindings for the various utilities classes and functions in uibase
+     * that cannot be extended from Python.
+     *
+     * @param m Python module to add bindings to.
+     */
+    void add_utils_bindings(pybind11::module_ m);
+
+    /**
      * @brief Add bindings for the uibase wrappers to the given module. uibase
      * wrappers include classes from uibase that can be extended from Python but
      * are neither plugins nor game features (e.g., ISaveGame).
