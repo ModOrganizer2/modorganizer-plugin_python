@@ -56,6 +56,11 @@ PYBIND11_MODULE(mobase, m)
     py::module_ widgets = m.def_submodule("widgets");
     mo2::python::add_widget_bindings(widgets);
 
+    // utils
+    //
+    py::module_ utils = m.def_submodule("utils");
+    mo2::python::add_utils_bindings(utils);
+
     // functions
     //
     m.def("getFileVersion", wrap_for_filepath(&MOBase::getFileVersion),
