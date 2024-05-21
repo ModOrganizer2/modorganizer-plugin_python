@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
+cmake_policy(SET CMP0144 NEW)
+
 if(DEFINED DEPENDENCIES_DIR)
 	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/mo2.cmake)
 else()

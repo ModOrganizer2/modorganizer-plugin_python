@@ -25,7 +25,7 @@ namespace mo2::python {
             buffer_ << message;
             if (buffer_.tellp() != 0 && buffer_.str().back() == '\n') {
                 const auto full_message = buffer_.str();
-                MOBase::log::log(level_,
+                MOBase::log::log(level_, "{}",
                                  full_message.substr(0, full_message.length() - 1));
                 buffer_ = std::stringstream{};
             }

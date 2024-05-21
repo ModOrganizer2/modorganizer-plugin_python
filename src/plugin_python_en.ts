@@ -47,27 +47,28 @@ Do you want to try initializing python again (at the risk of another crash)?
     </message>
     <message>
         <location filename="proxy/proxypython.cpp" line="252"/>
-        <location filename="proxy/proxypython.cpp" line="282"/>
+        <location filename="proxy/proxypython.cpp" line="281"/>
         <source>invalid problem key %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="proxy/proxypython.cpp" line="260"/>
-        <source>The path to Mod Organizer (%1) contains a semicolon. &lt;br&gt;While this is legal on NTFS drives, many softwares do not handle it correctly.&lt;br&gt;Unfortunately MO depends on libraries that seem to fall into that group.&lt;br&gt;As a result the python plugin cannot be loaded, and the only solution we canoffer is to remove the semicolon or move MO to a path without a semicolon.</source>
+        <source>The path to Mod Organizer (%1) contains a semicolon.&lt;br&gt;While this is legal on NTFS drives, many applications do not handle it correctly.&lt;br&gt;Unfortunately MO depends on libraries that seem to fall into that group.&lt;br&gt;As a result the python plugin cannot be loaded, and the only solution we can offer is to remove the semicolon or move MO to a path without a semicolon.</source>
+        <oldsource>The path to Mod Organizer (%1) contains a semicolon. &lt;br&gt;While this is legal on NTFS drives, many softwares do not handle it correctly.&lt;br&gt;Unfortunately MO depends on libraries that seem to fall into that group.&lt;br&gt;As a result the python plugin cannot be loaded, and the only solution we canoffer is to remove the semicolon or move MO to a path without a semicolon.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="proxy/proxypython.cpp" line="271"/>
+        <location filename="proxy/proxypython.cpp" line="270"/>
         <source>The Python plugin DLL was not found, maybe your antivirus deleted it. Re-installing MO2 might fix the problem.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="proxy/proxypython.cpp" line="274"/>
+        <location filename="proxy/proxypython.cpp" line="273"/>
         <source>The Python plugin DLL is invalid, maybe your antivirus is blocking it. Re-installing MO2 and adding exclusions for it to your AV might fix the problem.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="proxy/proxypython.cpp" line="279"/>
+        <location filename="proxy/proxypython.cpp" line="278"/>
         <source>The initialization of the Python plugin DLL failed, unfortunately without any details.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -75,7 +76,7 @@ Do you want to try initializing python again (at the risk of another crash)?
 <context>
     <name>QObject</name>
     <message>
-        <location filename="runner/error.h" line="75"/>
+        <location filename="runner/error.h" line="76"/>
         <source>An unknown exception was thrown in python code.</source>
         <translation type="unfinished"></translation>
     </message>

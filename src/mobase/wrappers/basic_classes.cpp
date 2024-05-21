@@ -2,11 +2,7 @@
 
 #include "../pybind11_all.h"
 
-#pragma warning(push)
-#pragma warning(disable : 4459)
-#include <fmt/format.h>
-#include <fmt/xchar.h>
-#pragma warning(pop)
+#include <format>
 
 #include <executableinfo.h>
 #include <filemapping.h>
@@ -763,7 +759,7 @@ namespace mo2::python {
             .def_readwrite("isDirectory", &Mapping::isDirectory)
             .def_readwrite("createTarget", &Mapping::createTarget)
             .def("__str__", [](Mapping const& m) {
-                return fmt::format(L"Mapping({}, {}, {}, {})", m.source.toStdWString(),
+                return std::format(L"Mapping({}, {}, {}, {})", m.source.toStdWString(),
                                    m.destination.toStdWString(), m.isDirectory,
                                    m.createTarget);
             });
