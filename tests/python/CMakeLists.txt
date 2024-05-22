@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # pytest
+cmake_policy(SET CMP0144 NEW)
 find_package(GTest REQUIRED)
 
 set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
