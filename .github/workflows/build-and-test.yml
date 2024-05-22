@@ -14,7 +14,7 @@ jobs:
         id: build-plugin-python
         uses: ModOrganizer2/build-with-mob-action@master
         with:
-          mo2-third-parties: fmt gtest python spdlog boost sip pyqt pybind11
+          mo2-third-parties: gtest python spdlog boost sip pyqt pybind11
           mo2-dependencies: cmake_common uibase
           mo2-cmake-command: -DPLUGIN_PYTHON_TESTS=1 ..
       - name: Build Plugin Python Tests
