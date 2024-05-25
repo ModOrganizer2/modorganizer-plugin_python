@@ -1,9 +1,10 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include <format>
+
 #include <QString>
 
-#include <fmt/format.h>
 #include <pybind11/pybind11.h>
 
 #include <utility.h>
@@ -19,7 +20,7 @@ namespace pyexcept {
         MissingImplementation(std::string const& className,
                               std::string const& methodName)
             : Exception(QString::fromStdString(
-                  fmt::format("Python class implementing \"{}\" has no "
+                  std::format("Python class implementing \"{}\" has no "
                               "implementation of method \"{}\".",
                               className, methodName)))
         {

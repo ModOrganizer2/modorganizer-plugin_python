@@ -1,6 +1,7 @@
 #pragma warning(disable : 4100)
 #pragma warning(disable : 4996)
 
+#include <format>
 #include <tuple>
 #include <variant>
 
@@ -15,7 +16,6 @@
 #include <QDir>
 #include <QFile>
 #include <QWidget>
-#include <fmt/format.h>
 #include <iplugin.h>
 #include <iplugindiagnose.h>
 #include <ipluginfilemapper.h>
