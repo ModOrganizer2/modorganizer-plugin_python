@@ -427,27 +427,6 @@ namespace mo2::python {
             .def("onModMoved", &MOBase::IModList::onModMoved, "callback"_a);
     }
 
-    void add_igamefeatures_classes(py::module_ m)
-    {
-        py::class_<IGameFeatures>(m, "IGameFeatures")
-            .def("registerFeature",
-                 py::overload_cast<QStringList const&, std::shared_ptr<GameFeature>,
-                                   int, bool>(&IGameFeatures::registerFeature),
-                 "games"_a, "feature"_a, "priority"_a, "replace"_a = false)
-            .def("registerFeature",
-                 py::overload_cast<MOBase::IPluginGame*, std::shared_ptr<GameFeature>,
-                                   int, bool>(&IGameFeatures::registerFeature),
-                 "game"_a, "feature"_a, "priority"_a, "replace"_a = false)
-            .def("registerFeature",
-                 py::overload_cast<std::shared_ptr<GameFeature>, int, bool>(
-                     &IGameFeatures::registerFeature),
-                 "feature"_a, "priority"_a, "replace"_a = false)
-            .def("unregisterFeature", &IGameFeatures::unregisterFeature, "feature"_a)
-            .def("unregisterFeatures", &unregister_feature, "feature_type"_a)
-            .def("gameFeature", &extract_feature, "feature_type"_a,
-                 py ::return_value_policy::reference);
-    }
-
     void add_iorganizer_classes(py::module_ m)
     {
         py::class_<IOrganizer::FileInfo>(m, "FileInfo")
@@ -807,7 +786,6 @@ namespace mo2::python {
         add_imodlist_classes(m);
         add_idownload_manager_classes(m);
         add_iinstallation_manager_classes(m);
-        add_igamefeatures_classes(m);
         add_iorganizer_classes(m);
     }
 

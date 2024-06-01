@@ -77,6 +77,13 @@ namespace mo2::python {
     void add_game_feature_bindings(pybind11::module_ m);
 
     /**
+     * @brief Add bindings for IGameFeatures.
+     *
+     * @param m Python module to add bindings to.
+     */
+    void add_igamefeatures_classes(pybind11::module_ m);
+
+    /**
      * @brief Extract the game feature corresponding to the given Python type.
      *
      * @param gameFeatures Game features to extract the feature from.
