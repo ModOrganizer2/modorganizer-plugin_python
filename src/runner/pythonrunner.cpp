@@ -82,17 +82,6 @@ namespace mo2::python {
         try {
             static const char* argv0 = "ModOrganizer.exe";
 
-            PyConfig config;
-            PyConfig_InitIsolatedConfig(&config);
-
-            // from PyBind11
-            config.parse_argv              = 0;
-            config.install_signal_handlers = 0;
-
-            // from MO2
-            config.site_import        = 1;
-            config.optimization_level = 2;
-
             // set the module search paths
             //
             auto paths = pythonPaths;
@@ -110,6 +99,18 @@ namespace mo2::python {
                 }
             }
 
+            PyConfig config;
+            PyConfig_InitIsolatedConfig(&config);
+
+            // from PyBind11
+            config.parse_argv              = 0;
+            config.install_signal_handlers = 0;
+
+            // from MO2
+            config.site_import        = 1;
+            config.optimization_level = 2;
+
+            // set paths to configuration
             if (!paths.empty()) {
                 config.module_search_paths_set = 1;
                 for (auto const& path : paths) {

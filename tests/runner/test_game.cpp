@@ -7,10 +7,6 @@
 
 #include "MockOrganizer.h"
 #include "iplugingame.h"
-#include "localsavegames.h"
-#include "moddatachecker.h"
-#include "moddatacontent.h"
-#include "savegameinfo.h"
 
 using namespace MOBase;
 
@@ -28,10 +24,4 @@ TEST(IPluginGame, Simple)
     // load the IPlugin
     IPluginGame* plugin = qobject_cast<IPluginGame*>(objects[0]);
     EXPECT_NE(plugin, nullptr);
-
-    // check features
-    EXPECT_EQ(plugin->feature<LocalSavegames>(), nullptr);
-    EXPECT_EQ(plugin->feature<ModDataContent>(), nullptr);
-    EXPECT_NE(plugin->feature<ModDataChecker>(), nullptr);
-    EXPECT_NE(plugin->feature<SaveGameInfo>(), nullptr);
 }

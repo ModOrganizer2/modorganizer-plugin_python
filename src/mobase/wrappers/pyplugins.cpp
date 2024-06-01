@@ -10,15 +10,6 @@ using namespace MOBase;
 
 namespace mo2::python {
 
-    std::map<std::type_index, std::any> PyPluginGame::featureList() const
-    {
-        py::dict pyFeatures = [this]() {
-            PYBIND11_OVERRIDE_PURE(py::dict, IPluginGame, _featureList, );
-        }();
-
-        return convert_feature_list(pyFeatures);
-    }
-
     // this one is kind of big so it has its own function
     void add_iplugingame_bindings(pybind11::module_ m)
     {
@@ -54,13 +45,9 @@ namespace mo2::python {
                    std::unique_ptr<IPluginGame, py::nodelete>>(
             m, "IPluginGame", py::multiple_inheritance())
             .def(py::init<>())
-
-            .def("featureList", &extract_feature_list)
-            .def("feature", &extract_feature, "feature_type"_a,
-                 py::return_value_policy::reference)
-
             .def("detectGame", &IPluginGame::detectGame)
             .def("gameName", &IPluginGame::gameName)
+            .def("displayGameName", &IPluginGame::displayGameName)
             .def("initializeProfile", &IPluginGame::initializeProfile, "directory"_a,
                  "settings"_a)
             .def("listSaves", &IPluginGame::listSaves, "folder"_a)
@@ -81,6 +68,7 @@ namespace mo2::python {
             .def("setGameVariant", &IPluginGame::setGameVariant, "variant"_a)
             .def("binaryName", &IPluginGame::binaryName)
             .def("gameShortName", &IPluginGame::gameShortName)
+            .def("lootGameName", &IPluginGame::lootGameName)
             .def("primarySources", &IPluginGame::primarySources)
             .def("validShortNames", &IPluginGame::validShortNames)
             .def("gameNexusName", &IPluginGame::gameNexusName)

@@ -353,6 +353,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameName, );
         }
+        QString displayGameName() const override
+        {
+            PYBIND11_OVERRIDE(QString, IPluginGame, displayGameName, );
+        }
         void initializeProfile(const QDir& directory,
                                ProfileSettings settings) const override
         {
@@ -435,6 +439,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QString, IPluginGame, gameShortName, );
         }
+        QString lootGameName() const override
+        {
+            PYBIND11_OVERRIDE(QString, IPluginGame, lootGameName, );
+        }
         QStringList primarySources() const override
         {
             PYBIND11_OVERRIDE(QStringList, IPluginGame, primarySources, );
@@ -491,9 +499,6 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE(QString, IPluginGame, getSupportURL, );
         }
-
-    protected:
-        std::map<std::type_index, std::any> featureList() const override;
     };
 
 }  // namespace mo2::python

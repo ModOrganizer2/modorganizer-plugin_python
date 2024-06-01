@@ -10,6 +10,7 @@
 #include <bsainvalidation.h>
 #include <dataarchives.h>
 #include <gameplugins.h>
+#include <igamefeatures.h>
 #include <localsavegames.h>
 #include <moddatachecker.h>
 #include <moddatacontent.h>
@@ -20,6 +21,7 @@
 #include "pyfiletree.h"
 
 namespace py = pybind11;
+
 using namespace MOBase;
 using namespace pybind11::literals;
 
@@ -198,7 +200,7 @@ namespace mo2::python {
         }
     };
 
-    class PyPyUnmanagedMods : public UnmanagedMods {
+    class PyUnmanagedMods : public UnmanagedMods {
     public:
         QStringList mods(bool onlyOfficial) const override
         {
@@ -223,9 +225,15 @@ namespace mo2::python {
 
     void add_game_feature_bindings(pybind11::module_ m)
     {
+        // this is just to allow accepting GameFeature in function, we do not expose
+        // anything from game feature to Python since typeInfo() is useless in Python
+        //
+        py::class_<GameFeature>(m, "GameFeature");
+
         // BSAInvalidation
 
-        py::class_<BSAInvalidation, PyBSAInvalidation>(m, "BSAInvalidation")
+        py::class_<BSAInvalidation, GameFeature, PyBSAInvalidation>(m,
+                                                                    "BSAInvalidation")
             .def(py::init<>())
             .def("isInvalidationBSA", &BSAInvalidation::isInvalidationBSA, "name"_a)
             .def("deactivate", &BSAInvalidation::deactivate, "profile"_a)
@@ -233,7 +241,7 @@ namespace mo2::python {
 
         // DataArchives
 
-        py::class_<DataArchives, PyDataArchives>(m, "DataArchives")
+        py::class_<DataArchives, GameFeature, PyDataArchives>(m, "DataArchives")
             .def(py::init<>())
             .def("vanillaArchives", &DataArchives::vanillaArchives)
             .def("archives", &DataArchives::archives, "profile"_a)
@@ -243,7 +251,7 @@ namespace mo2::python {
 
         // GamePlugins
 
-        py::class_<GamePlugins, PyGamePlugins>(m, "GamePlugins")
+        py::class_<GamePlugins, GameFeature, PyGamePlugins>(m, "GamePlugins")
             .def(py::init<>())
             .def("writePluginLists", &GamePlugins::writePluginLists, "plugin_list"_a)
             .def("readPluginLists", &GamePlugins::readPluginLists, "plugin_list"_a)
@@ -254,15 +262,15 @@ namespace mo2::python {
 
         // LocalSavegames
 
-        py::class_<LocalSavegames, PyLocalSavegames>(m, "LocalSavegames")
+        py::class_<LocalSavegames, GameFeature, PyLocalSavegames>(m, "LocalSavegames")
             .def(py::init<>())
             .def("mappings", &LocalSavegames::mappings, "profile_save_dir"_a)
             .def("prepareProfile", &LocalSavegames::prepareProfile, "profile"_a);
 
         // ModDataChecker
 
-        py::class_<ModDataChecker, PyModDataChecker> pyModDataChecker(m,
-                                                                      "ModDataChecker");
+        py::class_<ModDataChecker, GameFeature, PyModDataChecker> pyModDataChecker(
+            m, "ModDataChecker");
 
         py::enum_<ModDataChecker::CheckReturn>(pyModDataChecker, "CheckReturn")
             .value("INVALID", ModDataChecker::CheckReturn::INVALID)
@@ -275,8 +283,8 @@ namespace mo2::python {
             .def("fix", &ModDataChecker::fix, "filetree"_a);
 
         // ModDataContent
-        py::class_<ModDataContent, PyModDataContent> pyModDataContent(m,
-                                                                      "ModDataContent");
+        py::class_<ModDataContent, GameFeature, PyModDataContent> pyModDataContent(
+            m, "ModDataContent");
 
         py::class_<ModDataContent::Content>(pyModDataContent, "Content")
             .def(py::init<int, QString, QString, bool>(), "id"_a, "name"_a, "icon"_a,
@@ -292,7 +300,7 @@ namespace mo2::python {
 
         // SaveGameInfo
 
-        py::class_<SaveGameInfo, PySaveGameInfo>(m, "SaveGameInfo")
+        py::class_<SaveGameInfo, GameFeature, PySaveGameInfo>(m, "SaveGameInfo")
             .def(py::init<>())
             .def("getMissingAssets", &SaveGameInfo::getMissingAssets, "save"_a)
             .def("getSaveGameWidget", &SaveGameInfo::getSaveGameWidget,
@@ -300,7 +308,7 @@ namespace mo2::python {
 
         // ScriptExtender
 
-        py::class_<ScriptExtender, PyScriptExtender>(m, "ScriptExtender")
+        py::class_<ScriptExtender, GameFeature, PyScriptExtender>(m, "ScriptExtender")
             .def(py::init<>())
             .def("binaryName", &ScriptExtender::BinaryName)
             .def("pluginPath", wrap_return_for_directory(&ScriptExtender::PluginPath))
@@ -313,7 +321,7 @@ namespace mo2::python {
 
         // UnmanagedMods
 
-        py::class_<UnmanagedMods, PyPyUnmanagedMods>(m, "UnmanagedMods")
+        py::class_<UnmanagedMods, GameFeature, PyUnmanagedMods>(m, "UnmanagedMods")
             .def(py::init<>())
             .def("mods", &UnmanagedMods::mods, "official_only"_a)
             .def("displayName", &UnmanagedMods::displayName, "mod_name"_a)
@@ -333,14 +341,13 @@ namespace mo2::python {
 namespace mo2::python {
 
     class GameFeaturesHelper {
-        using GameFeatures = std::tuple<BSAInvalidation, DataArchives, GamePlugins,
-                                        LocalSavegames, ModDataChecker, ModDataContent,
-                                        SaveGameInfo, ScriptExtender, UnmanagedMods>;
-
         template <class F, std::size_t... Is>
         static void helper(F&& f, std::index_sequence<Is...>)
         {
-            (f(static_cast<std::tuple_element_t<Is, GameFeatures>*>(nullptr)), ...);
+            (f(static_cast<
+                 std::tuple_element_t<Is, MOBase::details::BaseGameFeaturesP>>(
+                 nullptr)),
+             ...);
         }
 
     public:
@@ -349,45 +356,33 @@ namespace mo2::python {
         template <class F>
         static void apply(F&& f)
         {
-            helper(f, std::make_index_sequence<std::tuple_size_v<GameFeatures>>{});
+            helper(f, std::make_index_sequence<
+                          std::tuple_size_v<MOBase::details::BaseGameFeaturesP>>{});
         }
     };
 
-    pybind11::object extract_feature(IPluginGame const& game, pybind11::object type)
+    pybind11::object extract_feature(IGameFeatures const& gameFeatures,
+                                     pybind11::object type)
     {
         py::object py_feature = py::none();
         GameFeaturesHelper::apply([&]<class Feature>(Feature*) {
             if (py::type::of<Feature>().is(type)) {
-                py_feature = py::cast(game.feature<Feature>(),
+                py_feature = py::cast(gameFeatures.gameFeature<Feature>(),
                                       py::return_value_policy::reference);
             }
         });
         return py_feature;
     }
 
-    pybind11::dict extract_feature_list(IPluginGame const& game)
+    int unregister_feature(MOBase::IGameFeatures& gameFeatures, pybind11::object type)
     {
-        // constructing a dict from class name to actual object
-        py::dict dict;
+        int count = 0;
         GameFeaturesHelper::apply([&]<class Feature>(Feature*) {
-            dict[py::type::of<Feature>()] =
-                py::cast(game.feature<Feature>(), py::return_value_policy::reference);
-        });
-        return dict;
-    }
-
-    std::map<std::type_index, std::any>
-    convert_feature_list(py::dict const& py_features)
-    {
-        std::map<std::type_index, std::any> features;
-        GameFeaturesHelper::apply([&]<class Feature>(Feature*) {
-            const auto py_type = py::type::of<Feature>();
-            if (py_features.contains(py_type)) {
-                features[std::type_index(typeid(Feature))] =
-                    py_features[py_type].cast<Feature*>();
+            if (py::type::of<Feature>().is(type)) {
+                count = gameFeatures.unregisterFeatures<Feature>();
             }
         });
-        return features;
+        return count;
     }
 
 }  // namespace mo2::python
