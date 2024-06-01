@@ -228,12 +228,12 @@ namespace mo2::python {
         // this is just to allow accepting GameFeature in function, we do not expose
         // anything from game feature to Python since typeInfo() is useless in Python
         //
-        py::class_<GameFeature>(m, "GameFeature");
+        py::class_<GameFeature, std::shared_ptr<GameFeature>>(m, "GameFeature");
 
         // BSAInvalidation
 
-        py::class_<BSAInvalidation, GameFeature, PyBSAInvalidation>(m,
-                                                                    "BSAInvalidation")
+        py::class_<BSAInvalidation, GameFeature, PyBSAInvalidation,
+                   std::shared_ptr<BSAInvalidation>>(m, "BSAInvalidation")
             .def(py::init<>())
             .def("isInvalidationBSA", &BSAInvalidation::isInvalidationBSA, "name"_a)
             .def("deactivate", &BSAInvalidation::deactivate, "profile"_a)
@@ -241,7 +241,8 @@ namespace mo2::python {
 
         // DataArchives
 
-        py::class_<DataArchives, GameFeature, PyDataArchives>(m, "DataArchives")
+        py::class_<DataArchives, GameFeature, PyDataArchives,
+                   std::shared_ptr<DataArchives>>(m, "DataArchives")
             .def(py::init<>())
             .def("vanillaArchives", &DataArchives::vanillaArchives)
             .def("archives", &DataArchives::archives, "profile"_a)
@@ -251,7 +252,8 @@ namespace mo2::python {
 
         // GamePlugins
 
-        py::class_<GamePlugins, GameFeature, PyGamePlugins>(m, "GamePlugins")
+        py::class_<GamePlugins, GameFeature, PyGamePlugins,
+                   std::shared_ptr<GamePlugins>>(m, "GamePlugins")
             .def(py::init<>())
             .def("writePluginLists", &GamePlugins::writePluginLists, "plugin_list"_a)
             .def("readPluginLists", &GamePlugins::readPluginLists, "plugin_list"_a)
@@ -262,15 +264,17 @@ namespace mo2::python {
 
         // LocalSavegames
 
-        py::class_<LocalSavegames, GameFeature, PyLocalSavegames>(m, "LocalSavegames")
+        py::class_<LocalSavegames, GameFeature, PyLocalSavegames,
+                   std::shared_ptr<LocalSavegames>>(m, "LocalSavegames")
             .def(py::init<>())
             .def("mappings", &LocalSavegames::mappings, "profile_save_dir"_a)
             .def("prepareProfile", &LocalSavegames::prepareProfile, "profile"_a);
 
         // ModDataChecker
 
-        py::class_<ModDataChecker, GameFeature, PyModDataChecker> pyModDataChecker(
-            m, "ModDataChecker");
+        py::class_<ModDataChecker, GameFeature, PyModDataChecker,
+                   std::shared_ptr<ModDataChecker>>
+            pyModDataChecker(m, "ModDataChecker");
 
         py::enum_<ModDataChecker::CheckReturn>(pyModDataChecker, "CheckReturn")
             .value("INVALID", ModDataChecker::CheckReturn::INVALID)
@@ -283,8 +287,9 @@ namespace mo2::python {
             .def("fix", &ModDataChecker::fix, "filetree"_a);
 
         // ModDataContent
-        py::class_<ModDataContent, GameFeature, PyModDataContent> pyModDataContent(
-            m, "ModDataContent");
+        py::class_<ModDataContent, GameFeature, PyModDataContent,
+                   std::shared_ptr<ModDataContent>>
+            pyModDataContent(m, "ModDataContent");
 
         py::class_<ModDataContent::Content>(pyModDataContent, "Content")
             .def(py::init<int, QString, QString, bool>(), "id"_a, "name"_a, "icon"_a,
@@ -300,7 +305,8 @@ namespace mo2::python {
 
         // SaveGameInfo
 
-        py::class_<SaveGameInfo, GameFeature, PySaveGameInfo>(m, "SaveGameInfo")
+        py::class_<SaveGameInfo, GameFeature, PySaveGameInfo,
+                   std::shared_ptr<SaveGameInfo>>(m, "SaveGameInfo")
             .def(py::init<>())
             .def("getMissingAssets", &SaveGameInfo::getMissingAssets, "save"_a)
             .def("getSaveGameWidget", &SaveGameInfo::getSaveGameWidget,
@@ -308,7 +314,8 @@ namespace mo2::python {
 
         // ScriptExtender
 
-        py::class_<ScriptExtender, GameFeature, PyScriptExtender>(m, "ScriptExtender")
+        py::class_<ScriptExtender, GameFeature, PyScriptExtender,
+                   std::shared_ptr<ScriptExtender>>(m, "ScriptExtender")
             .def(py::init<>())
             .def("binaryName", &ScriptExtender::BinaryName)
             .def("pluginPath", wrap_return_for_directory(&ScriptExtender::PluginPath))
@@ -321,7 +328,8 @@ namespace mo2::python {
 
         // UnmanagedMods
 
-        py::class_<UnmanagedMods, GameFeature, PyUnmanagedMods>(m, "UnmanagedMods")
+        py::class_<UnmanagedMods, GameFeature, PyUnmanagedMods,
+                   std::shared_ptr<UnmanagedMods>>(m, "UnmanagedMods")
             .def(py::init<>())
             .def("mods", &UnmanagedMods::mods, "official_only"_a)
             .def("displayName", &UnmanagedMods::displayName, "mod_name"_a)
