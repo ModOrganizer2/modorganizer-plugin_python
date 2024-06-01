@@ -82,17 +82,6 @@ namespace mo2::python {
         try {
             static const char* argv0 = "ModOrganizer.exe";
 
-            // initialize the core Path of Python, this must be done before
-            // initialization
-            //
-            if (!pythonPaths.empty()) {
-                QStringList paths;
-                for (auto const& p : pythonPaths) {
-                    paths.append(QString::fromStdWString(absolute(p).native()));
-                }
-                Py_SetPath(paths.join(';').toStdWString().c_str());
-            }
-
             PyConfig config;
             PyConfig_InitIsolatedConfig(&config);
 
@@ -103,6 +92,31 @@ namespace mo2::python {
             // from MO2
             config.site_import        = 1;
             config.optimization_level = 2;
+
+            // set the module search paths
+            //
+            auto paths = pythonPaths;
+            if (paths.empty()) {
+
+                // while it is possible to use config.pythonpath_env, it requires
+                // config.use_environment, which brings other stuffs in and might not be
+                // what we want, so simply parsing the path ourselve
+                //
+                if (auto* pythonPath = std::getenv("PYTHONPATH")) {
+                    for (auto& path : QString::fromStdString(pythonPath).split(";")) {
+                        paths.push_back(
+                            std::filesystem::path{path.trimmed().toStdWString()});
+                    }
+                }
+            }
+
+            if (!paths.empty()) {
+                config.module_search_paths_set = 1;
+                for (auto const& path : paths) {
+                    PyWideStringList_Append(&config.module_search_paths,
+                                            absolute(path).native().c_str());
+                }
+            }
 
             py::initialize_interpreter(&config, 1, &argv0, true);
 
