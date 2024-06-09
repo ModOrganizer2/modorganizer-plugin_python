@@ -8,6 +8,7 @@
 #include <filemapping.h>
 #include <guessedvalue.h>
 #include <idownloadmanager.h>
+#include <igamefeatures.h>
 #include <iinstallationmanager.h>
 #include <imodinterface.h>
 #include <imodrepositorybridge.h>
@@ -514,6 +515,8 @@ namespace mo2::python {
             .def("pluginList", &IOrganizer::pluginList,
                  py::return_value_policy::reference)
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
+            .def("gameFeatures", &IOrganizer::gameFeatures,
+                 py::return_value_policy::reference)
             .def("profile", &IOrganizer::profile, py::return_value_policy::reference)
 
             // custom implementation for startApplication and
@@ -775,7 +778,7 @@ namespace mo2::python {
                  [](const IProfile* p) {
                      bool supported;
                      bool active = p->invalidationActive(&supported);
-                     return py::make_tuple(active, supported);
+                     return std::make_tuple(active, supported);
                  })
             .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, "inifile"_a);
 

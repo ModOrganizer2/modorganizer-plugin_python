@@ -39,7 +39,7 @@ string(APPEND extra_paths "\\;${PYTHON_ROOT}/PCbuild/amd64")
 string(APPEND extra_paths "\\;$<TARGET_FILE_DIR:runner>")
 set_tests_properties(${runner-tests_gtests}
     PROPERTIES
-    WORKING_DIRECTORY "${MO2_INSTALL_PATH}/bin"
     ENVIRONMENT "PLUGIN_DIR=${CMAKE_CURRENT_SOURCE_DIR}/plugins"
     ENVIRONMENT_MODIFICATION
-    "PATH=path_list_prepend:${extra_paths};PYTHONPATH=set:${PYTHONPATH}")
+    "PATH=path_list_prepend:${extra_paths};PYTHONPATH=set:${PYTHONPATH}"
+)

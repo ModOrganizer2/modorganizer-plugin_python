@@ -16,6 +16,7 @@
 #include "pybind11_utils/shared_cpp_owner.h"
 #include "pybind11_utils/smart_variant_wrapper.h"
 
+#include <game_feature.h>
 #include <isavegame.h>
 #include <pluginrequirements.h>
 
@@ -139,5 +140,6 @@ namespace mo2::python {
 
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::IPluginRequirement)
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::ISaveGame)
+MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::GameFeature)
 
 #endif

@@ -48,6 +48,7 @@ PYBIND11_MODULE(mobase, m)
 
     // game features must be added before plugins
     mo2::python::add_game_feature_bindings(m);
+    mo2::python::add_igamefeatures_classes(m);
 
     mo2::python::add_plugins_bindings(m);
 
