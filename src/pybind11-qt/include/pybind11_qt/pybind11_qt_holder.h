@@ -29,7 +29,7 @@ namespace pybind11::detail::qt {
         ~qobject_holder_impl()
         {
             gil_scoped_acquire s;
-            p_ = std::move(none());
+            p_ = object();
         }
     };
 
