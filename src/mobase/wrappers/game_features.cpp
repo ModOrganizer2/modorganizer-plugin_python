@@ -91,9 +91,9 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(bool, GamePlugins, lightPluginsAreSupported, );
         }
-        bool overridePluginsAreSupported() override
+        bool mediumPluginsAreSupported() override
         {
-            PYBIND11_OVERRIDE_PURE(bool, GamePlugins, overridePluginsAreSupported, );
+            PYBIND11_OVERRIDE_PURE(bool, GamePlugins, mediumPluginsAreSupported, );
         }
     };
 
@@ -259,8 +259,7 @@ namespace mo2::python {
             .def("readPluginLists", &GamePlugins::readPluginLists, "plugin_list"_a)
             .def("getLoadOrder", &GamePlugins::getLoadOrder)
             .def("lightPluginsAreSupported", &GamePlugins::lightPluginsAreSupported)
-            .def("overridePluginsAreSupported",
-                 &GamePlugins::overridePluginsAreSupported);
+            .def("mediumPluginsAreSupported", &GamePlugins::mediumPluginsAreSupported);
 
         // LocalSavegames
 
