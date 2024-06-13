@@ -34,7 +34,7 @@ mo2_add_translations(proxy
 set(DLL_DIRS ${PLUGIN_PYTHON_DIR}/dlls)
 file(GLOB dlls_to_install
 	${PYTHON_BUILD_PATH}/libffi*.dll
-	${PYTHON_BUILD_PATH}/python${Python_VERSION_SHORT}.dll)
+	${PYTHON_BUILD_PATH}/python${Python_VERSION_SHORT}*.dll)
 install(FILES ${dlls_to_install} DESTINATION ${DLL_DIRS})
 
 # install Python files
