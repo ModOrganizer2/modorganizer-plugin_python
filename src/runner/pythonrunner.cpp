@@ -132,13 +132,15 @@ namespace mo2::python {
                 return false;
             }
 
-            py::module_ mainModule   = py::module_::import("__main__");
-            py::object mainNamespace = mainModule.attr("__dict__");
-            mainNamespace["sys"]     = py::module_::import("sys");
-            mainNamespace["mobase"]  = py::module_::import("mobase");
+            {
+                py::module_ mainModule   = py::module_::import("__main__");
+                py::object mainNamespace = mainModule.attr("__dict__");
+                mainNamespace["sys"]     = py::module_::import("sys");
+                mainNamespace["mobase"]  = py::module_::import("mobase");
 
-            mo2::python::configure_python_stream();
-            mo2::python::configure_python_logging(mainNamespace["mobase"]);
+                mo2::python::configure_python_stream();
+                mo2::python::configure_python_logging(mainNamespace["mobase"]);
+            }
 
             // we need to release the GIL here - which is what this does
             //

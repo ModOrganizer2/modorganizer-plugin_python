@@ -54,7 +54,6 @@ Do you want to try initializing python again (at the risk of another crash)?
     <message>
         <location filename="proxy/proxypython.cpp" line="260"/>
         <source>The path to Mod Organizer (%1) contains a semicolon.&lt;br&gt;While this is legal on NTFS drives, many applications do not handle it correctly.&lt;br&gt;Unfortunately MO depends on libraries that seem to fall into that group.&lt;br&gt;As a result the python plugin cannot be loaded, and the only solution we can offer is to remove the semicolon or move MO to a path without a semicolon.</source>
-        <oldsource>The path to Mod Organizer (%1) contains a semicolon. &lt;br&gt;While this is legal on NTFS drives, many softwares do not handle it correctly.&lt;br&gt;Unfortunately MO depends on libraries that seem to fall into that group.&lt;br&gt;As a result the python plugin cannot be loaded, and the only solution we canoffer is to remove the semicolon or move MO to a path without a semicolon.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>

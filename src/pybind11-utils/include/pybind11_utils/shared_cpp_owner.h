@@ -54,7 +54,7 @@ namespace mo2::python::detail {
             holder.reset(holder.get(), [pyobj = py::reinterpret_borrow<py::object>(
                                             src)](auto*) mutable {
                 py::gil_scoped_acquire s;
-                pyobj = std::move(py::none());
+                pyobj = py::object();
 
                 // we do NOT delete the object here - if this was the last reference to
                 // the Python object, the Python object will delete it
