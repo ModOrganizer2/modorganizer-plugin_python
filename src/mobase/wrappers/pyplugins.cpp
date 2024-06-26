@@ -190,8 +190,11 @@ namespace mo2::python {
             m, "IPluginPreview", py::multiple_inheritance())
             .def(py::init<>())
             .def("supportedExtensions", &IPluginPreview::supportedExtensions)
+            .def("supportsArchives", &IPluginPreview::supportsArchives)
             .def("genFilePreview", &IPluginPreview::genFilePreview, "filename"_a,
-                 "max_size"_a);
+                 "max_size"_a)
+            .def("genDataPreview", &IPluginPreview::genDataPreview, "file_data"_a,
+                 "filename"_a, "max_size"_a);
 
         py::class_<IPluginModPage, PyPluginModPage, IPlugin,
                    std::unique_ptr<IPluginModPage, py::nodelete>>(
