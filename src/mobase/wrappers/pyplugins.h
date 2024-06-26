@@ -179,11 +179,23 @@ namespace mo2::python {
                                    supportedExtensions, );
         }
 
+        bool supportsArchives() const override
+        {
+            PYBIND11_OVERRIDE(bool, IPluginPreview, supportsArchives, );
+        }
+
         QWidget* genFilePreview(const QString& fileName,
                                 const QSize& maxSize) const override
         {
             PYBIND11_OVERRIDE_PURE(QWidget*, IPluginPreview, genFilePreview, fileName,
                                    maxSize);
+        }
+
+        QWidget* genDataPreview(const QByteArray& fileData, const QString& fileName,
+                                const QSize& maxSize) const override
+        {
+            PYBIND11_OVERRIDE(QWidget*, IPluginPreview, genDataPreview, fileData,
+                              fileName, maxSize);
         }
     };
 
