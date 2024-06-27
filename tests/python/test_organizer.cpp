@@ -13,6 +13,10 @@ using ::testing::NiceMock;
 
 PYBIND11_MODULE(organizer, m)
 {
+    using ::testing::_;
+    using ::testing::Eq;
+    using ::testing::Return;
+
     m.def(
         "organizer",
         []() -> IOrganizer* {
@@ -21,9 +25,10 @@ PYBIND11_MODULE(organizer, m)
                 return "profile";
             });
             const auto handle = (HANDLE)std::uintptr_t{4654};
-            ON_CALL(*mock, startApplication).WillByDefault([&mock, handle](auto&&...) {
-                return handle;
-            });
+            EXPECT_CALL(*mock, startApplication(Eq("valid.exe"), _, _, _, _, _))
+                .WillRepeatedly(Return(handle));
+            EXPECT_CALL(*mock, startApplication(Eq("invalid.exe"), _, _, _, _, _))
+                .WillRepeatedly(Return(INVALID_HANDLE_VALUE));
             ON_CALL(*mock, waitForApplication)
                 .WillByDefault([&mock, original_handle = handle](
                                    HANDLE handle, bool refresh, LPDWORD exitCode) {
