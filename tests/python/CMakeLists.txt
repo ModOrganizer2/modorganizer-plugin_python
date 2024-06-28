@@ -18,7 +18,6 @@ add_test(NAME pytest
 	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/pylibs/bin/pytest.exe ${CMAKE_CURRENT_SOURCE_DIR} -s
 )
 
-set(extra_paths "${UIBASE_PATH}\\;${MO2_INSTALL_PATH}/bin/dlls")
 set_tests_properties(pytest
 	PROPERTIES
 	DEPENDS python-tests

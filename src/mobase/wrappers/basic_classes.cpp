@@ -429,6 +429,9 @@ namespace mo2::python {
 
     void add_iorganizer_classes(py::module_ m)
     {
+        // define INVALID_HANDLE_VALUE for startApplication, etc.
+        m.attr("INVALID_HANDLE_VALUE") = py::int_((std::uintptr_t)INVALID_HANDLE_VALUE);
+
         py::class_<IOrganizer::FileInfo>(m, "FileInfo")
             .def(py::init<>())
             .def_readwrite("filePath", &IOrganizer::FileInfo::filePath)

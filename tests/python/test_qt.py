@@ -1,7 +1,6 @@
-import pytest
 from PyQt6.QtCore import QDateTime, Qt
 
-m = pytest.importorskip("mobase_tests.qt")
+import mobase_tests.qt as m
 
 
 def test_qstring():

@@ -1,8 +1,6 @@
-import pytest
-
 import mobase
 
-m = pytest.importorskip("mobase_tests.filetree")
+import mobase_tests.filetree as m
 
 
 def test_filetype():

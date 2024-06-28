@@ -1,12 +1,11 @@
-import pytest
 from PyQt6.QtWidgets import QWidget
 
-m = pytest.importorskip("mobase_tests.qt_widgets")
+import mobase_tests.qt_widgets as m
 
 
 class PyWidget(QWidget):
-    def heightForWidth(self, value: int) -> int:
-        return value * 3 + 4
+    def heightForWidth(self, a0: int) -> int:
+        return a0 * 3 + 4
 
 
 class PyCustomWidget(m.CustomWidget):

@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+from collections.abc import Sequence
 
 from PyQt6.QtWidgets import QWidget
 
@@ -16,7 +16,7 @@ class DummyModDataChecker(mobase.ModDataChecker):
 
 
 class DummySaveGameInfo(mobase.SaveGameInfo):
-    def getMissingAssets(self, save: mobase.ISaveGame) -> dict[str, list[str]]:
+    def getMissingAssets(self, save: mobase.ISaveGame) -> dict[str, Sequence[str]]:
         return {}
 
     def getSaveGameWidget(self, parent: QWidget) -> mobase.ISaveGameInfoWidget | None:
