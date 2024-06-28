@@ -1,6 +1,6 @@
-import mobase
 import pytest
-from PyQt6.QtWidgets import QWidget
+
+import mobase
 
 m = pytest.importorskip("mobase_tests.organizer")
 

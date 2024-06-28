@@ -19,7 +19,7 @@ def test_filepath_wrappers():
 
     # from QDir, ko
     with pytest.raises(TypeError):
-        mobase.getProductVersion(QDir(sys.executable))
+        mobase.getProductVersion(QDir(sys.executable))  # pyright: ignore[reportArgumentType]
 
 
 def test_executableinfo():

@@ -1,5 +1,3 @@
-# -*- encoding: utf-8 -*-
-
 import mobase
 
 
@@ -31,4 +29,4 @@ class DummyFileMapperAndGame(mobase.IPluginFileMapper, mobase.IPluginGame):
 
 
 def createPlugins() -> list[mobase.IPlugin]:
-    return [DummyFileMapper(), DummyFileMapperAndGame()]
+    return [DummyFileMapper(), DummyFileMapperAndGame()]  # type: ignore

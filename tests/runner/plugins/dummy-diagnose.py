@@ -1,5 +1,3 @@
-# -*- encoding: utf-8 -*-
-
 import mobase
 
 
@@ -36,4 +34,4 @@ class DummyDiagnoseAndGame(mobase.IPluginDiagnose, mobase.IPluginGame):
 
 
 def createPlugins() -> list[mobase.IPlugin]:
-    return [DummyDiagnose(), DummyDiagnoseAndGame()]
+    return [DummyDiagnose(), DummyDiagnoseAndGame()]  # type: ignore

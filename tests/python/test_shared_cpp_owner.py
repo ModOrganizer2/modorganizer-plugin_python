@@ -1,9 +1,4 @@
-from re import A
-
-import pytest
-from PyQt6.QtCore import QDateTime, Qt
-
-m = pytest.importorskip("mobase_tests.shared_cpp_owner")
+import mobase_tests.shared_cpp_owner as m
 
 
 class PyBase(m.Base):
@@ -54,7 +49,7 @@ def test_shared_cpp_owner_3():
     assert not m.is_alive("foo")
 
 
-def test_shared_cpp_owner_3():
+def test_shared_cpp_owner_4():
     # create from Python, owned by C++
 
     p = PyBase("foo", 2)

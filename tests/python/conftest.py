@@ -1,15 +1,14 @@
-# -*- encoding: utf-8 -*-
-
 import os
 import sys
 from pathlib import Path
+from typing import cast
 
 
 def pytest_configure():
     global app
 
-    os.add_dll_directory(Path(os.getenv("QT_ROOT")).joinpath("bin"))
-    os.add_dll_directory(Path(os.getenv("UIBASE_PATH")))
+    os.add_dll_directory(str(Path(cast(str, os.getenv("QT_ROOT"))).joinpath("bin")))
+    os.add_dll_directory(str(os.getenv("UIBASE_PATH")))
 
     from PyQt6.QtWidgets import QApplication
 

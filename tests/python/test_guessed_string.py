@@ -1,8 +1,6 @@
-import pytest
-
 import mobase
 
-m = pytest.importorskip("mobase_tests.guessed_string")
+import mobase_tests.guessed_string as m
 
 
 def test_guessed_string():
@@ -29,7 +27,10 @@ def test_guessed_string():
     gs = mobase.GuessedString()
     assert str(gs) == ""
 
-    m.set_from_callback(gs, lambda gs: gs.update("test"))
+    def _update(gs: mobase.GuessedString):
+        gs.update("test")
+
+    m.set_from_callback(gs, _update)
     assert str(gs) == "test"
 
-    assert m.get_from_callback(lambda gs: gs.update("test")) == "test"
+    assert m.get_from_callback(_update) == "test"
