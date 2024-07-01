@@ -14,6 +14,7 @@ public:
 	MOCK_METHOD(QString, basePath, (), (const, override));
 	MOCK_METHOD(QString, modsPath, (), (const, override));
 	MOCK_METHOD(VersionInfo, appVersion, (), (const, override));
+	MOCK_METHOD(Version, version, (), (const, override));
 	MOCK_METHOD(IModInterface*, createMod, (GuessedValue<QString> &name), (override));
 	MOCK_METHOD(IPluginGame*, getGame, (const QString &gameName), (const, override));
 	MOCK_METHOD(void, modDataChanged, (IModInterface *mod), (override));
@@ -34,6 +35,7 @@ public:
 	MOCK_METHOD(std::shared_ptr<const IFileTree>, virtualFileTree, (), (const, override));
 	MOCK_METHOD(MOBase::IDownloadManager*, downloadManager, (), (const, override));
 	MOCK_METHOD(MOBase::IPluginList*, pluginList, (), (const, override));
+	MOCK_METHOD(MOBase::IExtensionList&, extensionList, (), (const, override));
 	MOCK_METHOD(MOBase::IModList*, modList, (), (const, override));
 	MOCK_METHOD(MOBase::IProfile*, profile, (), (const, override));
 	MOCK_METHOD(MOBase::IGameFeatures*, gameFeatures, (), (const, override));

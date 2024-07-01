@@ -12,7 +12,7 @@ else()
 	set(UIBASE_PATH "${MO2_INSTALL_PATH}/bin")
 endif()
 
-add_custom_target(python-tests)
+add_custom_target(python-tests ALL)
 
 add_test(NAME pytest
 	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/pylibs/bin/pytest.exe ${CMAKE_CURRENT_SOURCE_DIR} -s
@@ -44,6 +44,7 @@ foreach (test_file ${test_files})
 	pybind11_add_module(${target} EXCLUDE_FROM_ALL THIN_LTO ${test_file})
 	set_target_properties(${target}
 		PROPERTIES
+		CXX_STANDARD 20
 		OUTPUT_NAME ${pymodule}
 		FOLDER tests/python
 		LIBRARY_OUTPUT_DIRECTORY "${PYLIB_DIR}/mobase_tests")

@@ -5,9 +5,11 @@
 #include <format>
 
 #include <executableinfo.h>
+#include <extension.h>
 #include <filemapping.h>
 #include <guessedvalue.h>
 #include <idownloadmanager.h>
+#include <iextensionlist.h>
 #include <igamefeatures.h>
 #include <iinstallationmanager.h>
 #include <imodinterface.h>
@@ -33,6 +35,49 @@ namespace mo2::python {
 
     void add_versioninfo_classes(py::module_ m)
     {
+        // Version
+        py::class_<Version> pyVersion(m, "Version");
+
+        py::enum_<Version::ReleaseType>(pyVersion, "ReleaseType")
+            .value("DEVELOPMENT", Version::Development)
+            .value("ALPHA", Version::Alpha)
+            .value("BETA", Version::Beta)
+            .value("RELEASE_CANDIDATE", Version::ReleaseCandidate)
+            .export_values();
+
+        py::enum_<Version::ParseMode>(pyVersion, "ParseMode")
+            .value("SEMVER", Version::ParseMode::SemVer)
+            .value("MO2", Version::ParseMode::MO2);
+
+        pyVersion
+            .def_static("parse", &Version::parse, "value"_a,
+                        "mode"_a = Version::ParseMode::SemVer)
+            .def(py::init<int, int, int, QString>(), "major"_a, "minor"_a, "patch"_a,
+                 "metadata"_a = "")
+            .def(py::init<int, int, int, Version::ReleaseType, QString>(), "major"_a,
+                 "minor"_a, "patch"_a, "type"_a, "metadata"_a = "")
+            .def(py::init<int, int, int, Version::ReleaseType, int, QString>(),
+                 "major"_a, "minor"_a, "patch"_a, "type"_a, "prerelease"_a,
+                 "metadata"_a = "")
+            .def(py::init<int, int, int,
+                          std::vector<std::variant<int, Version::ReleaseType>>,
+                          QString>(),
+                 "major"_a, "minor"_a, "patch"_a, "pre_releases"_a, "metadata"_a = "")
+            .def("isPreRelease", &Version::isPreRelease)
+            .def_property_readonly("major", &Version::major)
+            .def_property_readonly("minor", &Version::minor)
+            .def_property_readonly("patch", &Version::patch)
+            .def_property_readonly("prerelease", &Version::preReleases)
+            .def_property_readonly("build_metadata", &Version::buildMetadata)
+            .def("__str__", &Version::string)
+            .def(py::self < py::self)
+            .def(py::self > py::self)
+            .def(py::self <= py::self)
+            .def(py::self >= py::self)
+            .def(py::self != py::self)
+            .def(py::self == py::self);
+
+        // VersionInfo
         py::enum_<MOBase::VersionInfo::ReleaseType>(m, "ReleaseType")
             .value("final", MOBase::VersionInfo::RELEASE_FINAL)
             .value("candidate", MOBase::VersionInfo::RELEASE_CANDIDATE)
@@ -447,7 +492,17 @@ namespace mo2::python {
             .def("overwritePath", &IOrganizer::overwritePath)
             .def("basePath", &IOrganizer::basePath)
             .def("modsPath", &IOrganizer::modsPath)
-            .def("appVersion", &IOrganizer::appVersion)
+            .def("appVersion",
+                 [](IOrganizer& o) {
+                     mo2::python::show_deprecation_warning(
+                         "appVersion", "IOrganizer::appVersion() is deprecated, use "
+                                       "IOrganizer::version() instead.");
+#pragma warning(push)
+#pragma warning(disable : 4996)
+                     return o.appVersion();
+#pragma warning(pop)
+                 })
+            .def("version", &IOrganizer::version)
             .def("createMod", &IOrganizer::createMod,
                  py::return_value_policy::reference, "name"_a)
             .def("getGame", &IOrganizer::getGame, py::return_value_policy::reference,
@@ -516,6 +571,8 @@ namespace mo2::python {
             .def("downloadManager", &IOrganizer::downloadManager,
                  py::return_value_policy::reference)
             .def("pluginList", &IOrganizer::pluginList,
+                 py::return_value_policy::reference)
+            .def("extensionList", &IOrganizer::extensionList,
                  py::return_value_policy::reference)
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,

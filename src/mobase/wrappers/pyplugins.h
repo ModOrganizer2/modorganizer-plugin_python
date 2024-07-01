@@ -45,22 +45,6 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE(QString, PluginBase, localizedName, );
         }
-        QString master() const override
-        {
-            PYBIND11_OVERRIDE(QString, PluginBase, master, );
-        }
-        QString author() const override
-        {
-            PYBIND11_OVERRIDE_PURE(QString, PluginBase, author, );
-        }
-        QString description() const override
-        {
-            PYBIND11_OVERRIDE_PURE(QString, PluginBase, description, );
-        }
-        VersionInfo version() const override
-        {
-            PYBIND11_OVERRIDE_PURE(VersionInfo, PluginBase, version, );
-        }
         QList<PluginSetting> settings() const override
         {
             PYBIND11_OVERRIDE_PURE(QList<PluginSetting>, PluginBase, settings, );

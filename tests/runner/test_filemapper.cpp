@@ -13,22 +13,24 @@ using namespace MOBase;
 
 TEST(IPluginFileMapper, Simple)
 {
-    const auto plugins_folder = QString(std::getenv("PLUGIN_DIR"));
+    const auto plugins_folder = std::filesystem::path(std::getenv("PLUGIN_DIR"));
 
     auto runner = mo2::python::createPythonRunner();
     runner->initialize();
 
     // load objects
-    const auto objects = runner->load(plugins_folder + "/dummy-filemapper.py");
-    EXPECT_EQ(objects.size(), 3);
+    const auto objects =
+        runner->load("dummy_filemapper", plugins_folder / "dummy-filemapper.py");
+    EXPECT_EQ(objects.size(), 2);
 
     // load the first IPluginFileMapper
     {
-        IPluginFileMapper* plugin = qobject_cast<IPluginFileMapper*>(objects[0]);
-        EXPECT_NE(plugin, nullptr);
+        ASSERT_EQ(objects[0].size(), 1);
+        IPluginFileMapper* plugin = qobject_cast<IPluginFileMapper*>(objects[0][0]);
+        ASSERT_NE(plugin, nullptr);
 
         const auto m = plugin->mappings();
-        EXPECT_EQ(m.size(), 2);
+        ASSERT_EQ(m.size(), 2);
 
         EXPECT_EQ(m[0].source, "the source");
         EXPECT_EQ(m[0].destination, "the destination");
@@ -43,11 +45,12 @@ TEST(IPluginFileMapper, Simple)
 
     // load the second one (this is cast before IPluginGame so should be before)
     {
-        IPluginFileMapper* plugin = qobject_cast<IPluginFileMapper*>(objects[1]);
-        EXPECT_NE(plugin, nullptr);
+        ASSERT_EQ(objects[1].size(), 2);
+        IPluginFileMapper* plugin = qobject_cast<IPluginFileMapper*>(objects[1][0]);
+        ASSERT_NE(plugin, nullptr);
 
         const auto m = plugin->mappings();
-        EXPECT_EQ(m.size(), 1);
+        ASSERT_EQ(m.size(), 1);
 
         EXPECT_EQ(m[0].source, "the source");
         EXPECT_EQ(m[0].destination, "the destination");
@@ -57,7 +60,7 @@ TEST(IPluginFileMapper, Simple)
 
     // load the game plugin
     {
-        IPluginGame* plugin = qobject_cast<IPluginGame*>(objects[2]);
-        EXPECT_NE(plugin, nullptr);
+        IPluginGame* plugin = qobject_cast<IPluginGame*>(objects[1][1]);
+        ASSERT_NE(plugin, nullptr);
     }
 }
