@@ -1,8 +1,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include <uibase/iplugininstallersimple.h>
+
 #include "MockOrganizer.h"
-#include "iplugininstallersimple.h"
 #include "pythonrunner.h"
 
 #include <QCoreApplication>

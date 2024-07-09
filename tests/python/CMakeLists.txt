@@ -2,15 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 
 # pytest
 cmake_policy(SET CMP0144 NEW)
+
+find_package(mo2-uibase CONFIG REQUIRED)
 find_package(GTest REQUIRED)
 
 set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
 
-if (TARGET uibase)
-	set(UIBASE_PATH $<TARGET_FILE_DIR:uibase>)
-else()
-	set(UIBASE_PATH "${MO2_INSTALL_PATH}/bin")
-endif()
+set(UIBASE_PATH $<TARGET_FILE_DIR:mo2::uibase>)
 
 add_custom_target(python-tests)
 
@@ -21,18 +19,16 @@ add_test(NAME pytest
 set_tests_properties(pytest
 	PROPERTIES
 	DEPENDS python-tests
-	WORKING_DIRECTORY ${MO2_INSTALL_PATH}/bin
 	ENVIRONMENT_MODIFICATION
 	"PYTHONPATH=set:${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>;\
-UIBASE_PATH=set:${UIBASE_PATH};\
-QT_ROOT=set:${QT_ROOT}"
+UIBASE_PATH=set:${UIBASE_PATH}"
 )
 
 mo2_python_pip_install(python-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
 	PACKAGES pytest
-		PyQt${QT_MAJOR_VERSION}==${QT_VERSION}
-		PyQt${QT_MAJOR_VERSION}-Qt${QT_MAJOR_VERSION}==${QT_VERSION})
+		PyQt${Qt_VERSION_MAJOR}==${Qt_VERSION}
+		PyQt${Qt_VERSION_MAJOR}-Qt${Qt_VERSION_MAJOR}==${Qt_VERSION})
 add_dependencies(python-tests mobase)
 set_target_properties(python-tests PROPERTIES FOLDER tests/python)
 
@@ -56,8 +52,8 @@ foreach (test_file ${test_files})
 		endforeach()
 	endif()
 
-	mo2_add_dependencies(${target} PRIVATE uibase Qt::Core Qt::Widgets)
-	target_link_libraries(${target} PRIVATE pybind11::qt pybind11::utils GTest::gmock)
+	target_link_libraries(${target} PRIVATE
+		mo2::uibase Qt6::Core Qt6::Widgets  pybind11::qt pybind11::utils GTest::gmock)
 
 	target_include_directories(${target}
     	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../mocks)

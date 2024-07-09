@@ -12,23 +12,6 @@
 #include "wrappers/pyfiletree.h"
 #include "wrappers/wrappers.h"
 
-// TODO: remove these include (only for testing)
-#include <QDir>
-#include <QFile>
-#include <QWidget>
-#include <iplugin.h>
-#include <iplugindiagnose.h>
-#include <ipluginfilemapper.h>
-#include <iplugingame.h>
-#include <iplugininstaller.h>
-#include <iplugininstallersimple.h>
-#include <ipluginlist.h>
-#include <ipluginmodpage.h>
-#include <ipluginpreview.h>
-#include <iplugintool.h>
-#include <isavegame.h>
-#include <isavegameinfowidget.h>
-
 using namespace MOBase;
 namespace py = pybind11;
 

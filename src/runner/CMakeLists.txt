@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
+find_package(mo2-uibase CONFIG REQUIRED)
+
 add_library(runner SHARED)
 mo2_configure_library(runner
 	SOURCE_TREE
@@ -7,9 +9,8 @@ mo2_configure_library(runner
 	EXTERNAL_WARNINGS 4
 	AUTOMOC ON
 	TRANSLATIONS OFF
-	PUBLIC_DEPENDS uibase Qt::Core
 )
-target_link_libraries(runner PRIVATE pybind11::embed pybind11::qt)
+target_link_libraries(runner PUBLIC mo2::uibase PRIVATE pybind11::embed pybind11::qt)
 target_include_directories(runner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(runner PRIVATE RUNNER_BUILD)
 

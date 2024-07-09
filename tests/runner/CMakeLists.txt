@@ -27,14 +27,12 @@ mo2_python_pip_install(runner-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
   PACKAGES
     pytest
-		PyQt${QT_MAJOR_VERSION}==${QT_VERSION}
-		PyQt${QT_MAJOR_VERSION}-Qt${QT_MAJOR_VERSION}==${QT_VERSION})
+		PyQt${Qt_VERSION_MAJOR}==${Qt_VERSION}
+		PyQt${Qt_VERSION_MAJOR}-Qt${Qt_VERSION_MAJOR}==${Qt_VERSION})
 
 add_dependencies(runner-tests mobase)
 
-set(pythoncore "${PYTHON_ROOT}/PCbuild/amd64/pythoncore")
-set(pythoncorezip "${pythoncore}/python${Python_VERSION_SHORT}.zip")
-set(PYTHONPATH "${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>\\;${pythoncore}\\;${pythoncorezip}")
+set(PYTHONPATH "${PYLIB_DIR}\\;$<TARGET_FILE_DIR:mobase>\\;${Python_DLL_DIR}\\;${Python_LIB_DIR}")
 
 set_tests_properties(${runner-tests_gtests}
     PROPERTIES

@@ -4,19 +4,19 @@
 
 #include "../pybind11_all.h"
 
-#include <ipluginlist.h>
-#include <isavegameinfowidget.h>
+#include <uibase/ipluginlist.h>
+#include <uibase/isavegameinfowidget.h>
 
-#include <bsainvalidation.h>
-#include <dataarchives.h>
-#include <gameplugins.h>
-#include <igamefeatures.h>
-#include <localsavegames.h>
-#include <moddatachecker.h>
-#include <moddatacontent.h>
-#include <savegameinfo.h>
-#include <scriptextender.h>
-#include <unmanagedmods.h>
+#include <uibase/game_features/bsainvalidation.h>
+#include <uibase/game_features/dataarchives.h>
+#include <uibase/game_features/gameplugins.h>
+#include <uibase/game_features/igamefeatures.h>
+#include <uibase/game_features/localsavegames.h>
+#include <uibase/game_features/moddatachecker.h>
+#include <uibase/game_features/moddatacontent.h>
+#include <uibase/game_features/savegameinfo.h>
+#include <uibase/game_features/scriptextender.h>
+#include <uibase/game_features/unmanagedmods.h>
 
 #include "pyfiletree.h"
 

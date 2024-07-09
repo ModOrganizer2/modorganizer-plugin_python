@@ -59,7 +59,7 @@ namespace pybind11::qt {
      * simply return the PyQtX object as a QClass* object, while __getattr__
      * will delegate to the underlying QClass object when required.
      *
-     * This allow access to Qt interface for object exposed using boost::python
+     * This allow access to Qt interface for object exposed using pybind11
      * (e.g., signals, methods from QObject or QWidget, etc.).
      *
      * @param pyclass Python class to define the methods on.

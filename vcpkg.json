@@ -1,0 +1,9 @@
+{
+  "dependencies": ["mo2-cmake", "pybind11"],
+  "features": {
+    "testing": {
+      "description": "Build UI Base tests.",
+      "dependencies": ["gtest"]
+    }
+  }
+}
