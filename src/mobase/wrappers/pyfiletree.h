@@ -3,7 +3,7 @@
 
 #include "../pybind11_all.h"
 
-#include <ifiletree.h>
+#include <uibase/ifiletree.h>
 
 namespace pybind11 {
     template <>

@@ -5,9 +5,10 @@
 
 #include <QCoreApplication>
 
+#include <uibase/ipluginfilemapper.h>
+#include <uibase/iplugingame.h>
+
 #include "MockOrganizer.h"
-#include "ipluginfilemapper.h"
-#include "iplugingame.h"
 
 using namespace MOBase;
 
