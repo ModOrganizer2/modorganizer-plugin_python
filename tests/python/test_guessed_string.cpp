@@ -3,7 +3,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 
-#include "guessedvalue.h"
+#include <uibase/guessedvalue.h>
 
 using namespace MOBase;
 

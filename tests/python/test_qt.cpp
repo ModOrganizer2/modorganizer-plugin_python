@@ -72,24 +72,26 @@ PYBIND11_MODULE(qt, m)
     // QVariant
 
     m.def("qvariant_from_none", [](QVariant const& variant) {
-        return std::make_tuple(variant.userType() == QVariant::Invalid,
+        return std::make_tuple(variant.userType() == QMetaType::UnknownType,
                                variant.isValid());
     });
     m.def("qvariant_from_int", [](QVariant const& variant) {
-        return std::make_tuple(variant.userType() == QVariant::Int, variant.toInt());
+        return std::make_tuple(variant.userType() == QMetaType::Int, variant.toInt());
     });
     m.def("qvariant_from_bool", [](QVariant const& variant) {
-        return std::make_tuple(variant.userType() == QVariant::Bool, variant.toBool());
+        return std::make_tuple(variant.userType() == QMetaType::Bool, variant.toBool());
     });
     m.def("qvariant_from_str", [](QVariant const& variant) {
-        return std::make_tuple(variant.userType() == QVariant::String,
+        return std::make_tuple(variant.userType() == QMetaType::QString,
                                variant.toString());
     });
     m.def("qvariant_from_list", [](QVariant const& variant) {
-        return std::make_tuple(variant.userType() == QVariant::List, variant.toList());
+        return std::make_tuple(variant.userType() == QMetaType::QVariantList,
+                               variant.toList());
     });
     m.def("qvariant_from_map", [](QVariant const& variant) {
-        return std::make_tuple(variant.userType() == QVariant::Map, variant.toMap());
+        return std::make_tuple(variant.userType() == QMetaType::QVariantMap,
+                               variant.toMap());
     });
 
     m.def("qvariant_none", []() {

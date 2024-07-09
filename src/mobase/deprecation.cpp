@@ -7,7 +7,7 @@
 
 #include <QCoreApplication>
 
-#include "log.h"
+#include <uibase/log.h>
 
 namespace py = pybind11;
 

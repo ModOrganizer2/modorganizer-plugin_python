@@ -4,6 +4,8 @@
 
 #include <QString>
 
+#include <sip.h>
+
 namespace py = pybind11;
 
 namespace pybind11::detail::qt {
@@ -60,5 +62,44 @@ namespace pybind11::detail::qt {
         }
         return sipApi;
     }
+
+    namespace sip {
+        const sipTypeDef* api_find_type(const char* type)
+        {
+            return sipAPI()->api_find_type(type);
+        }
+
+        int api_can_convert_to_type(PyObject* pyObj, const sipTypeDef* td, int flags)
+        {
+            return sipAPI()->api_can_convert_to_type(pyObj, td, flags);
+        }
+
+        void api_transfer_to(PyObject* self, PyObject* owner)
+        {
+            sipAPI()->api_transfer_to(self, owner);
+        }
+
+        void api_transfer_back(PyObject* self)
+        {
+            sipAPI()->api_transfer_back(self);
+        }
+
+        PyObject* api_convert_from_type(void* cpp, const sipTypeDef* td, PyObject*)
+        {
+            return sipAPI()->api_convert_from_type(cpp, td, 0);
+        }
+
+        void* extract_data(PyObject* ptr)
+        {
+            if (PyObject_TypeCheck(ptr, sipAPI()->api_simplewrapper_type)) {
+                return reinterpret_cast<sipSimpleWrapper*>(ptr)->data;
+            }
+            else if (PyObject_TypeCheck(ptr, sipAPI()->api_wrapper_type)) {
+                return reinterpret_cast<sipWrapper*>(ptr)->super.data;
+            }
+            return nullptr;
+        }
+
+    }  // namespace sip
 
 }  // namespace pybind11::detail::qt
