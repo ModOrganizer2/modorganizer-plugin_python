@@ -28,9 +28,9 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <QWidget>
 #include <QtPlugin>
 
-#include <log.h>
-#include <utility.h>
-#include <versioninfo.h>
+#include <uibase/log.h>
+#include <uibase/utility.h>
+#include <uibase/versioninfo.h>
 
 namespace fs = std::filesystem;
 using namespace MOBase;

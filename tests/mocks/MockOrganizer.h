@@ -1,5 +1,5 @@
-#include "imoinfo.h"
 #include <gmock/gmock.h>
+#include <uibase/imoinfo.h>
 
 using namespace MOBase;
 

@@ -16,9 +16,9 @@
 #include "pybind11_utils/shared_cpp_owner.h"
 #include "pybind11_utils/smart_variant_wrapper.h"
 
-#include <game_feature.h>
-#include <isavegame.h>
-#include <pluginrequirements.h>
+#include <uibase/game_features/game_feature.h>
+#include <uibase/isavegame.h>
+#include <uibase/pluginrequirements.h>
 
 namespace mo2::python {
 

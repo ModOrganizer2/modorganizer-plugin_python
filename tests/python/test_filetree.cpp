@@ -3,7 +3,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 
-#include "ifiletree.h"
+#include <uibase/ifiletree.h>
 
 using namespace MOBase;
 

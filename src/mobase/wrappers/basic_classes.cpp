@@ -4,21 +4,21 @@
 
 #include <format>
 
-#include <executableinfo.h>
-#include <filemapping.h>
-#include <guessedvalue.h>
-#include <idownloadmanager.h>
-#include <igamefeatures.h>
-#include <iinstallationmanager.h>
-#include <imodinterface.h>
-#include <imodrepositorybridge.h>
-#include <imoinfo.h>
-#include <iplugin.h>
-#include <iplugindiagnose.h>
-#include <iplugingame.h>
-#include <ipluginlist.h>
-#include <pluginsetting.h>
-#include <versioninfo.h>
+#include <uibase/executableinfo.h>
+#include <uibase/filemapping.h>
+#include <uibase/game_features/igamefeatures.h>
+#include <uibase/guessedvalue.h>
+#include <uibase/idownloadmanager.h>
+#include <uibase/iinstallationmanager.h>
+#include <uibase/imodinterface.h>
+#include <uibase/imodrepositorybridge.h>
+#include <uibase/imoinfo.h>
+#include <uibase/iplugin.h>
+#include <uibase/iplugindiagnose.h>
+#include <uibase/iplugingame.h>
+#include <uibase/ipluginlist.h>
+#include <uibase/pluginsetting.h>
+#include <uibase/versioninfo.h>
 
 #include "../deprecation.h"
 #include "pyfiletree.h"
