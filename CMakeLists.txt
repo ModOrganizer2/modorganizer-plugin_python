@@ -2,14 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 cmake_policy(SET CMP0144 NEW)
 
-# remove MinSizeRel otherwise CMP0111 breaks everything
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
-
 project(plugin_python CXX)
 
 find_package(mo2-cmake CONFIG REQUIRED)
 
-find_package(Python 3.12 COMPONENTS Interpreter Development REQUIRED)
+find_package(Python ${MO2_PYTHON_VERSION} COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
 get_filename_component(Python_HOME ${Python_EXECUTABLE} PATH)

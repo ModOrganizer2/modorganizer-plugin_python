@@ -19,8 +19,8 @@ protected:
         return std::make_shared<DummyFileTree>(parent, name);
     }
 
-    bool doPopulate(std::shared_ptr<const IFileTree> parent,
-                    std::vector<std::shared_ptr<FileTreeEntry>>& entries) const override
+    bool doPopulate(std::shared_ptr<const IFileTree>,
+                    std::vector<std::shared_ptr<FileTreeEntry>>&) const override
     {
         return true;
     }
