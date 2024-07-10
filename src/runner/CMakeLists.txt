@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 find_package(mo2-uibase CONFIG REQUIRED)
 
 add_library(runner SHARED)
-mo2_configure_library(runner
+mo2_configure_target(runner
 	SOURCE_TREE
 	WARNINGS 4
 	EXTERNAL_WARNINGS 4

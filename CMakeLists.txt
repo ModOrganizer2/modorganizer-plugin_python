@@ -17,7 +17,7 @@ add_custom_target(PyQt6)
 mo2_python_pip_install(PyQt6
 	DIRECTORY ${CMAKE_BINARY_DIR}/pylibs/
 	PACKAGES
-		PyQt${Qt_VERSION_MAJOR}==${Qt_VERSION}
+		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION}
 		sip==6.8.5)
 
 # useful for naming DLL, zip, etc. (3.10 -> 310)

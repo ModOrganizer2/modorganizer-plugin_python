@@ -5,7 +5,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 mo2_find_python_executable(PYTHON_EXE)
 
 add_library(pybind11-qt STATIC)
-mo2_configure_library(pybind11-qt
+mo2_configure_target(pybind11-qt
 	SOURCE_TREE
 	WARNINGS 4
 	EXTERNAL_WARNINGS 4
@@ -25,12 +25,12 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -E env PYTHONPATH=${CMAKE_BINARY_DIR}/pylibs
 		${CMAKE_BINARY_DIR}/pylibs/bin/sip-module.exe
-		--sip-h PyQt${Qt_VERSION_MAJOR}.sip
+		--sip-h PyQt${MO2_QT_VERSION_MAJOR}.sip
 		--target-dir ${CMAKE_CURRENT_BINARY_DIR}
 )
-target_sources(pybind11-qt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/sip.h")
 add_dependencies(PyQt6-siph PyQt6)
-
 add_dependencies(pybind11-qt PyQt6-siph)
+
+target_include_directories(pybind11-qt PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(pybind11::qt ALIAS pybind11-qt)

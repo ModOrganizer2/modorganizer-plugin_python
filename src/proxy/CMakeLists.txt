@@ -15,13 +15,13 @@ mo2_configure_plugin(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
 target_link_libraries(proxy PRIVATE runner mo2::uibase)
 set_target_properties(proxy PROPERTIES OUTPUT_NAME ${PLUGIN_NAME})
-mo2_install_target(proxy FOLDER)
+mo2_install_plugin(proxy FOLDER)
 
 set(PLUGIN_PYTHON_DIR bin/plugins/${PLUGIN_NAME})
 
 # install runner
 target_link_options(proxy PRIVATE "/DELAYLOAD:runner.dll")
-mo2_install_target(runner INSTALLDIR ${PLUGIN_PYTHON_DIR}/dlls)
+install(FILES $<TARGET_FILE:runner> DESTINATION ${PLUGIN_PYTHON_DIR}/dlls)
 
 # translations (custom location)
 mo2_add_translations(proxy
@@ -58,11 +58,8 @@ install(FILES ${pythoncore_zip} DESTINATION ${PYLIB_DIR})
 install(TARGETS mobase DESTINATION ${PYLIB_DIR})
 
 # install PyQt6
-# set(PYQT_LIB_DIR ${CMAKE_BINARY_DIR}/pylibs/PyQt${Qt_VERSION_MAJOR})
-# set(PYQT_TARGET_DIR ${PYLIB_DIR}/PyQt${Qt_VERSION_MAJOR})
-# file(GLOB pyqt_files ${PYQT_LIB_DIR}/*.py ${PYQT_LIB_DIR}/*.pyd ${PYQT_LIB_DIR}/*.pyi)
 install(
-    DIRECTORY ${CMAKE_BINARY_DIR}/pylibs/PyQt${Qt_VERSION_MAJOR}
+    DIRECTORY ${CMAKE_BINARY_DIR}/pylibs/PyQt${MO2_QT_VERSION_MAJOR}
     DESTINATION ${PYLIB_DIR}
     PATTERN "*.pyd"
     PATTERN "*.pyi"

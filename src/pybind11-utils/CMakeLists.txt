@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 add_library(pybind11-utils STATIC)
-mo2_configure_library(pybind11-utils
+mo2_configure_target(pybind11-utils
 	SOURCE_TREE
 	WARNINGS 4
 	EXTERNAL_WARNINGS 4
