@@ -15,7 +15,7 @@
       "kind": "git",
       "repository": "https://github.com/ModOrganizer2/vcpkg-registry",
       "baseline": "456d80419c7193bcf851d4c8b2075e0a2761053f",
-      "packages": ["mo2-cmake", "pybind11"]
+      "packages": ["mo2-*", "pybind11", "spdlog"]
     }
   ]
 }

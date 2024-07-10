@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           cmake --preset vs2022-windows `
-            "-DCMAKE_PREFIX_PATH=${env:QT_ROOT_DIR}\msvc2019_64;.\uibase\install\lib\cmake" `
+            "-DCMAKE_PREFIX_PATH=${env:QT_ROOT_DIR}\msvc2019_64;${{ github.workspace }}\uibase\install\lib\cmake" `
             -DPLUGIN_PYTHON_TESTING=ON
 
       - name: Build Plugin Python

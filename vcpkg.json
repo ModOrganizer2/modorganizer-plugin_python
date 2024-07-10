@@ -2,7 +2,7 @@
   "dependencies": ["mo2-cmake", "pybind11"],
   "features": {
     "testing": {
-      "description": "Build UI Base tests.",
+      "description": "Build Plugin Python tests.",
       "dependencies": ["gtest"]
     }
   }
