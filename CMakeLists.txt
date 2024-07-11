@@ -13,12 +13,7 @@ get_filename_component(Python_HOME ${Python_EXECUTABLE} PATH)
 set(Python_DLL_DIR "${Python_HOME}/DLLs")
 set(Python_LIB_DIR "${Python_HOME}/Lib")
 
-add_custom_target(PyQt6)
-mo2_python_pip_install(PyQt6
-	DIRECTORY ${CMAKE_BINARY_DIR}/pylibs/
-	PACKAGES
-		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION}
-		sip==6.8.5)
+mo2_python_install_pyqt()
 
 # useful for naming DLL, zip, etc. (3.10 -> 310)
 set(Python_VERSION_SHORT ${Python_VERSION_MAJOR}${Python_VERSION_MINOR})
