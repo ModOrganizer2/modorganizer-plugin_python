@@ -3,6 +3,7 @@
 
 #include <pybind11/pybind11.h>
 
+#include <QByteArray>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
@@ -41,6 +42,7 @@
 // the name of the PyQt6 package containing the class, and is only used for
 // the python signature
 
+PYQT_CLASS(QtCore, QByteArray);
 PYQT_CLASS(QtCore, QDateTime);
 PYQT_CLASS(QtCore, QDir);
 PYQT_CLASS(QtCore, QFileInfo);
