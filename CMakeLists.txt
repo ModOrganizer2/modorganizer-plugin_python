@@ -4,10 +4,12 @@ cmake_policy(SET CMP0144 NEW)
 
 project(plugin_python CXX)
 
-find_package(mo2-cmake CONFIG REQUIRED)
-
+# find Python before include mo2-cmake, otherwise this will trigger a bunch of CMP0111
+# due to the imported configuration mapping variables defined in mo2.cmake
 find_package(Python ${MO2_PYTHON_VERSION} COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
+
+find_package(mo2-cmake CONFIG REQUIRED)
 
 get_filename_component(Python_HOME ${Python_EXECUTABLE} PATH)
 set(Python_DLL_DIR "${Python_HOME}/DLLs")

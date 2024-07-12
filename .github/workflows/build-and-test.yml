@@ -34,28 +34,17 @@ jobs:
           cache: true
 
       - uses: actions/checkout@v4
-      - uses: lukka/run-vcpkg@v11
 
-      # build uibase
-      - uses: actions/checkout@v4
-        with:
-          repository: ModOrganizer2/modorganizer-uibase
-          ref: dev/vcpkg
-          path: uibase
-
-      - name: Build UIBase
+      - name: "Set environmental variables"
+        shell: bash
         run: |
-          cmake --preset vs2022-windows `
-            "-DCMAKE_PREFIX_PATH=${env:QT_ROOT_DIR}\msvc2019_64" `
-            "-DCMAKE_INSTALL_PREFIX=install"
-          cmake --build vsbuild --config RelWithDebInfo --target INSTALL
-        working-directory: uibase
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
       - name: Configure Plugin Python build
         shell: pwsh
         run: |
-          cmake --preset vs2022-windows `
-            "-DCMAKE_PREFIX_PATH=${env:QT_ROOT_DIR}\msvc2019_64;${{ github.workspace }}\uibase\install\lib\cmake" `
+          cmake --preset vs2022-windows-standalone `
+            "-DCMAKE_PREFIX_PATH=${env:QT_ROOT_DIR}\msvc2019_64" `
             -DPLUGIN_PYTHON_TESTING=ON
 
       - name: Build Plugin Python

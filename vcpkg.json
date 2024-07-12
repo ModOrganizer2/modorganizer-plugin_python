@@ -4,6 +4,31 @@
     "testing": {
       "description": "Build Plugin Python tests.",
       "dependencies": ["gtest"]
+    },
+    "standalone": {
+      "description": "Build Standalone.",
+      "dependencies": ["mo2-uibase"]
     }
+  },
+  "vcpkg-configuration": {
+    "default-registry": {
+      "kind": "git",
+      "repository": "https://github.com/Microsoft/vcpkg",
+      "baseline": "f61a294e765b257926ae9e9d85f96468a0af74e7"
+    },
+    "registries": [
+      {
+        "kind": "git",
+        "repository": "https://github.com/Microsoft/vcpkg",
+        "baseline": "f61a294e765b257926ae9e9d85f96468a0af74e7",
+        "packages": ["boost*", "boost-*"]
+      },
+      {
+        "kind": "git",
+        "repository": "https://github.com/ModOrganizer2/vcpkg-registry",
+        "baseline": "70c0aacd6962073dae6e46c2e810c91aa755d2e2",
+        "packages": ["mo2-*", "pybind11", "spdlog"]
+      }
+    ]
   }
 }
