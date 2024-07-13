@@ -11,6 +11,19 @@ set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
 set(UIBASE_PATH $<TARGET_FILE_DIR:mo2::uibase>)
 
 add_custom_target(python-tests)
+target_sources(python-tests
+	PRIVATE
+		conftest.py
+		test_argument_wrapper.py
+		test_filetree.py
+		test_functional.py
+		test_guessed_string.py
+		test_organizer.py
+		test_path_wrappers.py
+		test_qt_widgets.py
+		test_qt.py
+		test_shared_cpp_owner.py
+)
 
 add_test(NAME pytest
 	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/pylibs/bin/pytest.exe ${CMAKE_CURRENT_SOURCE_DIR} -s

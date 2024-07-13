@@ -5,8 +5,33 @@ cmake_minimum_required(VERSION 3.22)
 
 # first we configure the tests as with other tests
 add_executable(runner-tests EXCLUDE_FROM_ALL)
-
-mo2_configure_tests(runner-tests WARNINGS OFF)
+mo2_default_source_group()
+mo2_target_sources(runner-tests
+	FOLDER src
+	PRIVATE
+		test_diagnose.cpp
+		test_filemapper.cpp
+		test_game.cpp
+		test_installer.cpp
+		test_iplugin.cpp
+		test_lifetime.cpp
+)
+mo2_target_sources(runner-tests
+	FOLDER src/mocks
+	PRIVATE
+		../mocks/DummyFileTree.h
+		../mocks/MockOrganizer.h
+)
+mo2_target_sources(runner-tests
+	FOLDER src/plugins
+	PRIVATE
+		plugins/dummy-diagnose.py
+		plugins/dummy-filemapper.py
+		plugins/dummy-game.py
+		plugins/dummy-installer.py
+		plugins/dummy-iplugin.py
+)
+mo2_configure_tests(runner-tests NO_SOURCES WARNINGS 4)
 
 set_target_properties(runner-tests PROPERTIES FOLDER tests/runner)
 
@@ -25,8 +50,8 @@ target_include_directories(runner-tests
 set(PYLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/pylibs)
 mo2_python_pip_install(runner-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
-  PACKAGES
-    pytest
+	PACKAGES
+		pytest
 		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION}
 		PyQt${MO2_QT_VERSION_MAJOR}-Qt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION})
 

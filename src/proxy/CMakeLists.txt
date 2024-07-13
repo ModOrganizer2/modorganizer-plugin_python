@@ -4,8 +4,9 @@ find_package(mo2-uibase CONFIG REQUIRED)
 
 set(PLUGIN_NAME "plugin_python")
 
-add_library(proxy SHARED)
+add_library(proxy SHARED proxypython.cpp proxypython.h)
 mo2_configure_plugin(proxy
+    NO_SOURCES
     WARNINGS 4
     EXTERNAL_WARNINGS 4
     TRANSLATIONS OFF
@@ -13,6 +14,7 @@ mo2_configure_plugin(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../runner
     ${CMAKE_CURRENT_SOURCE_DIR}/../mobase
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
+mo2_default_source_group()
 target_link_libraries(proxy PRIVATE runner mo2::uibase)
 set_target_properties(proxy PROPERTIES OUTPUT_NAME ${PLUGIN_NAME})
 mo2_install_plugin(proxy FOLDER)
