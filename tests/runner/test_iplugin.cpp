@@ -1,8 +1,9 @@
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include <uibase/iplugin.h>
 
 #include "MockOrganizer.h"
-#include "iplugin.h"
 #include "pythonrunner.h"
 
 #include <QCoreApplication>
@@ -34,7 +35,7 @@ TEST(IPlugin, Basic)
     EXPECT_EQ(settings.size(), 1);
     EXPECT_EQ(settings[0].key, "a setting");
     EXPECT_EQ(settings[0].description, "the setting description");
-    EXPECT_EQ(settings[0].defaultValue.userType(), QVariant::Type::Int);
+    EXPECT_EQ(settings[0].defaultValue.userType(), QMetaType::Type::Int);
     EXPECT_EQ(settings[0].defaultValue.toInt(), 12);
 
     // no translation, no custom implementation -> name()

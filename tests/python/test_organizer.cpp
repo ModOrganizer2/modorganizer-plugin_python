@@ -30,14 +30,14 @@ PYBIND11_MODULE(organizer, m)
             EXPECT_CALL(*mock, startApplication(Eq("invalid.exe"), _, _, _, _, _))
                 .WillRepeatedly(Return(INVALID_HANDLE_VALUE));
             ON_CALL(*mock, waitForApplication)
-                .WillByDefault([&mock, original_handle = handle](
-                                   HANDLE handle, bool refresh, LPDWORD exitCode) {
+                .WillByDefault([&mock, original_handle = handle](HANDLE handle, bool,
+                                                                 LPDWORD exitCode) {
                     if (handle == original_handle) {
                         *exitCode = 0;
                         return true;
                     }
                     else {
-                        *exitCode = -1;
+                        *exitCode = static_cast<DWORD>(-1);
                         return false;
                     }
                 });
