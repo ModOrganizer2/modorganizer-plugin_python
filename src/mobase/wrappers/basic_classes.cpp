@@ -575,6 +575,7 @@ namespace mo2::python {
             .def("onProfileRenamed", &IOrganizer::onProfileRenamed, "callback"_a)
             .def("onProfileRemoved", &IOrganizer::onProfileRemoved, "callback"_a)
             .def("onProfileChanged", &IOrganizer::onProfileChanged, "callback"_a)
+            .def("onProfileSettingChanged", &IOrganizer::onProfileSettingChanged, "callback"_a)
 
             .def("onPluginSettingChanged", &IOrganizer::onPluginSettingChanged,
                  "callback"_a)
