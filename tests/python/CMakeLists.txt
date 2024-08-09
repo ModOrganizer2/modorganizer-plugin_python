@@ -53,6 +53,7 @@ foreach (test_file ${test_files})
 	pybind11_add_module(${target} EXCLUDE_FROM_ALL THIN_LTO ${test_file})
 	set_target_properties(${target}
 		PROPERTIES
+		CXX_STANDARD 20
 		OUTPUT_NAME ${pymodule}
 		FOLDER tests/python
 		LIBRARY_OUTPUT_DIRECTORY "${PYLIB_DIR}/mobase_tests")
