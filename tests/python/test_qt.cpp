@@ -33,6 +33,14 @@ PYBIND11_MODULE(qt, m)
         return QString::number(value);
     });
 
+    // QByteArray
+    m.def("create_qbytearray_from_raw", [](const char* raw) {
+        return QByteArray(raw);
+    });
+    m.def("get_qbytearray_length", [](const QByteArray& data) {
+        return data.size();
+    });
+
     // QStringList
 
     m.def("qstringlist_join", [](QStringList const& values, QString const& sep) {

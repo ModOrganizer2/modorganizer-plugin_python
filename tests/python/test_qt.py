@@ -1,4 +1,6 @@
-from PyQt6.QtCore import QDateTime, Qt
+import struct
+
+from PyQt6.QtCore import QByteArray, QDateTime, Qt
 
 import mobase_tests.qt as m
 
@@ -21,6 +23,12 @@ def test_qstring():
     assert m.consume_qstring_with_emoji(emoji) == 2
 
     assert m.consume_qstring_with_emoji("🌎") == 2
+
+
+def test_qbytearray():
+    arr = m.create_qbytearray_from_raw("hello world!")
+    assert isinstance(arr, QByteArray)
+    assert m.get_qbytearray_length(arr) == 12
 
 
 def test_qstringlist():
