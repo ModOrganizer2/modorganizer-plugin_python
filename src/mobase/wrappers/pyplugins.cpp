@@ -144,6 +144,7 @@ namespace mo2::python {
             .def("init", &IPlugin::init, "organizer"_a)
             .def("name", &IPlugin::name)
             .def("localizedName", &IPlugin::localizedName)
+            .def("requirements", &IPlugin::requirements)
             .def("settings", &IPlugin::settings)
             .def("settingGroups", &IPlugin::settingGroups)
             .def("enabledByDefault", &IPlugin::enabledByDefault);

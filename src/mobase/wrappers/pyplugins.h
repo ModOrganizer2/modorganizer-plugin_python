@@ -45,6 +45,12 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE(QString, PluginBase, localizedName, );
         }
+        std::vector<std::shared_ptr<const IPluginRequirement>>
+        requirements() const override
+        {
+            PYBIND11_OVERRIDE(std::vector<std::shared_ptr<const IPluginRequirement>>,
+                              PluginBase, requirements, );
+        }
         QList<Setting> settings() const override
         {
             PYBIND11_OVERRIDE_PURE(QList<Setting>, PluginBase, settings, );
