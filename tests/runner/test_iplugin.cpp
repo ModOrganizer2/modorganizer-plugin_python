@@ -31,10 +31,11 @@ TEST(IPlugin, Basic)
     // settings
     const auto settings = plugin->settings();
     EXPECT_EQ(settings.size(), 1);
-    EXPECT_EQ(settings[0].key, "a setting");
-    EXPECT_EQ(settings[0].description, "the setting description");
-    EXPECT_EQ(settings[0].defaultValue.userType(), QMetaType::Type::Int);
-    EXPECT_EQ(settings[0].defaultValue.toInt(), 12);
+    EXPECT_EQ(settings[0].name(), "a_setting");
+    EXPECT_EQ(settings[0].title(), "A Setting");
+    EXPECT_EQ(settings[0].description(), "the setting description");
+    EXPECT_EQ(settings[0].defaultValue().userType(), QMetaType::Type::Int);
+    EXPECT_EQ(settings[0].defaultValue().toInt(), 12);
 
     // no translation, no custom implementation -> name()
     EXPECT_EQ(plugin->localizedName(), "The Name");

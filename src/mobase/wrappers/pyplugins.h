@@ -45,9 +45,13 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE(QString, PluginBase, localizedName, );
         }
-        QList<PluginSetting> settings() const override
+        QList<Setting> settings() const override
         {
-            PYBIND11_OVERRIDE_PURE(QList<PluginSetting>, PluginBase, settings, );
+            PYBIND11_OVERRIDE_PURE(QList<Setting>, PluginBase, settings, );
+        }
+        QList<SettingGroup> settingGroups() const override
+        {
+            PYBIND11_OVERRIDE(QList<SettingGroup>, PluginBase, settingGroups, );
         }
     };
 

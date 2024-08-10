@@ -145,6 +145,7 @@ namespace mo2::python {
             .def("name", &IPlugin::name)
             .def("localizedName", &IPlugin::localizedName)
             .def("settings", &IPlugin::settings)
+            .def("settingGroups", &IPlugin::settingGroups)
             .def("enabledByDefault", &IPlugin::enabledByDefault);
 
         py::class_<IPyPlugin, PyPlugin, IPlugin,

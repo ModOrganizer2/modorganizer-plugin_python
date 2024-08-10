@@ -798,12 +798,37 @@ namespace mo2::python {
         add_modinterface_classes(m);
         add_modrepository_classes(m);
 
-        py::class_<PluginSetting>(m, "PluginSetting")
-            .def(py::init<const QString&, const QString&, const QVariant&>(), "key"_a,
-                 "description"_a, "default_value"_a)
-            .def_readwrite("key", &PluginSetting::key)
-            .def_readwrite("description", &PluginSetting::description)
-            .def_readwrite("default_value", &PluginSetting::defaultValue);
+        py::class_<Setting>(m, "Setting")
+            .def(py::init([](const QString& name, const QString& description,
+                             const QVariant& defaultValue) {
+                     mo2::python::show_deprecation_warning(
+                         "Setting(key, description, default)",
+                         "Setting(key, description, default) is deprecated, use "
+                         "Setting(name, title, description, default) instead.");
+                     return Setting(name, description, defaultValue);
+                 }),
+                 "key"_a, "description"_a, "default_value"_a)
+            .def(py::init<const QString&, const QString&, const QString&,
+                          const QVariant&>(),
+                 "name"_a, "title"_a, "description"_a, "default_value"_a)
+            .def(py::init<const QString&, const QString&, const QString&,
+                          const QString&, const QVariant&>(),
+                 "name"_a, "title"_a, "description"_a, "group"_a, "default_value"_a)
+            .def_property_readonly("name", &Setting::name)
+            .def_property_readonly("title", &Setting::title)
+            .def_property_readonly("description", &Setting::description)
+            .def_property_readonly("group", &Setting::group)
+            .def_property_readonly("default_value", &Setting::defaultValue);
+
+        // deprecated alias
+        m.attr("PluginSetting") = m.attr("Setting");
+
+        py::class_<SettingGroup>(m, "SettingGroup")
+            .def(py::init<const QString&, const QString&, const QString&>(), "name"_a,
+                 "title"_a, "description"_a)
+            .def_property_readonly("name", &SettingGroup::name)
+            .def_property_readonly("title", &SettingGroup::title)
+            .def_property_readonly("description", &SettingGroup::description);
 
         py::class_<PluginRequirementFactory>(m, "PluginRequirementFactory")
             // pluginDependency
