@@ -79,7 +79,8 @@ PYBIND11_MODULE(mobase, m)
         //
         m.add_object(
             "MoVariant",
-            py::eval("None | bool | int | str | list[object] | dict[str, object]"));
+            py::eval(
+                "None | bool | int | str | float | list[object] | dict[str, object]"));
 
         // same thing for GameFeatureType
         //

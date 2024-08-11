@@ -2,12 +2,17 @@
 
 #include <type_traits>
 
+#include <QColor>
+#include <QIcon>
+#include <QPixmap>
+
 #include <pybind11/stl/filesystem.h>
 
 #include "pybind11_qt/details/pybind11_qt_utils.h"
 
 // need to import containers to get QVariantList and QVariantMap
 #include "pybind11_qt/pybind11_qt_containers.h"
+#include "pybind11_qt/pybind11_qt_objects.h"
 
 namespace pybind11::detail {
 
@@ -81,7 +86,18 @@ namespace pybind11::detail {
                                      2 * src.length(), nullptr, 0);
     }
 
-    bool type_caster<QVariant>::load(handle src, bool)
+    template <class T>
+    bool tryCast(QVariant& value, handle src, bool implicit)
+    {
+        type_caster<T> caster;
+        if (caster.load(src, implicit)) {
+            value = caster.value;
+            return true;
+        }
+        return false;
+    }
+
+    bool type_caster<QVariant>::load(handle src, bool implicit)
     {
         // test for string first otherwise PyList_Check also works
         if (PyBytes_Check(src.ptr()) || PyUnicode_Check(src.ptr())) {
@@ -119,6 +135,15 @@ namespace pybind11::detail {
             value = src.cast<int>();
             return true;
         }
+        else if (PyFloat_Check(src.ptr())) {
+            value = src.cast<double>();
+            return true;
+        }
+        else if (tryCast<QColor>(value, src, implicit) ||
+                 tryCast<QIcon>(value, src, implicit) ||
+                 tryCast<QPixmap>(value, src, implicit)) {
+            return true;
+        }
         else {
             return false;
         }
@@ -131,13 +156,25 @@ namespace pybind11::detail {
         case QMetaType::UnknownType:
             return Py_None;
         case QMetaType::Int:
+        case QMetaType::Long:
             return PyLong_FromLong(var.toInt());
+        case QMetaType::LongLong:
+            return PyLong_FromLongLong(var.toLongLong());
         case QMetaType::UInt:
+        case QMetaType::ULong:
             return PyLong_FromUnsignedLong(var.toUInt());
+        case QMetaType::ULongLong:
+            return PyLong_FromUnsignedLongLong(var.toULongLong());
+        case QMetaType::Float:
+            return PyFloat_FromDouble(var.toFloat());
+        case QMetaType::Double:
+            return PyFloat_FromDouble(var.toDouble());
         case QMetaType::Bool:
             return PyBool_FromLong(var.toBool());
+
         case QMetaType::QString:
             return type_caster<QString>::cast(var.toString(), policy, parent);
+
         // We need to check for StringList here because these are not considered
         // List since List is QList<QVariant> will StringList is QList<QString>:
         case QMetaType::QStringList:
@@ -146,6 +183,16 @@ namespace pybind11::detail {
             return type_caster<QVariantList>::cast(var.toList(), policy, parent);
         case QMetaType::QVariantMap:
             return type_caster<QVariantMap>::cast(var.toMap(), policy, parent);
+
+        case QMetaType::QColor:
+            return type_caster<QColor>::cast(var.value<QColor>(), policy, parent);
+
+        case QMetaType::QIcon:
+            return type_caster<QIcon>::cast(var.value<QIcon>(), policy, parent);
+
+        case QMetaType::QPixmap:
+            return type_caster<QPixmap>::cast(var.value<QPixmap>(), policy, parent);
+
         default: {
             PyErr_Format(PyExc_TypeError, "type unsupported: %d", var.userType());
             throw pybind11::error_already_set();
