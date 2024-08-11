@@ -174,6 +174,13 @@ namespace mo2::python {
                 // load the module
                 auto spec =
                     importlib_util.attr("spec_from_file_location")(name, pythonModule);
+
+                if (Py_IsNone(spec.ptr())) {
+                    MOBase::log::error("failed to load Python plugin '{}' from '{}'",
+                                       name, pythonModule);
+                    return {};
+                }
+
                 pymodule = importlib_util.attr("module_from_spec")(spec);
                 sys.attr("modules")[py::str(name)] = pymodule;
                 spec.attr("loader").attr("exec_module")(pymodule);

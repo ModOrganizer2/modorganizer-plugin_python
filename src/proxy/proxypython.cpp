@@ -121,7 +121,7 @@ QList<QList<QObject*>> ProxyPython::load(const PluginExtension& extension)
     }
 
     if (extension.autodetect()) {
-        log::error("{}: automatic plugin detection is not supported for Python plugins",
+        log::debug("{}: automatic plugin detection is not supported for Python plugins",
                    extension.metadata().name());
         return {};
     }
