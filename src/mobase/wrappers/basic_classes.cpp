@@ -360,6 +360,38 @@ namespace mo2::python {
         py::implicitly_convertible<QString, GuessedValue<QString>>();
     }
 
+    void add_iextensionlist_classes(py::module_ m)
+    {
+        // TODO: add all bindings here
+
+        py::class_<IExtension>(m, "IExtension");
+
+        py::class_<IExtensionList>(m, "IExtensionList")
+            .def("installed", &IExtensionList::installed, "identifier"_a)
+            .def(
+                "enabled",
+                py::overload_cast<const QString&>(&IExtensionList::enabled, py::const_),
+                "identifier"_a)
+            .def(
+                "__getitem__",
+                [](IExtensionList const& self,
+                   std::variant<std::size_t, QString> const& index) {
+                    return std::visit(
+                        [&self](auto&& value) {
+                            if constexpr (std::is_same_v<std::decay_t<decltype(value)>,
+                                                         std::size_t>) {
+                                return self.at(value);
+                            }
+                            else {
+                                return self.get(value);
+                            }
+                        },
+                        index);
+                },
+                "index"_a, py::return_value_policy::reference)
+            .def("__len__", &IExtensionList::size);
+    }
+
     void add_ipluginlist_classes(py::module_ m)
     {
         py::enum_<IPluginList::PluginState>(m, "PluginState", py::arithmetic())
@@ -887,6 +919,7 @@ namespace mo2::python {
                  })
             .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, "inifile"_a);
 
+        add_iextensionlist_classes(m);
         add_ipluginlist_classes(m);
         add_imodlist_classes(m);
         add_idownload_manager_classes(m);

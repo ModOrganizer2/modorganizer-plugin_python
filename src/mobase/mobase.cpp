@@ -29,7 +29,7 @@ PYBIND11_MODULE(mobase, m)
 
     // exceptions
     //
-    py::register_exception<Exception>(m, "Exception");
+    py::register_exception<Exception>(m, "MO2Exception");
     py::register_exception<InvalidNXMLinkException>(m, "InvalidNXMLinkException");
     py::register_exception<IncompatibilityException>(m, "IncompatibilityException");
     py::register_exception<InvalidVersionException>(m, "InvalidVersionException");
