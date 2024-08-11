@@ -5,6 +5,8 @@
 #include <format>
 
 #include <uibase/executableinfo.h>
+#include <uibase/extensions/extension.h>
+#include <uibase/extensions/iextensionlist.h>
 #include <uibase/filemapping.h>
 #include <uibase/game_features/igamefeatures.h>
 #include <uibase/guessedvalue.h>
@@ -358,6 +360,38 @@ namespace mo2::python {
         py::implicitly_convertible<QString, GuessedValue<QString>>();
     }
 
+    void add_iextensionlist_classes(py::module_ m)
+    {
+        // TODO: add all bindings here
+
+        py::class_<IExtension>(m, "IExtension");
+
+        py::class_<IExtensionList>(m, "IExtensionList")
+            .def("installed", &IExtensionList::installed, "identifier"_a)
+            .def(
+                "enabled",
+                py::overload_cast<const QString&>(&IExtensionList::enabled, py::const_),
+                "identifier"_a)
+            .def(
+                "__getitem__",
+                [](IExtensionList const& self,
+                   std::variant<std::size_t, QString> const& index) {
+                    return std::visit(
+                        [&self](auto&& value) {
+                            if constexpr (std::is_same_v<std::decay_t<decltype(value)>,
+                                                         std::size_t>) {
+                                return self.at(value);
+                            }
+                            else {
+                                return self.get(value);
+                            }
+                        },
+                        index);
+                },
+                "index"_a, py::return_value_policy::reference)
+            .def("__len__", &IExtensionList::size);
+    }
+
     void add_ipluginlist_classes(py::module_ m)
     {
         py::enum_<IPluginList::PluginState>(m, "PluginState", py::arithmetic())
@@ -590,6 +624,8 @@ namespace mo2::python {
                  py::return_value_policy::reference)
             .def("pluginList", &IOrganizer::pluginList,
                  py::return_value_policy::reference)
+            .def("extensionList", &IOrganizer::extensionList,
+                 py::return_value_policy::reference)
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,
                  py::return_value_policy::reference)
@@ -794,12 +830,37 @@ namespace mo2::python {
         add_modinterface_classes(m);
         add_modrepository_classes(m);
 
-        py::class_<PluginSetting>(m, "PluginSetting")
-            .def(py::init<const QString&, const QString&, const QVariant&>(), "key"_a,
-                 "description"_a, "default_value"_a)
-            .def_readwrite("key", &PluginSetting::key)
-            .def_readwrite("description", &PluginSetting::description)
-            .def_readwrite("default_value", &PluginSetting::defaultValue);
+        py::class_<Setting>(m, "Setting")
+            .def(py::init([](const QString& name, const QString& description,
+                             const QVariant& defaultValue) {
+                     mo2::python::show_deprecation_warning(
+                         "Setting(key, description, default)",
+                         "Setting(key, description, default) is deprecated, use "
+                         "Setting(name, title, description, default) instead.");
+                     return Setting(name, description, defaultValue);
+                 }),
+                 "key"_a, "description"_a, "default_value"_a)
+            .def(py::init<const QString&, const QString&, const QString&,
+                          const QVariant&>(),
+                 "name"_a, "title"_a, "description"_a, "default_value"_a)
+            .def(py::init<const QString&, const QString&, const QString&,
+                          const QString&, const QVariant&>(),
+                 "name"_a, "title"_a, "description"_a, "group"_a, "default_value"_a)
+            .def_property_readonly("name", &Setting::name)
+            .def_property_readonly("title", &Setting::title)
+            .def_property_readonly("description", &Setting::description)
+            .def_property_readonly("group", &Setting::group)
+            .def_property_readonly("default_value", &Setting::defaultValue);
+
+        // deprecated alias
+        m.attr("PluginSetting") = m.attr("Setting");
+
+        py::class_<SettingGroup>(m, "SettingGroup")
+            .def(py::init<const QString&, const QString&, const QString&>(), "name"_a,
+                 "title"_a, "description"_a)
+            .def_property_readonly("name", &SettingGroup::name)
+            .def_property_readonly("title", &SettingGroup::title)
+            .def_property_readonly("description", &SettingGroup::description);
 
         py::class_<PluginRequirementFactory>(m, "PluginRequirementFactory")
             // pluginDependency
@@ -858,6 +919,7 @@ namespace mo2::python {
                  })
             .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, "inifile"_a);
 
+        add_iextensionlist_classes(m);
         add_ipluginlist_classes(m);
         add_imodlist_classes(m);
         add_idownload_manager_classes(m);

@@ -14,17 +14,19 @@ using namespace MOBase;
 
 TEST(IPluginInstaller, Simple)
 {
-    const auto plugins_folder = QString(std::getenv("PLUGIN_DIR"));
+    const auto plugins_folder = std::filesystem::path(std::getenv("PLUGIN_DIR"));
 
     auto runner = mo2::python::createPythonRunner();
     runner->initialize();
 
     // load objects
-    const auto objects = runner->load(plugins_folder + "/dummy-installer.py");
+    const auto objects =
+        runner->load("dummy_installer", plugins_folder / "dummy-installer.py");
     EXPECT_EQ(objects.size(), 1);
 
     // load the IPlugin
-    IPluginInstallerSimple* plugin = qobject_cast<IPluginInstallerSimple*>(objects[0]);
+    IPluginInstallerSimple* plugin =
+        qobject_cast<IPluginInstallerSimple*>(objects[0][0]);
     EXPECT_NE(plugin, nullptr);
 
     // basic tests

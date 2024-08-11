@@ -9,6 +9,8 @@
 #include <QString>
 #include <QStringList>
 
+#include <uibase/extensions/extension.h>
+
 #ifdef RUNNER_BUILD
 #define RUNNER_DLL_EXPORT Q_DECL_EXPORT
 #else
@@ -21,8 +23,10 @@ namespace mo2::python {
     //
     class IPythonRunner {
     public:
-        virtual QList<QObject*> load(const QString& identifier) = 0;
-        virtual void unload(const QString& identifier)          = 0;
+        virtual QList<QList<QObject*>>
+        load(std::string_view moduleName, std::filesystem::path const& modulePath) = 0;
+        virtual void unload(std::string_view moduleName,
+                            std::filesystem::path const& modulePath)               = 0;
 
         // initialize Python
         //

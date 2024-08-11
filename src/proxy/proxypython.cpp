@@ -53,57 +53,24 @@ fs::path getPluginFolder()
     return fs::path(path).parent_path();
 }
 
-ProxyPython::ProxyPython()
-    : m_MOInfo{nullptr}, m_RunnerLib{nullptr}, m_Runner{nullptr},
-      m_LoadFailure(FailureType::NONE)
-{
-}
+ProxyPython::ProxyPython() : m_RunnerLib{nullptr}, m_Runner{nullptr} {}
 
-bool ProxyPython::init(IOrganizer* moInfo)
+bool ProxyPython::initialize(QString& errorMessage)
 {
-    m_MOInfo = moInfo;
-
-    if (m_MOInfo && !m_MOInfo->isPluginEnabled(this)) {
-        return false;
-    }
+    errorMessage = "";
 
     if (QCoreApplication::applicationDirPath().contains(';')) {
-        m_LoadFailure = FailureType::SEMICOLON;
+        errorMessage = failureMessage(FailureType::SEMICOLON);
         return true;
     }
 
     const auto pluginFolder = getPluginFolder();
-
     if (pluginFolder.empty()) {
-        DWORD error   = ::GetLastError();
-        m_LoadFailure = FailureType::DLL_NOT_FOUND;
+        DWORD error  = ::GetLastError();
+        errorMessage = failureMessage(FailureType::DLL_NOT_FOUND);
         log::error("failed to resolve Python proxy directory ({}): {}", error,
                    qUtf8Printable(windowsErrorString(::GetLastError())));
         return false;
-    }
-
-    if (m_MOInfo && m_MOInfo->persistent(name(), "tryInit", false).toBool()) {
-        m_LoadFailure = FailureType::INITIALIZATION;
-        if (QMessageBox::question(
-                parentWidget(), tr("Python Initialization failed"),
-                tr("On a previous start the Python Plugin failed to initialize.\n"
-                   "Do you want to try initializing python again (at the risk of "
-                   "another crash)?\n "
-                   "Suggestion: Select \"no\", and click the warning sign for further "
-                   "help.Afterwards you have to re-enable the python plugin."),
-                QMessageBox::Yes | QMessageBox::No,
-                QMessageBox::No) == QMessageBox::No) {
-            // we force enabled here (note: this is a persistent settings since MO2 2.4
-            // or something), plugin
-            // usually should not handle enabled/disabled themselves but this is a base
-            // plugin so...
-            m_MOInfo->setPersistent(name(), "enabled", false, true);
-            return true;
-        }
-    }
-
-    if (m_MOInfo) {
-        m_MOInfo->setPersistent(name(), "tryInit", true);
     }
 
     // load the pythonrunner library, this is done in multiple steps:
@@ -114,8 +81,8 @@ bool ProxyPython::init(IOrganizer* moInfo)
     //
     const auto dllPaths = pluginFolder / "dlls";
     if (SetDllDirectoryW(dllPaths.c_str()) == 0) {
-        DWORD error   = ::GetLastError();
-        m_LoadFailure = FailureType::DLL_NOT_FOUND;
+        DWORD error  = ::GetLastError();
+        errorMessage = failureMessage(FailureType::DLL_NOT_FOUND);
         log::error("failed to add python DLL directory ({}): {}", error,
                    qUtf8Printable(windowsErrorString(::GetLastError())));
         return false;
@@ -129,21 +96,16 @@ bool ProxyPython::init(IOrganizer* moInfo)
 
     if (m_Runner) {
         const auto libpath = pluginFolder / "libs";
-        const std::vector<fs::path> paths{
-            libpath / "pythoncore.zip", libpath,
-            std::filesystem::path{IOrganizer::getPluginDataPath().toStdWString()}};
+        const std::vector<fs::path> paths{libpath / "pythoncore.zip", libpath};
         m_Runner->initialize(paths);
-    }
-
-    if (m_MOInfo) {
-        m_MOInfo->setPersistent(name(), "tryInit", false);
     }
 
     // reset DLL directory
     SetDllDirectoryW(NULL);
 
     if (!m_Runner || !m_Runner->isInitialized()) {
-        m_LoadFailure = FailureType::INITIALIZATION;
+        errorMessage = failureMessage(FailureType::INITIALIZATION);
+        return false;
     }
     else {
         m_Runner->addDllSearchPath(pluginFolder / "dlls");
@@ -152,110 +114,58 @@ bool ProxyPython::init(IOrganizer* moInfo)
     return true;
 }
 
-QString ProxyPython::name() const
-{
-    return "Python Proxy";
-}
-
-QString ProxyPython::localizedName() const
-{
-    return tr("Python Proxy");
-}
-
-QString ProxyPython::author() const
-{
-    return "AnyOldName3, Holt59, Silarn, Tannin";
-}
-
-QString ProxyPython::description() const
-{
-    return tr("Proxy Plugin to allow plugins written in python to be loaded");
-}
-
-VersionInfo ProxyPython::version() const
-{
-    return VersionInfo(3, 0, 0, VersionInfo::RELEASE_FINAL);
-}
-
-QList<PluginSetting> ProxyPython::settings() const
-{
-    return {};
-}
-
-QStringList ProxyPython::pluginList(const QDir& pluginPath) const
-{
-    QDir dir(pluginPath);
-    dir.setFilter(dir.filter() | QDir::NoDotAndDotDot);
-    QDirIterator iter(dir);
-
-    // Note: We put python script (.py) and directory names, not the __init__.py
-    // files in those since it is easier for the runner to import them.
-    QStringList result;
-    while (iter.hasNext()) {
-        QString name   = iter.next();
-        QFileInfo info = iter.fileInfo();
-
-        if (info.isFile() && name.endsWith(".py")) {
-            result.append(name);
-        }
-        else if (info.isDir() && QDir(info.absoluteFilePath()).exists("__init__.py")) {
-            result.append(name);
-        }
-    }
-
-    return result;
-}
-
-QList<QObject*> ProxyPython::load(const QString& identifier)
+QList<QList<QObject*>> ProxyPython::load(const PluginExtension& extension)
 {
     if (!m_Runner) {
         return {};
     }
-    return m_Runner->load(identifier);
+
+    if (extension.autodetect()) {
+        log::debug("{}: automatic plugin detection is not supported for Python plugins",
+                   extension.metadata().name());
+        return {};
+    }
+
+    m_ExtensionModules[&extension] = {};
+
+    QList<QList<QObject*>> plugins;
+    for (auto& [moduleName, modulePath] : extension.plugins()) {
+        m_ExtensionModules[&extension].push_back({moduleName, modulePath});
+        plugins.append(m_Runner->load(moduleName, modulePath));
+    }
+
+    return plugins;
 }
 
-void ProxyPython::unload(const QString& identifier)
+void ProxyPython::unload(const PluginExtension& extension)
+{
+    if (!m_Runner) {
+        return;
+    }
+
+    if (auto it = m_ExtensionModules.find(&extension); it != m_ExtensionModules.end()) {
+        for (auto& [moduleName, modulePath] : it->second) {
+            m_Runner->unload(moduleName, modulePath);
+        }
+        m_ExtensionModules.erase(it);
+    }
+}
+
+void ProxyPython::unloadAll()
 {
     if (m_Runner) {
-        return m_Runner->unload(identifier);
+        for (auto& [ext, modules] : m_ExtensionModules) {
+            for (auto& [moduleName, modulePath] : modules) {
+                m_Runner->unload(moduleName, modulePath);
+            }
+        }
     }
+    m_ExtensionModules.clear();
 }
 
-std::vector<unsigned int> ProxyPython::activeProblems() const
+QString ProxyPython::failureMessage(FailureType key)
 {
-    auto failure = m_LoadFailure;
-
-    // don't know how this could happen but wth
-    if (m_Runner && !m_Runner->isInitialized()) {
-        failure = FailureType::INITIALIZATION;
-    }
-
-    if (failure != FailureType::NONE) {
-        return {static_cast<std::underlying_type_t<FailureType>>(failure)};
-    }
-
-    return {};
-}
-
-QString ProxyPython::shortDescription(unsigned int key) const
-{
-    switch (static_cast<FailureType>(key)) {
-    case FailureType::SEMICOLON:
-        return tr("ModOrganizer path contains a semicolon");
-    case FailureType::DLL_NOT_FOUND:
-        return tr("Python DLL not found");
-    case FailureType::INVALID_DLL:
-        return tr("Invalid Python DLL");
-    case FailureType::INITIALIZATION:
-        return tr("Initializing Python failed");
-    default:
-        return tr("invalid problem key %1").arg(key);
-    }
-}
-
-QString ProxyPython::fullDescription(unsigned int key) const
-{
-    switch (static_cast<FailureType>(key)) {
+    switch (key) {
     case FailureType::SEMICOLON:
         return tr("The path to Mod Organizer (%1) contains a semicolon.<br>"
                   "While this is legal on NTFS drives, many applications do not "
@@ -278,13 +188,6 @@ QString ProxyPython::fullDescription(unsigned int key) const
         return tr("The initialization of the Python plugin DLL failed, unfortunately "
                   "without any details.");
     default:
-        return tr("invalid problem key %1").arg(key);
+        return tr("no failure");
     }
 }
-
-bool ProxyPython::hasGuidedFix(unsigned int) const
-{
-    return false;
-}
-
-void ProxyPython::startGuidedFix(unsigned int) const {}

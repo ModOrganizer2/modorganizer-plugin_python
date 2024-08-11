@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 find_package(mo2-uibase CONFIG REQUIRED)
 
-set(PLUGIN_NAME "plugin_python")
+set(PROXY_NAME "python")
 
 add_library(proxy SHARED proxypython.cpp proxypython.h)
 mo2_configure_plugin(proxy
@@ -16,18 +16,23 @@ mo2_configure_plugin(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
 mo2_default_source_group()
 target_link_libraries(proxy PRIVATE runner mo2::uibase)
-set_target_properties(proxy PROPERTIES OUTPUT_NAME ${PLUGIN_NAME})
-mo2_install_plugin(proxy FOLDER)
+set_target_properties(proxy PROPERTIES OUTPUT_NAME "python_proxy")
 
-set(PLUGIN_PYTHON_DIR bin/plugins/${PLUGIN_NAME})
+set(PROXY_PYTHON_DIR ${MO2_INSTALL_BIN}/proxies/python)
 
-# install runner
+# install runner and proxy
+install(FILES $<TARGET_FILE:proxy> DESTINATION ${PROXY_PYTHON_DIR})
+install(FILES $<TARGET_FILE:runner> DESTINATION ${PROXY_PYTHON_DIR}/dlls)
+
+# install PDB
+install(FILES $<TARGET_PDB_FILE:proxy> DESTINATION pdb)
+
+# delay loading since the dll is not in the standard folder
 target_link_options(proxy PRIVATE "/DELAYLOAD:runner.dll")
-install(FILES $<TARGET_FILE:runner> DESTINATION ${PLUGIN_PYTHON_DIR}/dlls)
 
 # translations (custom location)
 mo2_add_translations(proxy
-    TS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../${PLUGIN_NAME}_en.ts
+    TS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../plugin_python_en.ts
     SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../runner
@@ -35,14 +40,14 @@ mo2_add_translations(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
 
 # install DLLs files needed
-set(DLL_DIRS ${PLUGIN_PYTHON_DIR}/dlls)
+set(DLL_DIRS ${PROXY_PYTHON_DIR}/dlls)
 file(GLOB dlls_to_install
 	# ${PYTHON_BUILD_PATH}/libffi*.dll
 	${Python_HOME}/python${Python_VERSION_MAJOR}*.dll)
 install(FILES ${dlls_to_install} DESTINATION ${DLL_DIRS})
 
 # install Python .pyd files
-set(PYLIB_DIR ${PLUGIN_PYTHON_DIR}/libs)
+set(PYLIB_DIR ${PROXY_PYTHON_DIR}/libs)
 file(GLOB libs_to_install ${Python_DLL_DIR}/*.pyd)
 install(FILES ${libs_to_install} DESTINATION ${PYLIB_DIR})
 

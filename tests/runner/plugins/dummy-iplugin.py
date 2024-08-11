@@ -20,7 +20,7 @@ class DummyPlugin(mobase.IPlugin):
     def settings(self) -> list[mobase.PluginSetting]:
         return [
             mobase.PluginSetting(
-                "a setting", "the setting description", default_value=12
+                "a_setting", "A Setting", "the setting description", default_value=12
             )
         ]
 
