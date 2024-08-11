@@ -5,6 +5,9 @@
 #include <tuple>
 #include <variant>
 
+#include <uibase/exceptions.h>
+#include <uibase/versioning.h>
+
 #include <pybind11/embed.h>
 
 #include "pybind11_all.h"
@@ -23,6 +26,13 @@ PYBIND11_MODULE(mobase, m)
     m.add_object("PyQt6.QtCore", py::module_::import("PyQt6.QtCore"));
     m.add_object("PyQt6.QtGui", py::module_::import("PyQt6.QtGui"));
     m.add_object("PyQt6.QtWidgets", py::module_::import("PyQt6.QtWidgets"));
+
+    // exceptions
+    //
+    py::register_exception<Exception>(m, "Exception");
+    py::register_exception<InvalidNXMLinkException>(m, "InvalidNXMLinkException");
+    py::register_exception<IncompatibilityException>(m, "IncompatibilityException");
+    py::register_exception<InvalidVersionException>(m, "InvalidVersionException");
 
     // bindings
     //
