@@ -1,5 +1,3 @@
-import struct
-
 from PyQt6.QtCore import QByteArray, QDateTime, Qt
 
 import mobase_tests.qt as m
