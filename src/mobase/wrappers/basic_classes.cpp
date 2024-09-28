@@ -323,6 +323,9 @@ namespace mo2::python {
             .def("hasLightExtension", &IPluginList::hasLightExtension, "name"_a)
             .def("hasNoRecords", &IPluginList::hasNoRecords, "name"_a)
 
+            .def("author", &IPluginList::author, "name"_a)
+            .def("description", &IPluginList::description, "name"_a)
+
             // Kept but deprecated for backward compatibility:
             .def(
                 "onPluginStateChanged",
