@@ -264,7 +264,8 @@ namespace mo2::python {
             .def("getLoadOrder", &GamePlugins::getLoadOrder)
             .def("lightPluginsAreSupported", &GamePlugins::lightPluginsAreSupported)
             .def("mediumPluginsAreSupported", &GamePlugins::mediumPluginsAreSupported)
-            .def("blueprintPluginsAreSupported", &GamePlugins::blueprintPluginsAreSupported);
+            .def("blueprintPluginsAreSupported",
+                 &GamePlugins::blueprintPluginsAreSupported);
 
         // LocalSavegames
 
