@@ -6,20 +6,50 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
 jobs:
   build:
     runs-on: windows-2022
     steps:
-      - name: Build Plugin Python
-        id: build-plugin-python
-        uses: ModOrganizer2/build-with-mob-action@master
+      # https://learn.microsoft.com/en-us/vcpkg/consume/binary-caching-github-actions-cache
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
         with:
-          mo2-third-parties: gtest python spdlog boost sip pyqt pybind11
-          mo2-dependencies: cmake_common uibase
-          mo2-cmake-command: -DPLUGIN_PYTHON_TESTS=1 ..
-      - name: Build Plugin Python Tests
-        run: cmake --build vsbuild --config RelWithDebInfo -j4 --target python-tests --target runner-tests
-        working-directory: ${{ steps.build-plugin-python.outputs.working-directory }}
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          setup-python: false
+          version: 6.7.1
+          modules:
+          cache: true
+
+      - uses: actions/checkout@v4
+
+      - name: "Set environmental variables"
+        shell: bash
+        run: |
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+
+      - name: Configure Plugin Python build
+        shell: pwsh
+        run: |
+          cmake --preset vs2022-windows-standalone `
+            "-DCMAKE_PREFIX_PATH=${env:QT_ROOT_DIR}\msvc2019_64" `
+            -DPLUGIN_PYTHON_TESTING=ON
+
+      - name: Build Plugin Python
+        run: cmake --build vsbuild --config RelWithDebInfo --verbose `
+          --target python-tests --target runner-tests --target proxy
+
       - name: Test Plugin Python
         run: ctest --test-dir vsbuild -C RelWithDebInfo --output-on-failure
-        working-directory: ${{ steps.build-plugin-python.outputs.working-directory }}

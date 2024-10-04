@@ -4,21 +4,37 @@
 #include <type_traits>
 
 #include <pybind11/pybind11.h>
-#include <sip.h>
 
 #include <iostream>
 #include <pybind11/iostream.h>
 
 #include "../pybind11_qt_holder.h"
 
+struct _sipTypeDef;
+typedef struct _sipTypeDef sipTypeDef;
+
+struct _sipSimpleWrapper;
+typedef struct _sipSimpleWrapper sipSimpleWrapper;
+
+struct _sipWrapper;
+typedef struct _sipWrapper sipWrapper;
+
 namespace pybind11::detail::qt {
 
-    /**
-     * @brief Retrieve the SIP api.
-     *
-     * @return const sipAPIDef*
-     */
-    const sipAPIDef* sipAPI();
+    // helper functions to avoid bringing <sip.h> in this header
+    namespace sip {
+
+        // extract the underlying data if present from the equivalent PyQt object
+        void* extract_data(PyObject*);
+
+        const sipTypeDef* api_find_type(const char* type);
+        int api_can_convert_to_type(PyObject* pyObj, const sipTypeDef* td, int flags);
+
+        void api_transfer_to(PyObject* self, PyObject* owner);
+        void api_transfer_back(PyObject* self);
+        PyObject* api_convert_from_type(void* cpp, const sipTypeDef* td,
+                                        PyObject* transferObj);
+    }  // namespace sip
 
     template <typename T, class = void>
     struct MetaData;
@@ -91,12 +107,11 @@ namespace pybind11::detail::qt {
                 }
             }
 
-            const sipTypeDef* type =
-                qt::sipAPI()->api_find_type(MetaData<QClass>::class_name);
+            const auto* type = sip::api_find_type(MetaData<QClass>::class_name);
             if (type == nullptr) {
                 return false;
             }
-            if (!qt::sipAPI()->api_can_convert_to_type(src.ptr(), type, 0)) {
+            if (!sip::api_can_convert_to_type(src.ptr(), type, 0)) {
                 return false;
             }
 
@@ -107,20 +122,14 @@ namespace pybind11::detail::qt {
             //
             //   sipAPI()->api_transfer_to(objPtr, Py_None);
             //
-            void* data = nullptr;
-            if (PyObject_TypeCheck(src.ptr(), qt::sipAPI()->api_simplewrapper_type)) {
-                data = reinterpret_cast<sipSimpleWrapper*>(src.ptr())->data;
-            }
-            else if (PyObject_TypeCheck(src.ptr(), qt::sipAPI()->api_wrapper_type)) {
-                data = reinterpret_cast<sipWrapper*>(src.ptr())->super.data;
-            }
+            void* const data = sip::extract_data(src.ptr());
 
             if (data) {
                 if constexpr (is_pointer) {
                     value = reinterpret_cast<QClass>(data);
 
                     // transfer ownership
-                    sipAPI()->api_transfer_to(src.ptr(), Py_None);
+                    sip::api_transfer_to(src.ptr(), Py_None);
 
                     // tie the py::object to the C++ one
                     new pybind11::detail::qt::qobject_holder_impl(value);
@@ -164,8 +173,7 @@ namespace pybind11::detail::qt {
                 }
             }
 
-            const sipTypeDef* type =
-                qt::sipAPI()->api_find_type(MetaData<QClass>::class_name);
+            const sipTypeDef* type = sip::api_find_type(MetaData<QClass>::class_name);
             if (type == nullptr) {
                 return Py_None;
             }
@@ -188,7 +196,7 @@ namespace pybind11::detail::qt {
                 sipData = &src;
             }
 
-            sipObj = qt::sipAPI()->api_convert_from_type(sipData, type, 0);
+            sipObj = sip::api_convert_from_type(sipData, type, 0);
 
             if (sipObj == nullptr) {
                 return Py_None;
@@ -196,11 +204,11 @@ namespace pybind11::detail::qt {
 
             // ensure Python deletes the C++ component
             if constexpr (!is_pointer) {
-                qt::sipAPI()->api_transfer_back(sipObj);
+                sip::api_transfer_back(sipObj);
             }
             else {
                 if (policy == return_value_policy::take_ownership) {
-                    qt::sipAPI()->api_transfer_back(sipObj);
+                    sip::api_transfer_back(sipObj);
                 }
             }
 

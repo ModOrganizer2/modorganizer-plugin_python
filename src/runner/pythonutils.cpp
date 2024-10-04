@@ -7,7 +7,7 @@
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
 
-#include "log.h"
+#include <uibase/log.h>
 
 namespace py = pybind11;
 
@@ -123,7 +123,7 @@ namespace mo2::python {
     void configure_python_logging(py::module_ mobase)
     {
         // most of this is dealing with actual Python objects since it is not
-        // possible to derive from logging.Handler in C++ using Boost.Python,
+        // possible to derive from logging.Handler in C++ using pybind11,
         // and since a lot of this would require extra register only for this.
 
         // see also
