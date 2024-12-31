@@ -674,6 +674,9 @@ namespace mo2::python {
             .def("startDownloadURLs", &IDownloadManager::startDownloadURLs, "urls"_a)
             .def("startDownloadNexusFile", &IDownloadManager::startDownloadNexusFile,
                  "mod_id"_a, "file_id"_a)
+            .def("startDownloadNexusFileForGame",
+                 &IDownloadManager::startDownloadNexusFileForGame, "game_name"_a,
+                 "mod_id"_a, "file_id"_a)
             .def("downloadPath", &IDownloadManager::downloadPath, "id"_a)
             .def("onDownloadComplete", &IDownloadManager::onDownloadComplete,
                  "callback"_a)
