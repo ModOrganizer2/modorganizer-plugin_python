@@ -10,7 +10,7 @@
 #include <QList>
 #include <QObject>
 
-#include <iplugingame.h>
+#include <uibase/iplugingame.h>
 
 namespace mo2::python {
 
