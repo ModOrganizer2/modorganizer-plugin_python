@@ -324,6 +324,8 @@ namespace mo2::python {
             .def("hasLightExtension", &IPluginList::hasLightExtension, "name"_a)
             .def("hasNoRecords", &IPluginList::hasNoRecords, "name"_a)
 
+            .def("formVersion", &IPluginList::formVersion, "name"_a)
+            .def("headerVersion", &IPluginList::headerVersion, "name"_a)
             .def("author", &IPluginList::author, "name"_a)
             .def("description", &IPluginList::description, "name"_a)
 
