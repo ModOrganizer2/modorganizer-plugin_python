@@ -4,21 +4,21 @@
 
 #include <format>
 
-#include <executableinfo.h>
-#include <filemapping.h>
-#include <guessedvalue.h>
-#include <idownloadmanager.h>
-#include <igamefeatures.h>
-#include <iinstallationmanager.h>
-#include <imodinterface.h>
-#include <imodrepositorybridge.h>
-#include <imoinfo.h>
-#include <iplugin.h>
-#include <iplugindiagnose.h>
-#include <iplugingame.h>
-#include <ipluginlist.h>
-#include <pluginsetting.h>
-#include <versioninfo.h>
+#include <uibase/executableinfo.h>
+#include <uibase/filemapping.h>
+#include <uibase/game_features/igamefeatures.h>
+#include <uibase/guessedvalue.h>
+#include <uibase/idownloadmanager.h>
+#include <uibase/iinstallationmanager.h>
+#include <uibase/imodinterface.h>
+#include <uibase/imodrepositorybridge.h>
+#include <uibase/imoinfo.h>
+#include <uibase/iplugin.h>
+#include <uibase/iplugindiagnose.h>
+#include <uibase/iplugingame.h>
+#include <uibase/ipluginlist.h>
+#include <uibase/pluginsetting.h>
+#include <uibase/versioninfo.h>
 
 #include "../deprecation.h"
 #include "pyfiletree.h"
@@ -33,6 +33,69 @@ namespace mo2::python {
 
     void add_versioninfo_classes(py::module_ m)
     {
+        // Version
+        py::class_<Version> pyVersion(m, "Version");
+
+        py::enum_<Version::ReleaseType>(pyVersion, "ReleaseType")
+            .value("DEVELOPMENT", Version::Development)
+            .value("ALPHA", Version::Alpha)
+            .value("BETA", Version::Beta)
+            .value("RELEASE_CANDIDATE", Version::ReleaseCandidate)
+            .export_values();
+
+        py::enum_<Version::ParseMode>(pyVersion, "ParseMode")
+            .value("SEMVER", Version::ParseMode::SemVer)
+            .value("MO2", Version::ParseMode::MO2);
+
+        py::enum_<Version::FormatMode>(pyVersion, "FormatMode", py::arithmetic{})
+            .value("FORCE_SUBPATCH", Version::FormatMode::ForceSubPatch)
+            .value("NO_SEPARATOR", Version::FormatMode::NoSeparator)
+            .value("SHORT_ALPHA_BETA", Version::FormatMode::ShortAlphaBeta)
+            .value("NO_METADATA", Version::FormatMode::NoMetadata)
+            .value("CONDENSED",
+                   static_cast<Version::FormatMode>(Version::FormatCondensed.toInt()))
+            .export_values();
+
+        pyVersion
+            .def_static("parse", &Version::parse, "value"_a,
+                        "mode"_a = Version::ParseMode::SemVer)
+            .def(py::init<int, int, int, QString>(), "major"_a, "minor"_a, "patch"_a,
+                 "metadata"_a = "")
+            .def(py::init<int, int, int, int, QString>(), "major"_a, "minor"_a,
+                 "patch"_a, "subpatch"_a, "metadata"_a = "")
+            .def(py::init<int, int, int, Version::ReleaseType, QString>(), "major"_a,
+                 "minor"_a, "patch"_a, "type"_a, "metadata"_a = "")
+            .def(py::init<int, int, int, int, Version::ReleaseType, QString>(),
+                 "major"_a, "minor"_a, "patch"_a, "subpatch"_a, "type"_a,
+                 "metadata"_a = "")
+            .def(py::init<int, int, int, Version::ReleaseType, int, QString>(),
+                 "major"_a, "minor"_a, "patch"_a, "type"_a, "prerelease"_a,
+                 "metadata"_a = "")
+            .def(py::init<int, int, int, int, Version::ReleaseType, int, QString>(),
+                 "major"_a, "minor"_a, "patch"_a, "subpatch"_a, "type"_a,
+                 "prerelease"_a, "metadata"_a = "")
+            .def(py::init<int, int, int, int,
+                          std::vector<std::variant<int, Version::ReleaseType>>,
+                          QString>(),
+                 "major"_a, "minor"_a, "patch"_a, "subpatch"_a, "prereleases"_a,
+                 "metadata"_a = "")
+            .def("isPreRelease", &Version::isPreRelease)
+            .def_property_readonly("major", &Version::major)
+            .def_property_readonly("minor", &Version::minor)
+            .def_property_readonly("patch", &Version::patch)
+            .def_property_readonly("subpatch", &Version::subpatch)
+            .def_property_readonly("prereleases", &Version::preReleases)
+            .def_property_readonly("build_metadata", &Version::buildMetadata)
+            .def("string", &Version::string, "mode"_a = Version::FormatCondensed)
+            .def("__str__", &Version::string)
+            .def(py::self < py::self)
+            .def(py::self > py::self)
+            .def(py::self <= py::self)
+            .def(py::self >= py::self)
+            .def(py::self != py::self)
+            .def(py::self == py::self);
+
+        // VersionInfo
         py::enum_<MOBase::VersionInfo::ReleaseType>(m, "ReleaseType")
             .value("final", MOBase::VersionInfo::RELEASE_FINAL)
             .value("candidate", MOBase::VersionInfo::RELEASE_CANDIDATE)
@@ -453,7 +516,17 @@ namespace mo2::python {
             .def("overwritePath", &IOrganizer::overwritePath)
             .def("basePath", &IOrganizer::basePath)
             .def("modsPath", &IOrganizer::modsPath)
-            .def("appVersion", &IOrganizer::appVersion)
+            .def("appVersion",
+                 [](IOrganizer& o) {
+                     mo2::python::show_deprecation_warning(
+                         "appVersion", "IOrganizer::appVersion() is deprecated, use "
+                                       "IOrganizer::version() instead.");
+#pragma warning(push)
+#pragma warning(disable : 4996)
+                     return o.appVersion();
+#pragma warning(pop)
+                 })
+            .def("version", &IOrganizer::version)
             .def("createMod", &IOrganizer::createMod,
                  py::return_value_policy::reference, "name"_a)
             .def("getGame", &IOrganizer::getGame, py::return_value_policy::reference,

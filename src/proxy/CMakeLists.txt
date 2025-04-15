@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 
+find_package(mo2-uibase CONFIG REQUIRED)
+
 set(PLUGIN_NAME "plugin_python")
 
-add_library(proxy SHARED)
+add_library(proxy SHARED proxypython.cpp proxypython.h)
 mo2_configure_plugin(proxy
+    NO_SOURCES
     WARNINGS 4
     EXTERNAL_WARNINGS 4
     TRANSLATIONS OFF
@@ -11,15 +14,16 @@ mo2_configure_plugin(proxy
     ${CMAKE_CURRENT_SOURCE_DIR}/../runner
     ${CMAKE_CURRENT_SOURCE_DIR}/../mobase
     ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11-qt)
-target_link_libraries(proxy PRIVATE runner)
+mo2_default_source_group()
+target_link_libraries(proxy PRIVATE runner mo2::uibase)
 set_target_properties(proxy PROPERTIES OUTPUT_NAME ${PLUGIN_NAME})
-mo2_install_target(proxy FOLDER)
+mo2_install_plugin(proxy FOLDER)
 
-set(PLUGIN_PYTHON_DIR ${MO2_INSTALL_PATH}/bin/plugins/${PLUGIN_NAME})
+set(PLUGIN_PYTHON_DIR bin/plugins/${PLUGIN_NAME})
 
 # install runner
 target_link_options(proxy PRIVATE "/DELAYLOAD:runner.dll")
-mo2_install_target(runner INSTALLDIR ${PLUGIN_PYTHON_DIR}/dlls)
+install(FILES $<TARGET_FILE:runner> DESTINATION ${PLUGIN_PYTHON_DIR}/dlls)
 
 # translations (custom location)
 mo2_add_translations(proxy
@@ -33,23 +37,37 @@ mo2_add_translations(proxy
 # install DLLs files needed
 set(DLL_DIRS ${PLUGIN_PYTHON_DIR}/dlls)
 file(GLOB dlls_to_install
-	${PYTHON_BUILD_PATH}/libffi*.dll
-	${PYTHON_BUILD_PATH}/python${Python_VERSION_SHORT}*.dll)
+	# ${PYTHON_BUILD_PATH}/libffi*.dll
+	${Python_HOME}/python${Python_VERSION_MAJOR}*.dll)
 install(FILES ${dlls_to_install} DESTINATION ${DLL_DIRS})
 
-# install Python files
+# install Python .pyd files
 set(PYLIB_DIR ${PLUGIN_PYTHON_DIR}/libs)
-file(GLOB libs_to_install ${PYTHON_BUILD_PATH}/pythoncore/*.pyd)
+file(GLOB libs_to_install ${Python_DLL_DIR}/*.pyd)
 install(FILES ${libs_to_install} DESTINATION ${PYLIB_DIR})
-install(FILES ${PYTHON_BUILD_PATH}/pythoncore/python${Python_VERSION_SHORT}.zip
-    DESTINATION ${PYLIB_DIR} RENAME pythoncore.zip)
+
+# generate + install standard library
+set(pythoncore_zip "${CMAKE_CURRENT_BINARY_DIR}/pythoncore.zip")
+add_custom_command(
+    TARGET proxy POST_BUILD
+    COMMAND ${Python_EXECUTABLE}
+        "${CMAKE_CURRENT_SOURCE_DIR}\\build_pythoncore.py"
+        ${pythoncore_zip}
+    )
+install(FILES ${pythoncore_zip} DESTINATION ${PYLIB_DIR})
 
 # install mobase
 install(TARGETS mobase DESTINATION ${PYLIB_DIR})
 
 # install PyQt6
-#file(GLOB PYQT_DIR ${MO2_BUILD_PATH}/PyQt${QT_MAJOR_VERSION}*)
-set(PYQT_LIB_DIR ${PYTHON_ROOT}/Lib/site-packages/PyQt${QT_MAJOR_VERSION})
-set(PYQT_TARGET_DIR ${PYLIB_DIR}/PyQt${QT_MAJOR_VERSION})
-file(GLOB pyqt_files ${PYQT_LIB_DIR}/*.py ${PYQT_LIB_DIR}/*.pyd ${PYQT_LIB_DIR}/*.pyi)
-install(FILES ${pyqt_files} DESTINATION ${PYQT_TARGET_DIR})
+install(
+    DIRECTORY ${CMAKE_BINARY_DIR}/pylibs/PyQt${MO2_QT_VERSION_MAJOR}
+    DESTINATION ${PYLIB_DIR}
+    PATTERN "*.pyd"
+    PATTERN "*.pyi"
+    PATTERN "__pycache__" EXCLUDE
+    PATTERN "bindings" EXCLUDE
+    PATTERN "lupdate" EXCLUDE
+    PATTERN "Qt6" EXCLUDE
+    PATTERN "uic" EXCLUDE
+)
