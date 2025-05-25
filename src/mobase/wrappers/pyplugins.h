@@ -397,6 +397,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE_PURE(QDir, IPluginGame, dataDirectory, );
         }
+        QString modDataDirectory() const override
+        {
+            PYBIND11_OVERRIDE(QString, IPluginGame, modDataDirectory, );
+        }
         QMap<QString, QDir> secondaryDataDirectories() const override
         {
             using string_dir_map = QMap<QString, QDir>;
@@ -510,6 +514,11 @@ namespace mo2::python {
         QString getSupportURL() const override
         {
             PYBIND11_OVERRIDE(QString, IPluginGame, getSupportURL, );
+        }
+        QMap<QString, QStringList> getModMappings() const override
+        {
+            using vfs_map = QMap<QString, QStringList>;
+            PYBIND11_OVERRIDE(vfs_map, IPluginGame, getModMappings, );
         }
     };
 

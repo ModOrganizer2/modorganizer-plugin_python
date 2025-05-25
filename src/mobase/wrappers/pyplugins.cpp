@@ -55,6 +55,7 @@ namespace mo2::python {
             .def("gameIcon", &IPluginGame::gameIcon)
             .def("gameDirectory", &IPluginGame::gameDirectory)
             .def("dataDirectory", &IPluginGame::dataDirectory)
+            .def("modDataDirectory", &IPluginGame::modDataDirectory)
             .def("secondaryDataDirectories", &IPluginGame::secondaryDataDirectories)
             .def("setGamePath", &IPluginGame::setGamePath, "path"_a)
             .def("documentsDirectory", &IPluginGame::documentsDirectory)
@@ -82,7 +83,8 @@ namespace mo2::python {
             .def("looksValid", &IPluginGame::looksValid, "directory"_a)
             .def("gameVersion", &IPluginGame::gameVersion)
             .def("getLauncherName", &IPluginGame::getLauncherName)
-            .def("getSupportURL", &IPluginGame::getSupportURL);
+            .def("getSupportURL", &IPluginGame::getSupportURL)
+            .def("getModMappings", &IPluginGame::getModMappings);
     }
 
     // multiple installers
