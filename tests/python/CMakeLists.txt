@@ -40,7 +40,7 @@ UIBASE_PATH=set:${UIBASE_PATH}"
 mo2_python_pip_install(python-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
 	PACKAGES pytest
-		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION}
+		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_PYQT_VERSION}
 		PyQt${MO2_QT_VERSION_MAJOR}-Qt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION})
 add_dependencies(python-tests mobase)
 set_target_properties(python-tests PROPERTIES FOLDER tests/python)

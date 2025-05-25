@@ -52,7 +52,7 @@ mo2_python_pip_install(runner-tests
 	DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pylibs
 	PACKAGES
 		pytest
-		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION}
+		PyQt${MO2_QT_VERSION_MAJOR}==${MO2_PYQT_VERSION}
 		PyQt${MO2_QT_VERSION_MAJOR}-Qt${MO2_QT_VERSION_MAJOR}==${MO2_QT_VERSION})
 
 add_dependencies(runner-tests mobase)
