@@ -19,7 +19,7 @@ jobs:
 
       - name: Configure Plugin Python
         id: configure-plugin-python
-        uses: ModOrganizer2/build-with-mob-action@dev/vcpkg
+        uses: ModOrganizer2/build-with-mob-action@master
         with:
           mo2-dependencies: uibase
           mo2-skip-build: true
