@@ -2,24 +2,37 @@ name: Build & Test Plugin Python
 
 on:
   push:
-    branches: master
+    branches: [master]
   pull_request:
     types: [opened, synchronize, reopened]
+
+env:
+  VCPKG_BINARY_SOURCES: clear;x-azblob,${{ vars.AZ_BLOB_VCPKG_URL }},${{ secrets.AZ_BLOB_SAS }},readwrite
 
 jobs:
   build:
     runs-on: windows-2022
     steps:
-      - name: Build Plugin Python
-        id: build-plugin-python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configure Plugin Python
+        id: configure-plugin-python
         uses: ModOrganizer2/build-with-mob-action@master
         with:
-          mo2-third-parties: gtest python spdlog boost sip pyqt pybind11
-          mo2-dependencies: cmake_common uibase
-          mo2-cmake-command: -DPLUGIN_PYTHON_TESTS=1 ..
-      - name: Build Plugin Python Tests
-        run: cmake --build vsbuild --config RelWithDebInfo -j4 --target python-tests --target runner-tests
-        working-directory: ${{ steps.build-plugin-python.outputs.working-directory }}
+          mo2-dependencies: uibase
+          mo2-skip-build: true
+
+      - name: Build Plugin Python
+        working-directory: ${{ steps.configure-plugin-python.outputs.working-directory }}
+        run: cmake --build vsbuild --config RelWithDebInfo --verbose `
+          --target python-tests --target runner-tests --target proxy
+
       - name: Test Plugin Python
+        working-directory: ${{ steps.configure-plugin-python.outputs.working-directory }}
         run: ctest --test-dir vsbuild -C RelWithDebInfo --output-on-failure
-        working-directory: ${{ steps.build-plugin-python.outputs.working-directory }}
+
+      - name: Install Plugin Python
+        working-directory: ${{ steps.configure-plugin-python.outputs.working-directory }}
+        run: cmake --build vsbuild --config RelWithDebInfo --target INSTALL

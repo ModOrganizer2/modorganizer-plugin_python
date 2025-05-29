@@ -10,10 +10,10 @@
 
 // IOrganizer must be bring here to properly compile the Python bindings of
 // plugin requirements
-#include <imoinfo.h>
-#include <isavegame.h>
-#include <isavegameinfowidget.h>
-#include <pluginrequirements.h>
+#include <uibase/imoinfo.h>
+#include <uibase/isavegame.h>
+#include <uibase/isavegameinfowidget.h>
+#include <uibase/pluginrequirements.h>
 
 using namespace pybind11::literals;
 namespace py = pybind11;

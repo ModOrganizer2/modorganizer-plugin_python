@@ -2,8 +2,8 @@
 
 #include "../pybind11_all.h"
 
-#include <report.h>
-#include <utility.h>
+#include <uibase/report.h>
+#include <uibase/utility.h>
 
 #include "known_folders.h"
 

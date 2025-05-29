@@ -3,18 +3,18 @@
 
 #include "../pybind11_all.h"
 
-#include <iinstallationmanager.h>
+#include <uibase/iinstallationmanager.h>
 
-#include <iplugin.h>
-#include <iplugindiagnose.h>
-#include <ipluginfilemapper.h>
-#include <iplugingame.h>
-#include <iplugininstaller.h>
-#include <iplugininstallercustom.h>
-#include <iplugininstallersimple.h>
-#include <ipluginmodpage.h>
-#include <ipluginpreview.h>
-#include <iplugintool.h>
+#include <uibase/iplugin.h>
+#include <uibase/iplugindiagnose.h>
+#include <uibase/ipluginfilemapper.h>
+#include <uibase/iplugingame.h>
+#include <uibase/iplugininstaller.h>
+#include <uibase/iplugininstallercustom.h>
+#include <uibase/iplugininstallersimple.h>
+#include <uibase/ipluginmodpage.h>
+#include <uibase/ipluginpreview.h>
+#include <uibase/iplugintool.h>
 
 // these needs to be defined in a header file for automoc - this file is included only
 // in pyplugins.cpp

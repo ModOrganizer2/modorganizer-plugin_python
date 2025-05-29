@@ -16,8 +16,8 @@
 #include <pybind11/functional.h>
 #include <pybind11/stl/filesystem.h>
 
-#include <log.h>
-#include <utility.h>
+#include <uibase/log.h>
+#include <uibase/utility.h>
 
 #include "error.h"
 #include "pythonutils.h"

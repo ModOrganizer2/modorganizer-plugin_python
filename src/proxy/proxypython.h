@@ -23,8 +23,8 @@ along with python proxy plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <memory>
 
-#include <iplugindiagnose.h>
-#include <ipluginproxy.h>
+#include <uibase/iplugindiagnose.h>
+#include <uibase/ipluginproxy.h>
 
 #include <pythonrunner.h>
 
