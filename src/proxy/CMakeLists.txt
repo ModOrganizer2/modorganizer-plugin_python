@@ -37,7 +37,10 @@ mo2_add_translations(proxy
 # install DLLs files needed
 set(DLL_DIRS ${PLUGIN_PYTHON_DIR}/dlls)
 file(GLOB dlls_to_install
-	# ${PYTHON_BUILD_PATH}/libffi*.dll
+	${Python_HOME}/dlls/libffi*.dll
+	${Python_HOME}/dlls/sqlite*.dll
+	${Python_HOME}/dlls/libssl*.dll
+	${Python_HOME}/dlls/libcrypto*.dll
 	${Python_HOME}/python${Python_VERSION_MAJOR}*.dll)
 install(FILES ${dlls_to_install} DESTINATION ${DLL_DIRS})
 
