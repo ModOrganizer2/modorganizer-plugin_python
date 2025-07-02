@@ -84,6 +84,9 @@ namespace mo2::python {
     void add_ifiletree_bindings(pybind11::module_& m)
     {
 
+        // register generator for walk and glob
+        register_generator_type<std::shared_ptr<const FileTreeEntry>>(m);
+
         // FileTreeEntry class:
         auto fileTreeEntryClass =
             py::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>>(m,
@@ -164,6 +167,11 @@ namespace mo2::python {
             .value("SKIP", IFileTree::WalkReturn::SKIP)
             .export_values();
 
+        py::enum_<IFileTree::GlobPatternType>(iFileTreeClass, "GlobPatternType")
+            .value("GLOB", IFileTree::GlobPatternType::GLOB)
+            .value("REGEX", IFileTree::GlobPatternType::REGEX)
+            .export_values();
+
         // Non-mutable operations:
         iFileTreeClass.def("exists",
                            py::overload_cast<QString, IFileTree::FileTypes>(
@@ -175,10 +183,18 @@ namespace mo2::python {
         iFileTreeClass.def("pathTo", &IFileTree::pathTo, py::arg("entry"),
                            py::arg("sep") = "\\");
 
-        // Note: walk() would probably be better as a generator in python, but
-        // it is likely impossible to construct from the C++ walk() method.
-        iFileTreeClass.def("walk", &IFileTree::walk, py::arg("callback"),
-                           py::arg("sep") = "\\");
+        iFileTreeClass.def(
+            "walk",
+            py::overload_cast<
+                std::function<IFileTree::WalkReturn(
+                    QString const&, std::shared_ptr<const FileTreeEntry>)>,
+                QString>(&IFileTree::walk, py::const_),
+            py::arg("callback"), py::arg("sep") = "\\");
+
+        iFileTreeClass.def("walk", py::overload_cast<>(&IFileTree::walk, py::const_));
+
+        iFileTreeClass.def("glob", &IFileTree::glob, py::arg("pattern"),
+                           py::arg("type") = IFileTree::GlobPatternType::GLOB);
 
         // Kind-of-static operations:
         iFileTreeClass.def("createOrphanTree", &IFileTree::createOrphanTree,

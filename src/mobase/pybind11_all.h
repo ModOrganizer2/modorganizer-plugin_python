@@ -13,6 +13,7 @@
 #include "pybind11_qt/pybind11_qt.h"
 
 #include "pybind11_utils/functional.h"
+#include "pybind11_utils/generator.h"
 #include "pybind11_utils/shared_cpp_owner.h"
 #include "pybind11_utils/smart_variant_wrapper.h"
 
