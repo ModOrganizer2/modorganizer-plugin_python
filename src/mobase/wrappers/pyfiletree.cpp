@@ -49,7 +49,7 @@ namespace mo2::detail {
             return std::make_shared<PyFileTree>(parent, name, m_Callback);
         }
 
-        bool doPopulate(std::shared_ptr<const IFileTree> parent,
+        bool doPopulate([[maybe_unused]] std::shared_ptr<const IFileTree> parent,
                         std::vector<std::shared_ptr<FileTreeEntry>>&) const override
         {
             return true;
@@ -83,10 +83,6 @@ namespace mo2::python {
 
     void add_ifiletree_bindings(pybind11::module_& m)
     {
-
-        // register generator for walk and glob
-        register_generator_type<std::shared_ptr<const FileTreeEntry>>(m);
-
         // FileTreeEntry class:
         auto fileTreeEntryClass =
             py::class_<FileTreeEntry, std::shared_ptr<FileTreeEntry>>(m,
@@ -191,10 +187,17 @@ namespace mo2::python {
                 QString>(&IFileTree::walk, py::const_),
             py::arg("callback"), py::arg("sep") = "\\");
 
-        iFileTreeClass.def("walk", py::overload_cast<>(&IFileTree::walk, py::const_));
+        iFileTreeClass.def("walk", [](IFileTree const* tree) {
+            return make_generator(tree->walk());
+        });
 
-        iFileTreeClass.def("glob", &IFileTree::glob, py::arg("pattern"),
-                           py::arg("type") = IFileTree::GlobPatternType::GLOB);
+        iFileTreeClass.def(
+            "glob",  // &IFileTree::glob,
+            [](IFileTree const* tree, QString pattern,
+               IFileTree::GlobPatternType patternType) {
+                return make_generator(tree->glob(pattern, patternType));
+            },
+            py::arg("pattern"), py::arg("type") = IFileTree::GlobPatternType::GLOB);
 
         // Kind-of-static operations:
         iFileTreeClass.def("createOrphanTree", &IFileTree::createOrphanTree,

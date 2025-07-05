@@ -7,28 +7,46 @@
 
 namespace mo2::python {
 
+    // the code here is mostly taken from pybind11 itself, and relies on some pybind11
+    // internals so might be subject to change when upgrading pybind11 versions
+
+    namespace detail {
+        template <typename T>
+        struct generator_state {
+            std::generator<T> g;
+            decltype(g.begin()) it;
+
+            generator_state(std::generator<T> gen) : g(std::move(gen)), it(g.begin()) {}
+        };
+    }  // namespace detail
+
     // create a Python generator from a C++ generator
     //
     template <typename T>
-    auto register_generator_type(pybind11::handle scope,
-                                 const char* name = "_mo2_generator")
+    auto make_generator(std::generator<T> g)
     {
-        namespace py = pybind11;
+        using state = detail::generator_state<T>;
 
-        return py::class_<std::generator<T>>(scope, name, py::module_local())
-            .def("__iter__",
-                 [](std::generator<T>& gen) -> std::generator<T>& {
-                     return gen;
-                 })
-            .def("__next__", [](std::generator<T>& gen) {
-                auto it = gen.begin();
-                if (it != gen.end()) {
-                    return *it;
-                }
-                else {
-                    throw py::stop_iteration();
-                }
-            });
+        namespace py = pybind11;
+        if (!py::detail::get_type_info(typeid(state), false)) {
+            py::class_<state>(py::handle(), "iterator", pybind11::module_local())
+                .def("__iter__",
+                     [](state& s) -> state& {
+                         return s;
+                     })
+                .def("__next__", [](state& s) {
+                    if (s.it != s.g.end()) {
+                        const auto v = *s.it;
+                        s.it++;
+                        return v;
+                    }
+                    else {
+                        throw py::stop_iteration();
+                    }
+                });
+        }
+
+        return py::cast(state{std::move(g)});
     }
 
 }  // namespace mo2::python
