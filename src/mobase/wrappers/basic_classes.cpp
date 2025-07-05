@@ -54,7 +54,24 @@ namespace mo2::python {
             .value("NO_METADATA", Version::FormatMode::NoMetadata)
             .value("CONDENSED",
                    static_cast<Version::FormatMode>(Version::FormatCondensed.toInt()))
-            .export_values();
+            .export_values()
+            .def("__xor__",
+                 py::overload_cast<Version::FormatMode, Version::FormatModes>(
+                     &operator^))
+            .def("__and__",
+                 py::overload_cast<Version::FormatMode, Version::FormatModes>(
+                     &operator&))
+            .def("__or__", py::overload_cast<Version::FormatMode, Version::FormatModes>(
+                               &operator|))
+            .def("__rxor__",
+                 py::overload_cast<Version::FormatMode, Version::FormatModes>(
+                     &operator^))
+            .def("__rand__",
+                 py::overload_cast<Version::FormatMode, Version::FormatModes>(
+                     &operator&))
+            .def("__ror__",
+                 py::overload_cast<Version::FormatMode, Version::FormatModes>(
+                     &operator|));
 
         pyVersion
             .def_static("parse", &Version::parse, "value"_a,
@@ -86,8 +103,11 @@ namespace mo2::python {
             .def_property_readonly("subpatch", &Version::subpatch)
             .def_property_readonly("prereleases", &Version::preReleases)
             .def_property_readonly("build_metadata", &Version::buildMetadata)
-            .def("string", &Version::string, "mode"_a = Version::FormatCondensed)
-            .def("__str__", &Version::string)
+            .def("string", &Version::string, "mode"_a = Version::FormatModes{})
+            .def("__str__",
+                 [](Version const& version) {
+                     return version.string(Version::FormatCondensed);
+                 })
             .def(py::self < py::self)
             .def(py::self > py::self)
             .def(py::self <= py::self)
