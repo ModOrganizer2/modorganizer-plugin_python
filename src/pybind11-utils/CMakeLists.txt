@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 add_library(pybind11-utils STATIC
 	./include/pybind11_utils/functional.h
+	./include/pybind11_utils/generator.h
 	./include/pybind11_utils/shared_cpp_owner.h
 	./include/pybind11_utils/smart_variant_wrapper.h
 	./include/pybind11_utils/smart_variant.h
