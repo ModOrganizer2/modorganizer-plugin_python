@@ -91,7 +91,7 @@ namespace mo2::python {
         };
 
         template <class R, class C, class... Args>
-        struct function_signature<R (C::*)(Args...)&> {
+        struct function_signature<R (C::*)(Args...) &> {
             using type = R(C*, Args...);
         };
 
