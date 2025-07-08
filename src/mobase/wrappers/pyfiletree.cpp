@@ -163,9 +163,11 @@ namespace mo2::python {
             .value("SKIP", IFileTree::WalkReturn::SKIP)
             .export_values();
 
-        py::enum_<IFileTree::GlobPatternType>(iFileTreeClass, "GlobPatternType")
-            .value("GLOB", IFileTree::GlobPatternType::GLOB)
-            .value("REGEX", IFileTree::GlobPatternType::REGEX)
+        // in C++ this is not an inner enum due to the conditional feature of glob(),
+        // but in Python this makes more sense as a inner enum
+        py::enum_<GlobPatternType>(iFileTreeClass, "GlobPatternType")
+            .value("GLOB", GlobPatternType::GLOB)
+            .value("REGEX", GlobPatternType::REGEX)
             .export_values();
 
         // Non-mutable operations:
@@ -187,17 +189,21 @@ namespace mo2::python {
                 QString>(&IFileTree::walk, py::const_),
             py::arg("callback"), py::arg("sep") = "\\");
 
-        iFileTreeClass.def("walk", [](IFileTree const* tree) {
-            return make_generator(tree->walk());
+        // the walk() and glob() generator version are free functions in C++ due to the
+        // conditional nature, but in Python, it makes more sense to have them as method
+        // of IFileTree directly
+
+        iFileTreeClass.def("walk", [](std::shared_ptr<const IFileTree> tree) {
+            return make_generator(walk(tree));
         });
 
         iFileTreeClass.def(
-            "glob",  // &IFileTree::glob,
-            [](IFileTree const* tree, QString pattern,
-               IFileTree::GlobPatternType patternType) {
-                return make_generator(tree->glob(pattern, patternType));
+            "glob",
+            [](std::shared_ptr<const IFileTree> tree, QString pattern,
+               GlobPatternType patternType) {
+                return make_generator(glob(tree, pattern, patternType));
             },
-            py::arg("pattern"), py::arg("type") = IFileTree::GlobPatternType::GLOB);
+            py::arg("pattern"), py::arg("type") = GlobPatternType::GLOB);
 
         // Kind-of-static operations:
         iFileTreeClass.def("createOrphanTree", &IFileTree::createOrphanTree,
