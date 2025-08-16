@@ -231,6 +231,9 @@ namespace mo2::python {
             .def("url", &IModInterface::url)
             .def("primaryCategory", &IModInterface::primaryCategory)
             .def("categories", &IModInterface::categories)
+            .def("author", &IModInterface::author)
+            .def("uploader", &IModInterface::uploader)
+            .def("uploaderUrl", &IModInterface::uploaderUrl)
             .def("trackedState", &IModInterface::trackedState)
             .def("endorsedState", &IModInterface::endorsedState)
             .def("fileTree", &IModInterface::fileTree)
@@ -298,7 +301,10 @@ namespace mo2::python {
             .def_readwrite("fileCategory", &ModRepositoryFileInfo::fileCategory)
             .def_readwrite("fileTime", &ModRepositoryFileInfo::fileTime)
             .def_readwrite("repository", &ModRepositoryFileInfo::repository)
-            .def_readwrite("userData", &ModRepositoryFileInfo::userData);
+            .def_readwrite("userData", &ModRepositoryFileInfo::userData)
+            .def_readwrite("author", &ModRepositoryFileInfo::author)
+            .def_readwrite("uploader", &ModRepositoryFileInfo::uploader)
+            .def_readwrite("uploaderUrl", &ModRepositoryFileInfo::uploaderUrl);
     }
 
     void add_guessedstring_classes(py::module_ m)
