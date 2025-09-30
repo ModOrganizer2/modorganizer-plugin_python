@@ -111,7 +111,7 @@ namespace mo2::python {
                  py::return_value_policy::reference);
 
         py::class_<IPluginInstallerSimple, PyPluginInstallerSimple, IPluginInstaller,
-                   std::unique_ptr<IPluginInstallerSimple, py::nodelete>>(
+                   IPlugin, std::unique_ptr<IPluginInstallerSimple, py::nodelete>>(
             m, "IPluginInstallerSimple", py::multiple_inheritance())
             .def(py::init<>())
 
@@ -128,7 +128,7 @@ namespace mo2::python {
                 "name"_a, "tree"_a, "version"_a, "nexus_id"_a);
 
         py::class_<IPluginInstallerCustom, PyPluginInstallerCustom, IPluginInstaller,
-                   std::unique_ptr<IPluginInstallerCustom, py::nodelete>>(
+                   IPlugin, std::unique_ptr<IPluginInstallerCustom, py::nodelete>>(
             m, "IPluginInstallerCustom", py::multiple_inheritance())
             .def(py::init<>())
             .def("isArchiveSupported", &IPluginInstallerCustom::isArchiveSupported,
