@@ -3,6 +3,7 @@
 #include "../pybind11_all.h"
 
 #include <format>
+#include <memory>
 
 #include <uibase/executableinfo.h>
 #include <uibase/filemapping.h>
@@ -536,6 +537,7 @@ namespace mo2::python {
         py::class_<IOrganizer>(m, "IOrganizer")
             .def("createNexusBridge", &IOrganizer::createNexusBridge,
                  py::return_value_policy::reference)
+            .def("instanceName", &IOrganizer::instanceName)
             .def("profileName", &IOrganizer::profileName)
             .def("profilePath", &IOrganizer::profilePath)
             .def("downloadsPath", &IOrganizer::downloadsPath)
@@ -626,6 +628,7 @@ namespace mo2::python {
             .def("gameFeatures", &IOrganizer::gameFeatures,
                  py::return_value_policy::reference)
             .def("profile", &IOrganizer::profile, py::return_value_policy::reference)
+            .def("profiles", &IOrganizer::profiles)
 
             // custom implementation for startApplication and
             // waitForApplication because 1) HANDLE (= void*) is not properly
@@ -877,21 +880,6 @@ namespace mo2::python {
                                    m.destination.toStdWString(), m.isDirectory,
                                    m.createTarget);
             });
-
-        // must be done BEFORE imodlist because there is a default argument to a
-        // IProfile* in the modlist class
-        py::class_<IProfile>(m, "IProfile")
-            .def("name", &IProfile::name)
-            .def("absolutePath", &IProfile::absolutePath)
-            .def("localSavesEnabled", &IProfile::localSavesEnabled)
-            .def("localSettingsEnabled", &IProfile::localSettingsEnabled)
-            .def("invalidationActive",
-                 [](const IProfile* p) {
-                     bool supported;
-                     bool active = p->invalidationActive(&supported);
-                     return std::make_tuple(active, supported);
-                 })
-            .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, "inifile"_a);
 
         add_ipluginlist_classes(m);
         add_imodlist_classes(m);

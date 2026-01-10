@@ -11,6 +11,7 @@
 // IOrganizer must be bring here to properly compile the Python bindings of
 // plugin requirements
 #include <uibase/imoinfo.h>
+#include <uibase/iprofile.h>
 #include <uibase/isavegame.h>
 #include <uibase/isavegameinfowidget.h>
 #include <uibase/pluginrequirements.h>
@@ -75,6 +76,41 @@ namespace mo2::python {
         ~PySaveGameInfoWidget() { std::cout << "~PySaveGameInfoWidget()" << std::endl; }
     };
 
+    class PyProfile : public IProfile {
+    public:
+        QString name() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IProfile, name, );
+        }
+
+        QString absolutePath() const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IProfile, absolutePath, );
+        }
+
+        bool localSavesEnabled() const override
+        {
+            PYBIND11_OVERRIDE_PURE(bool, IProfile, localSavesEnabled, );
+        }
+
+        bool localSettingsEnabled() const override
+        {
+            PYBIND11_OVERRIDE_PURE(bool, IProfile, localSettingsEnabled, );
+        }
+
+        bool invalidationActive(bool* supported) const override
+        {
+            PYBIND11_OVERRIDE_PURE(bool, IProfile, invalidationActive, supported);
+        }
+
+        QString absoluteIniFilePath(QString iniFile) const override
+        {
+            PYBIND11_OVERRIDE_PURE(QString, IProfile, absoluteIniFilePath, iniFile);
+        }
+
+        ~PyProfile() { std::cout << "~PyProfile()" << std::endl; }
+    };
+
     void add_wrapper_bindings(pybind11::module_ m)
     {
         // ISaveGame - custom type_caster<> for shared_ptr<> to keep the Python object
@@ -115,6 +151,24 @@ namespace mo2::python {
             .def("longDescription", &IPluginRequirement::Problem::longDescription);
 
         iPluginRequirementClass.def("check", &IPluginRequirement::check, "organizer"_a);
+
+        // IProfile - custom type_caster<> for shared_ptr<> to keep the Python object
+        // alive when returned from Python (see shared_cpp_owner.h)
+
+        // must be done BEFORE imodlist because there is a default argument to a
+        // IProfile* in the modlist class
+        py::class_<IProfile, PyProfile, std::shared_ptr<IProfile>>(m, "IProfile")
+            .def("name", &IProfile::name)
+            .def("absolutePath", &IProfile::absolutePath)
+            .def("localSavesEnabled", &IProfile::localSavesEnabled)
+            .def("localSettingsEnabled", &IProfile::localSettingsEnabled)
+            .def("invalidationActive",
+                 [](const IProfile* p) {
+                     bool supported;
+                     bool active = p->invalidationActive(&supported);
+                     return std::make_tuple(active, supported);
+                 })
+            .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, "inifile"_a);
     }
 
 }  // namespace mo2::python
