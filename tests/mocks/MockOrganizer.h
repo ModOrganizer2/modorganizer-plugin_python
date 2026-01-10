@@ -7,6 +7,7 @@ class MockOrganizer : public IOrganizer {
 public:
     // clang-format off
 	MOCK_METHOD(IModRepositoryBridge*, createNexusBridge, (), (const, override));
+	MOCK_METHOD(QString, instanceName, (), (const, override));
 	MOCK_METHOD(QString, profileName, (), (const, override));
 	MOCK_METHOD(QString, profilePath, (), (const, override));
 	MOCK_METHOD(QString, downloadsPath, (), (const, override));
@@ -37,6 +38,7 @@ public:
 	MOCK_METHOD(MOBase::IPluginList*, pluginList, (), (const, override));
 	MOCK_METHOD(MOBase::IModList*, modList, (), (const, override));
 	MOCK_METHOD(MOBase::IProfile*, profile, (), (const, override));
+	MOCK_METHOD(std::vector<std::shared_ptr<const MOBase::IProfile>>, profiles, (), (const, override));
 	MOCK_METHOD(MOBase::IGameFeatures*, gameFeatures, (), (const, override));
 	MOCK_METHOD(HANDLE, startApplication, (const QString &executable, const QStringList &args, const QString &cwd, const QString &profile, const QString &forcedCustomOverwrite, bool ignoreCustomOverwrite), (override));
 	MOCK_METHOD(bool, waitForApplication, (HANDLE handle, bool refresh, LPDWORD exitCode), (const, override));
