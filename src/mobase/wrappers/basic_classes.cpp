@@ -3,6 +3,7 @@
 #include "../pybind11_all.h"
 
 #include <format>
+#include <memory>
 
 #include <uibase/executableinfo.h>
 #include <uibase/filemapping.h>
@@ -536,6 +537,7 @@ namespace mo2::python {
         py::class_<IOrganizer>(m, "IOrganizer")
             .def("createNexusBridge", &IOrganizer::createNexusBridge,
                  py::return_value_policy::reference)
+            .def("instanceName", &IOrganizer::instanceName)
             .def("profileName", &IOrganizer::profileName)
             .def("profilePath", &IOrganizer::profilePath)
             .def("downloadsPath", &IOrganizer::downloadsPath)
@@ -625,7 +627,9 @@ namespace mo2::python {
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,
                  py::return_value_policy::reference)
-            .def("profile", &IOrganizer::profile, py::return_value_policy::reference)
+            .def("profile", &IOrganizer::profile)
+            .def("profileNames", &IOrganizer::profileNames)
+            .def("getProfile", &IOrganizer::getProfile, "name"_a)
 
             // custom implementation for startApplication and
             // waitForApplication because 1) HANDLE (= void*) is not properly
@@ -880,7 +884,7 @@ namespace mo2::python {
 
         // must be done BEFORE imodlist because there is a default argument to a
         // IProfile* in the modlist class
-        py::class_<IProfile>(m, "IProfile")
+        py::class_<IProfile, std::shared_ptr<IProfile>>(m, "IProfile")
             .def("name", &IProfile::name)
             .def("absolutePath", &IProfile::absolutePath)
             .def("localSavesEnabled", &IProfile::localSavesEnabled)
