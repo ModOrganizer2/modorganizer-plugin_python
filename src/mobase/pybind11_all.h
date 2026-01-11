@@ -18,7 +18,6 @@
 #include "pybind11_utils/smart_variant_wrapper.h"
 
 #include <uibase/game_features/game_feature.h>
-#include <uibase/iprofile.h>
 #include <uibase/isavegame.h>
 #include <uibase/pluginrequirements.h>
 
@@ -141,7 +140,6 @@ namespace mo2::python {
 }  // namespace mo2::python
 
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::IPluginRequirement)
-MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::IProfile)
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::ISaveGame)
 MO2_PYBIND11_SHARED_CPP_HOLDER(MOBase::GameFeature)
 
