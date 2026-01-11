@@ -26,8 +26,8 @@ PYBIND11_MODULE(mobase, m)
 
     // bindings
     //
-    mo2::python::add_wrapper_bindings(m);
     mo2::python::add_basic_bindings(m);
+    mo2::python::add_wrapper_bindings(m);
 
     // game features must be added before plugins
     mo2::python::add_game_feature_bindings(m);

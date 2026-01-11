@@ -627,7 +627,7 @@ namespace mo2::python {
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,
                  py::return_value_policy::reference)
-            .def("profile", &IOrganizer::profile, py::return_value_policy::reference)
+            .def("profile", &IOrganizer::profile)
             .def("profileNames", &IOrganizer::profileNames)
             .def("getProfile", &IOrganizer::getProfile, "name"_a)
 
@@ -881,6 +881,21 @@ namespace mo2::python {
                                    m.destination.toStdWString(), m.isDirectory,
                                    m.createTarget);
             });
+
+        // must be done BEFORE imodlist because there is a default argument to a
+        // IProfile* in the modlist class
+        py::class_<IProfile, std::shared_ptr<IProfile>>(m, "IProfile")
+            .def("name", &IProfile::name)
+            .def("absolutePath", &IProfile::absolutePath)
+            .def("localSavesEnabled", &IProfile::localSavesEnabled)
+            .def("localSettingsEnabled", &IProfile::localSettingsEnabled)
+            .def("invalidationActive",
+                 [](const IProfile* p) {
+                     bool supported;
+                     bool active = p->invalidationActive(&supported);
+                     return std::make_tuple(active, supported);
+                 })
+            .def("absoluteIniFilePath", &IProfile::absoluteIniFilePath, "inifile"_a);
 
         add_ipluginlist_classes(m);
         add_imodlist_classes(m);
