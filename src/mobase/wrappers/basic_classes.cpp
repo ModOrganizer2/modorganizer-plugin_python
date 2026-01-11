@@ -628,7 +628,8 @@ namespace mo2::python {
             .def("gameFeatures", &IOrganizer::gameFeatures,
                  py::return_value_policy::reference)
             .def("profile", &IOrganizer::profile, py::return_value_policy::reference)
-            .def("profiles", &IOrganizer::profiles)
+            .def("profileNames", &IOrganizer::profileNames)
+            .def("getProfile", &IOrganizer::getProfile, "name"_a)
 
             // custom implementation for startApplication and
             // waitForApplication because 1) HANDLE (= void*) is not properly
