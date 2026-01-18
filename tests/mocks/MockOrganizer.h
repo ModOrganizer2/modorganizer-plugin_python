@@ -37,6 +37,7 @@ public:
 	MOCK_METHOD(MOBase::IDownloadManager*, downloadManager, (), (const, override));
 	MOCK_METHOD(MOBase::IPluginList*, pluginList, (), (const, override));
 	MOCK_METHOD(MOBase::IModList*, modList, (), (const, override));
+	MOCK_METHOD(MOBase::IExecutablesList*, executablesList, (), (const, override));
 	MOCK_METHOD(std::shared_ptr<MOBase::IProfile>, profile, (), (const, override));
 	MOCK_METHOD(QStringList, profileNames, (), (const, override));
 	MOCK_METHOD(std::shared_ptr<const MOBase::IProfile>, getProfile, (const QString& name), (const, override));

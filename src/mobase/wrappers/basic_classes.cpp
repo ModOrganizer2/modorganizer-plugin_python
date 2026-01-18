@@ -10,6 +10,8 @@
 #include <uibase/game_features/igamefeatures.h>
 #include <uibase/guessedvalue.h>
 #include <uibase/idownloadmanager.h>
+#include <uibase/iexecutable.h>
+#include <uibase/iexecutableslist.h>
 #include <uibase/iinstallationmanager.h>
 #include <uibase/imodinterface.h>
 #include <uibase/imodrepositorybridge.h>
@@ -198,6 +200,23 @@ namespace mo2::python {
             .def("forced", &ExecutableForcedLoadSetting::forced)
             .def("library", &ExecutableForcedLoadSetting::library)
             .def("process", &ExecutableForcedLoadSetting::process);
+
+        py::class_<IExecutable, std::shared_ptr<IExecutable>>(m, "IExecutable")
+            .def("title", &IExecutable::title)
+            .def("binaryInfo", &IExecutable::binaryInfo)
+            .def("arguments", &IExecutable::arguments)
+            .def("steamAppID", &IExecutable::steamAppID)
+            .def("workingDirectory", &IExecutable::workingDirectory)
+            .def("isShownOnToolbar", &IExecutable::isShownOnToolbar)
+            .def("usesOwnIcon", &IExecutable::usesOwnIcon)
+            .def("minimizeToSystemTray", &IExecutable::minimizeToSystemTray)
+            .def("hide", &IExecutable::hide);
+
+        py::class_<IExecutablesList>(m, "IExecutablesList")
+            .def("executables", &IExecutablesList::executables)
+            .def("getByTitle", &IExecutablesList::getByTitle, "title"_a)
+            .def("getByBinary", &IExecutablesList::getByBinary, "info"_a)
+            .def("titleExists", &IExecutablesList::titleExists, "title"_a);
     }
 
     void add_modinterface_classes(py::module_ m)
@@ -625,6 +644,8 @@ namespace mo2::python {
             .def("pluginList", &IOrganizer::pluginList,
                  py::return_value_policy::reference)
             .def("modList", &IOrganizer::modList, py::return_value_policy::reference)
+            .def("executablesList", &IOrganizer::executablesList,
+                 py::return_value_policy::reference)
             .def("gameFeatures", &IOrganizer::gameFeatures,
                  py::return_value_policy::reference)
             .def("profile", &IOrganizer::profile)
