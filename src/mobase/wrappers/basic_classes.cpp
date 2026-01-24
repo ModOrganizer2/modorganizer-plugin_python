@@ -5,6 +5,7 @@
 #include <format>
 #include <memory>
 
+#include <pybind11_utils/generator.h>
 #include <uibase/executableinfo.h>
 #include <uibase/filemapping.h>
 #include <uibase/game_features/igamefeatures.h>
@@ -215,7 +216,8 @@ namespace mo2::python {
         py::class_<IExecutablesList>(m, "IExecutablesList")
             .def("executables",
                  [](IExecutablesList* executablesList) {
-                     return make_generator(executablesList->executables());
+                     return make_generator(executablesList->executables(),
+                                           py::return_value_policy::reference);
                  })
             .def("getByTitle", &IExecutablesList::getByTitle, "title"_a)
             .def("getByBinary", &IExecutablesList::getByBinary, "info"_a)
