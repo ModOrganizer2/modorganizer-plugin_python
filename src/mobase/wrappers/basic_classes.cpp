@@ -201,7 +201,7 @@ namespace mo2::python {
             .def("library", &ExecutableForcedLoadSetting::library)
             .def("process", &ExecutableForcedLoadSetting::process);
 
-        py::class_<IExecutable, std::shared_ptr<IExecutable>>(m, "IExecutable")
+        py::class_<IExecutable>(m, "IExecutable")
             .def("title", &IExecutable::title)
             .def("binaryInfo", &IExecutable::binaryInfo)
             .def("arguments", &IExecutable::arguments)
@@ -213,10 +213,13 @@ namespace mo2::python {
             .def("hide", &IExecutable::hide);
 
         py::class_<IExecutablesList>(m, "IExecutablesList")
-            .def("executables", &IExecutablesList::executables)
+            .def("executables",
+                 [](IExecutablesList* executablesList) {
+                     return make_generator(executablesList->executables());
+                 })
             .def("getByTitle", &IExecutablesList::getByTitle, "title"_a)
             .def("getByBinary", &IExecutablesList::getByBinary, "info"_a)
-            .def("titleExists", &IExecutablesList::titleExists, "title"_a);
+            .def("titleExists", &IExecutablesList::contains, "title"_a);
     }
 
     void add_modinterface_classes(py::module_ m)

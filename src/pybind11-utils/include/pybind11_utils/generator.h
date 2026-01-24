@@ -34,9 +34,9 @@ namespace mo2::python {
                      [](state& s) -> state& {
                          return s;
                      })
-                .def("__next__", [](state& s) {
+                .def("__next__", [](state& s) -> decltype(auto) {
                     if (s.it != s.g.end()) {
-                        const auto v = *s.it;
+                        decltype(auto) v = *s.it;
                         s.it++;
                         return v;
                     }
