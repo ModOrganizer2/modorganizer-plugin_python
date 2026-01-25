@@ -38,7 +38,7 @@ namespace mo2::python {
                     "__next__",
                     [](state& s) -> T {
                         if (s.it != s.g.end()) {
-                            decltype(auto) v = *s.it;
+                            T v = *s.it;
                             s.it++;
                             return v;
                         }
