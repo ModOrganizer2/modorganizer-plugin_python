@@ -22,8 +22,8 @@ namespace mo2::python {
 
     // create a Python generator from a C++ generator
     //
-    template <typename T>
-    auto make_generator(std::generator<T> g)
+    template <typename T, typename... Args>
+    auto make_generator(std::generator<T> g, Args&&... args)
     {
         using state = detail::generator_state<T>;
 
@@ -34,16 +34,19 @@ namespace mo2::python {
                      [](state& s) -> state& {
                          return s;
                      })
-                .def("__next__", [](state& s) {
-                    if (s.it != s.g.end()) {
-                        const auto v = *s.it;
-                        s.it++;
-                        return v;
-                    }
-                    else {
-                        throw py::stop_iteration();
-                    }
-                });
+                .def(
+                    "__next__",
+                    [](state& s) -> T {
+                        if (s.it != s.g.end()) {
+                            T v = *s.it;
+                            s.it++;
+                            return v;
+                        }
+                        else {
+                            throw py::stop_iteration();
+                        }
+                    },
+                    std::forward<Args>(args)...);
         }
 
         return py::cast(state{std::move(g)});
