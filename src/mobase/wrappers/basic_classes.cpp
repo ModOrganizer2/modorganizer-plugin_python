@@ -14,6 +14,8 @@
 #include <uibase/iexecutable.h>
 #include <uibase/iexecutableslist.h>
 #include <uibase/iinstallationmanager.h>
+#include <uibase/iinstance.h>
+#include <uibase/iinstancemanager.h>
 #include <uibase/imodinterface.h>
 #include <uibase/imodrepositorybridge.h>
 #include <uibase/imoinfo.h>
@@ -644,6 +646,8 @@ namespace mo2::python {
 
             .def("virtualFileTree", &IOrganizer::virtualFileTree)
 
+            .def("instanceManager", &IOrganizer::instanceManager,
+                 py::return_value_policy::reference)
             .def("downloadManager", &IOrganizer::downloadManager,
                  py::return_value_policy::reference)
             .def("pluginList", &IOrganizer::pluginList,
@@ -799,6 +803,42 @@ namespace mo2::python {
             .def_static("getPluginDataPath", &IOrganizer::getPluginDataPath);
     }
 
+    void add_iinstance_manager_classes(py::module_ m)
+    {
+        py::class_<IInstance, std::shared_ptr<IInstance>>(m, "IInstance")
+            .def("readFromIni", &IInstance::readFromIni)
+            .def("displayName", &IInstance::displayName)
+            .def("gameName", &IInstance::gameName)
+            .def("gameDirectory", &IInstance::gameDirectory)
+            .def("directory", &IInstance::directory)
+            .def("baseDirectory", &IInstance::baseDirectory)
+            .def("isPortable", &IInstance::isPortable)
+            .def("profileName", &IInstance::profileName)
+            .def("iniPath", &IInstance::iniPath);
+
+        py::class_<IInstanceManager>(m, "IInstanceManager")
+            .def("overrideInstance", &IInstanceManager::overrideInstance,
+                 "instance_name"_a)
+            .def("overrideProfile", &IInstanceManager::overrideProfile,
+                 "profile_name"_a)
+            .def("clearOverrides", &IInstanceManager::clearOverrides)
+            .def("clearCurrentInstance", &IInstanceManager::clearCurrentInstance)
+            .def("currentInstance", &IInstanceManager::currentInstance,
+                 py::return_value_policy::reference)
+            .def("setCurrentInstance", &IInstanceManager::setCurrentInstance,
+                 "instance_name"_a)
+            .def("allowedToChangeInstance", &IInstanceManager::allowedToChangeInstance)
+            .def("portableInstanceExists", &IInstanceManager::portableInstanceExists)
+            .def("portablePath", &IInstanceManager::portablePath)
+            .def("globalInstancesRootPath", &IInstanceManager::globalInstancesRootPath)
+            .def("globalInstancePaths", &IInstanceManager::globalInstancePaths)
+            .def("globalInstanceExists", &IInstanceManager::globalInstanceExists,
+                 "instance_name"_a)
+            .def("globalInstancePath", &IInstanceManager::globalInstancePath,
+                 "instance_name"_a)
+            .def("iniPath", &IInstanceManager::iniPath, "instance_directory"_a);
+    }
+
     void add_idownload_manager_classes(py::module_ m)
     {
         py::class_<IDownloadManager>(m, "IDownloadManager")
@@ -925,6 +965,7 @@ namespace mo2::python {
 
         add_ipluginlist_classes(m);
         add_imodlist_classes(m);
+        add_iinstance_manager_classes(m);
         add_idownload_manager_classes(m);
         add_iinstallation_manager_classes(m);
         add_iorganizer_classes(m);

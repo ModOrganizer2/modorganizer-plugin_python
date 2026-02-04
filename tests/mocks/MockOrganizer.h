@@ -34,6 +34,7 @@ public:
 	MOCK_METHOD(QStringList, getFileOrigins, (const QString &fileName) ,(const, override));
 	MOCK_METHOD(QList<FileInfo>, findFileInfos, (const QString &path, const std::function<bool(const FileInfo&)> &filter), (const, override));
 	MOCK_METHOD(std::shared_ptr<const IFileTree>, virtualFileTree, (), (const, override));
+	MOCK_METHOD(MOBase::IInstanceManager*, instanceManager, (), (const, override));
 	MOCK_METHOD(MOBase::IDownloadManager*, downloadManager, (), (const, override));
 	MOCK_METHOD(MOBase::IPluginList*, pluginList, (), (const, override));
 	MOCK_METHOD(MOBase::IModList*, modList, (), (const, override));
