@@ -814,7 +814,9 @@ namespace mo2::python {
         py::class_<IInstanceManager>(m, "IInstanceManager")
             .def("currentInstance", &IInstanceManager::currentInstance,
                  py::return_value_policy::reference)
-            .def("globalInstancePaths", &IInstanceManager::globalInstancePaths);
+            .def("globalInstancePaths", &IInstanceManager::globalInstancePaths)
+            .def("getGlobalInstance", &IInstanceManager::getGlobalInstance,
+                 py::return_value_policy::reference);
     }
 
     void add_idownload_manager_classes(py::module_ m)
