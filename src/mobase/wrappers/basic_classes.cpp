@@ -812,11 +812,9 @@ namespace mo2::python {
             .def("isPortable", &IInstance::isPortable);
 
         py::class_<IInstanceManager>(m, "IInstanceManager")
-            .def("currentInstance", &IInstanceManager::currentInstance,
-                 py::return_value_policy::reference)
+            .def("currentInstance", &IInstanceManager::currentInstance)
             .def("globalInstancePaths", &IInstanceManager::globalInstancePaths)
-            .def("getGlobalInstance", &IInstanceManager::getGlobalInstance,
-                 py::return_value_policy::reference);
+            .def("getGlobalInstance", &IInstanceManager::getGlobalInstance);
     }
 
     void add_idownload_manager_classes(py::module_ m)
