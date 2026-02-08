@@ -14,6 +14,8 @@
 #include <uibase/iexecutable.h>
 #include <uibase/iexecutableslist.h>
 #include <uibase/iinstallationmanager.h>
+#include <uibase/iinstance.h>
+#include <uibase/iinstancemanager.h>
 #include <uibase/imodinterface.h>
 #include <uibase/imodrepositorybridge.h>
 #include <uibase/imoinfo.h>
@@ -644,6 +646,8 @@ namespace mo2::python {
 
             .def("virtualFileTree", &IOrganizer::virtualFileTree)
 
+            .def("instanceManager", &IOrganizer::instanceManager,
+                 py::return_value_policy::reference)
             .def("downloadManager", &IOrganizer::downloadManager,
                  py::return_value_policy::reference)
             .def("pluginList", &IOrganizer::pluginList,
@@ -799,6 +803,20 @@ namespace mo2::python {
             .def_static("getPluginDataPath", &IOrganizer::getPluginDataPath);
     }
 
+    void add_iinstance_manager_classes(py::module_ m)
+    {
+        py::class_<IInstance, std::shared_ptr<IInstance>>(m, "IInstance")
+            .def("displayName", &IInstance::displayName)
+            .def("gameName", &IInstance::gameName)
+            .def("gameDirectory", &IInstance::gameDirectory)
+            .def("isPortable", &IInstance::isPortable);
+
+        py::class_<IInstanceManager>(m, "IInstanceManager")
+            .def("currentInstance", &IInstanceManager::currentInstance)
+            .def("globalInstancePaths", &IInstanceManager::globalInstancePaths)
+            .def("getGlobalInstance", &IInstanceManager::getGlobalInstance);
+    }
+
     void add_idownload_manager_classes(py::module_ m)
     {
         py::class_<IDownloadManager>(m, "IDownloadManager")
@@ -925,6 +943,7 @@ namespace mo2::python {
 
         add_ipluginlist_classes(m);
         add_imodlist_classes(m);
+        add_iinstance_manager_classes(m);
         add_idownload_manager_classes(m);
         add_iinstallation_manager_classes(m);
         add_iorganizer_classes(m);
