@@ -13,7 +13,7 @@ ruff = "^0.2.1"
 poethepoet = "^0.23.0"
 mobase-stubs = { version = "^2.5.1a0", allow-prereleases = true }
 pyqt6 = "^6.7.0"
-pytest = "^8.2.2"
+pytest = ">=8.2.2,<10.0.0"
 pybind11-stubgen = "^2.5.1"
 
 [tool.poe.tasks]
