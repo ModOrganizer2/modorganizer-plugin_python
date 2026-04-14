@@ -483,6 +483,10 @@ namespace mo2::python {
         {
             PYBIND11_OVERRIDE(QStringList, IPluginGame, CCPlugins, );
         }
+        QString blueprintPrefix() const override
+        {
+            PYBIND11_OVERRIDE(QString, IPluginGame, blueprintPrefix, );
+        }
         LoadOrderMechanism loadOrderMechanism() const override
         {
             PYBIND11_OVERRIDE(LoadOrderMechanism, IPluginGame, loadOrderMechanism, );
