@@ -76,6 +76,7 @@ namespace mo2::python {
             .def("iniFiles", &IPluginGame::iniFiles)
             .def("DLCPlugins", &IPluginGame::DLCPlugins)
             .def("CCPlugins", &IPluginGame::CCPlugins)
+            .def("blueprintPrefix", &IPluginGame::blueprintPrefix)
             .def("loadOrderMechanism", &IPluginGame::loadOrderMechanism)
             .def("sortMechanism", &IPluginGame::sortMechanism)
             .def("nexusModOrganizerID", &IPluginGame::nexusModOrganizerID)
