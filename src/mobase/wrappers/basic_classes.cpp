@@ -223,7 +223,7 @@ namespace mo2::python {
                  })
             .def("getByTitle", &IExecutablesList::getByTitle, "title"_a)
             .def("getByBinary", &IExecutablesList::getByBinary, "info"_a)
-            .def("titleExists", &IExecutablesList::contains, "title"_a);
+            .def("contains", &IExecutablesList::contains, "title"_a);
     }
 
     void add_modinterface_classes(py::module_ m)
