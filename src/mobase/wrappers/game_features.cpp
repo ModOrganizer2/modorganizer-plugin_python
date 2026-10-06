@@ -367,7 +367,7 @@ namespace mo2::python {
             .def("unregisterFeature", &IGameFeatures::unregisterFeature, "feature"_a)
             .def("unregisterFeatures", &unregister_feature, "feature_type"_a)
             .def("gameFeature", &extract_feature, "feature_type"_a,
-                 py ::return_value_policy::reference);
+                 py::return_value_policy::reference);
     }
 
 }  // namespace mo2::python
