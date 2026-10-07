@@ -4,7 +4,7 @@ from pathlib import Path
 
 _EXCLUDE_MODULES = ["ensurepip", "idlelib", "test", "tkinter", "turtle_demo", "venv"]
 
-libdir = Path(sys.executable).parent.joinpath("Lib")
+libdir = Path(sys.base_prefix).joinpath("Lib")
 assert libdir.exists()
 
 with zipfile.PyZipFile(sys.argv[1], optimize=2, mode="w") as fp:
